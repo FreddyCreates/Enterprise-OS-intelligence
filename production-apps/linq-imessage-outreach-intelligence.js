@@ -234,7 +234,9 @@ for (let day = 1; day <= 30; day++) {
     const cordexState = cordexAGI.tick();
 
     // Autonomous interventions triggered when engagement falls below φ⁻¹
-    if (event.type === 'low-reply-signal' || (cordexState.interventionActive && event.resistanceInjection > 0)) {
+    const shouldIntervene = event.type === 'low-reply-signal'
+      || (cordexState.interventionActive && event.resistanceInjection > 0);
+    if (shouldIntervene) {
       metrics.autonomousInterventions++;
 
       // CEREBEX: Diagnose and rotate personalization strategy
@@ -360,7 +362,7 @@ console.log(`  Final Dominance Ratio:          ${cordexStatus.currentState?.domi
 console.log(`  Self-Aware:                     ${cordexStatus.selfAware ? 'YES' : 'NO'}`);
 
 console.log(`\nAETHER (SDR Swarm):`);
-console.log(`  Active SDR Agents:              ${aetherStatus.goals.toLocaleString()}`);
+console.log(`  Active SDR Agents:              ${aetherStatus.goals.toLocaleString()}`); // goals = active agent count per AETHER API
 console.log(`  Emergence Level:                ${aetherStatus.emergenceLevel.toFixed(4)}`);
 console.log(`  Self-Aware:                     ${aetherStatus.selfAware ? 'YES' : 'NO'}`);
 
