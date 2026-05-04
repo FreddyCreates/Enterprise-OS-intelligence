@@ -12,9 +12,12 @@
  *   1. Concession Intelligence (PORTEX)  — queue analysis + revenue projection
  *   2. Safety Intelligence    (SALUTEX)  — Bayesian risk, on-chain credentials
  *   3. Security Intelligence  (SECUREX)  — TSA checkpoint throughput, badge control
- *   4. Value Summary                     — DFW economic impact model
+ *   4. Community Economy      (COMMUNEX) — aerotropolis impact, ACDBE small business
+ *   5. Value Summary                     — DFW economic impact model
  *
- * Full production deployment: rship-enterprise-dfw-airport.js (6 AGI systems)
+ * Full production deployments:
+ *   - rship-enterprise-dfw-airport.js (6 AGIs — ops, safety, security)
+ *   - rship-airport-community.js     (3 AGIs — aerotropolis, ACDBE, workforce)
  *
  * © 2026 Alfredo Medina Hernandez. All Rights Reserved.
  */
@@ -22,6 +25,7 @@
 import { birthPORTEX  } from '../sdk/portex-agi/portex-agi.js';
 import { birthSALUTEX } from '../sdk/salutex-agi/salutex-agi.js';
 import { birthSECUREX } from '../sdk/securex-agi/securex-agi.js';
+import { birthCOMMUNEX } from '../sdk/communex-agi/communex-agi.js';
 import { PHI_INV }       from '../rship-framework.js';
 
 // ── Demo Helpers ───────────────────────────────────────────────────────────
@@ -44,25 +48,27 @@ function divider(char = '─', width = 72) {
 console.log(`
 ╔══════════════════════════════════════════════════════════════════════════╗
 ║          RSHIP ENTERPRISE — DFW AIRPORT DEMO                             ║
-║          AI-Powered Airport Economy & Security Intelligence              ║
+║      AI-Powered Airport Economy, Security & Community Intelligence       ║
 ╠══════════════════════════════════════════════════════════════════════════╣
 ║  Airport:   Dallas/Fort Worth International (DFW)                        ║
 ║  Scope:     73M passengers/yr · 5 terminals · 182 gates · 58,000 staff   ║
-║  AGI Stack: PORTEX + SALUTEX + SECUREX (+ TRACTEX, PRAEDEX, AEQUEX)     ║
-║  Demo Mode: Starter — run dfw-airport.js for full enterprise simulation  ║
+║  AGI Stack: PORTEX + SALUTEX + SECUREX + COMMUNEX (+ TRACTEX, PRAEDEX)  ║
+║  Demo Mode: Starter — see dfw-airport.js and dfw-community.js for full   ║
 ╚══════════════════════════════════════════════════════════════════════════╝
 `);
 
 // ── AGI Init ───────────────────────────────────────────────────────────────
 
-const portex  = birthPORTEX ({ airport: 'DFW' });
-const salutex = birthSALUTEX({ basePrior: 0.025 });
-const securex = birthSECUREX({ airport: 'DFW', threatPrior: 0.0001 });
+const portex   = birthPORTEX ({ airport: 'DFW' });
+const salutex  = birthSALUTEX({ basePrior: 0.025 });
+const securex  = birthSECUREX({ airport: 'DFW', threatPrior: 0.0001 });
+const communex = birthCOMMUNEX({ airport: 'DFW', annualPassengers: 73000000, directEmployees: 58000 });
 
 console.log('  Initializing RSHIP AGI systems...');
-console.log('    ✓ PORTEX  (Airport Economy Intelligence)   born alive');
-console.log('    ✓ SALUTEX (Campus Safety Intelligence)     born alive');
-console.log('    ✓ SECUREX (Security Operations Intelligence) born alive');
+console.log('    ✓ PORTEX   (Airport Economy Intelligence)    born alive');
+console.log('    ✓ SALUTEX  (Campus Safety Intelligence)      born alive');
+console.log('    ✓ SECUREX  (Security Operations Intelligence)  born alive');
+console.log('    ✓ COMMUNEX (Community Economy Intelligence)  born alive');
 console.log('');
 
 // ── Demo Function ──────────────────────────────────────────────────────────
@@ -231,20 +237,88 @@ async function runDemo() {
 
   await sleep(200);
 
-  // ── MODULE 4: Value Summary ──────────────────────────────────────────────
+  // ── MODULE 4: Community Economy Intelligence (COMMUNEX) ─────────────────
 
   console.log('');
   console.log(divider('═'));
-  console.log('  MODULE 4 — DFW ECONOMIC IMPACT MODEL');
+  console.log('  MODULE 4 — COMMUNITY ECONOMY INTELLIGENCE  (COMMUNEX)');
+  console.log(divider());
+  console.log('');
+  console.log('  Problem: 28 surrounding cities have no visibility into their share');
+  console.log('  of the $37B aerotropolis economy. ACDBE operators lack benchmarks.');
+  console.log('  Community Benefit Agreements go untracked between annual reviews.');
+  console.log('');
+
+  // 4a — Aerotropolis economic map (top 5 cities)
+  const ecoMap = communex.aerotropolisEconomicMap();
+  console.log('  Leontief I/O Aerotropolis Model:');
+  console.log(`    Total Airport Direct Spending:  ${ecoMap.totalDirectSpend}`);
+  console.log(`    Total Regional Economic Impact: ${ecoMap.totalEconomicImpact}  (${ecoMap.overallMultiplier}x multiplier)`);
+  console.log(`    Direct Jobs: ${ecoMap.directJobs}  |  Total Jobs (incl. indirect): ${ecoMap.totalJobs}`);
+  console.log('');
+  console.log('  Top 5 Cities by Economic Impact Share:');
+  ecoMap.cityImpact
+    .sort((a, b) => parseFloat(b.economicImpact) - parseFloat(a.economicImpact))
+    .slice(0, 5)
+    .forEach(c => {
+      console.log(`    ${c.city.padEnd(18)} ${c.tier.padEnd(9)} Impact: ${c.economicImpact.padEnd(7)}  Jobs: ${String(c.jobsSupported).padEnd(6)} Tax: ${c.taxRevenue}`);
+    });
+
+  // 4b — ACDBE small business scoring (3 sample firms)
+  console.log('\n  ACDBE Small Business Scoring:');
+  const sampleFirms = [
+    { legalName: "Morales Family Kitchen", ownerName: "Maria Morales", category: 'F&B', certification: 'WBE', terminal: 'D', annualRevenueTarget: 1200000, annualRevenueActual: 1380000, sqft: 1400, openDate: Date.now() - 24 * 30 * 86400000, mentorFirm: 'SSP America' },
+    { legalName: "DFW Veterans Gifts",     ownerName: "James Thornton", category: 'Retail', certification: 'SDVOSB', terminal: 'A', annualRevenueTarget: 680000, annualRevenueActual: 520000, sqft: 800, openDate: Date.now() - 8 * 30 * 86400000, mentorFirm: null },
+    { legalName: "Aisha's Fresh Juice",    ownerName: "Aisha Okafor", category: 'F&B', certification: 'MBE', terminal: 'C', annualRevenueTarget: 540000, annualRevenueActual: 610000, sqft: 600, openDate: Date.now() - 36 * 30 * 86400000, mentorFirm: 'DFW Hospitality Group' },
+  ];
+  sampleFirms.forEach(f => communex.registerACDBEFirm(f));
+  const acdbIds = [...communex.acdbeFirms.keys()];
+  acdbIds.forEach(id => {
+    const s = communex.scoreACDBEFirm(id);
+    console.log(`    ${s.legalName.padEnd(26)} ${s.certification.padEnd(7)} Score: ${s.overallScore}  [${s.tier}]  Revenue: ${s.revenueAttainment}`);
+  });
+
+  // 4c — Visitor economic bridge (summary)
+  const bridge = communex.visitorEconomicBridge(73000000);
+  console.log('\n  Visitor-to-Community Economic Bridge:');
+  console.log(`    73M passengers → Hotel Nights: ${bridge.totals.hotelNights}  Hotel Rev: ${bridge.totals.hotelRevenue}`);
+  console.log(`    Restaurant Revenue: ${bridge.totals.restaurantRevenue}  |  Retail Revenue: ${bridge.totals.retailRevenue}`);
+  console.log(`    Total Visitor Direct Spend: ${bridge.totals.totalDirectSpend}  |  Economic Impact: ${bridge.totals.totalEconomicImpact}`);
+
+  // 4d — CBA scorecard (compact)
+  const cbaItems = [
+    { id: 'CBA-HIRING',   category: 'LOCAL_HIRING',    municipality: 'Regional',  target: 65,   actual: 71,   trend: 'IMPROVING' },
+    { id: 'CBA-NOISE',    category: 'NOISE_ABATEMENT', municipality: 'Grapevine', target: 97,   actual: 98.2, trend: 'STABLE'    },
+    { id: 'CBA-INVEST',   category: 'COMMUNITY_INVEST',municipality: 'Dallas Co.', target: 12,  actual: 11.2, trend: 'STABLE'    },
+    { id: 'CBA-ACDBE',    category: 'SMALL_BUSINESS',  municipality: 'Regional',  target: 25,   actual: 22.1, trend: 'IMPROVING' },
+  ];
+  cbaItems.forEach(c => communex.registerCBACommitment(c.id, c));
+  const cba = communex.cbaScorecardReport();
+  console.log(`\n  Community Benefit Agreement Scorecard: ${cba.overallStatus}  (Score: ${cba.overallScore})`);
+  cba.commitments.forEach(c => {
+    const icon = c.status === 'MET' || c.status === 'ON TRACK' ? '✓' : '⚠';
+    console.log(`    ${icon} ${c.municipality.padEnd(12)} ${c.category.padEnd(30)} ${c.attainment.padEnd(8)} ${c.status}`);
+  });
+
+  await sleep(200);
+
+  // ── MODULE 5: Value Summary ──────────────────────────────────────────────
+
+  console.log('');
+  console.log(divider('═'));
+  console.log('  MODULE 5 — DFW ECONOMIC IMPACT MODEL');
   console.log(divider());
 
-  const concessionLift        = (18.50 - 11.23) * 73000000;     // RPE uplift × annual pax
-  const safetyReduction       = 12 * 850000;                     // 12 fewer OSHA incidents
-  const securityOps           = 0.15 * 58000 * 4200;             // badge admin efficiency
-  const checkpointRetailUplift = 0.12 * 73000000 * 3.50;         // faster screening → retail
+  const concessionLift        = (18.50 - 11.23) * 73000000;
+  const safetyReduction       = 12 * 850000;
+  const securityOps           = 0.15 * 58000 * 4200;
+  const checkpointRetailUplift = 0.12 * 73000000 * 3.50;
+  const acdbeLift             = 42 * 180000;              // ACDBE firm revenue uplift
+  const workforceWageLift     = 58000 * 0.08 * 45000;    // wage progression for 58K workers
+  const communityVisitorBridge = 0.02 * 3400000000;      // incremental visitor spend capture
 
-  const total       = concessionLift + safetyReduction + securityOps + checkpointRetailUplift;
-  const platformCost = 1200000;
+  const total       = concessionLift + safetyReduction + securityOps + checkpointRetailUplift + acdbeLift + workforceWageLift + communityVisitorBridge;
+  const platformCost = 1680000; // Enterprise + Community editions
   const roi         = ((total - platformCost) / platformCost * 100).toFixed(0);
 
   console.log(`
@@ -255,34 +329,39 @@ async function runDemo() {
   │  Safety Incident Reduction  (−12/yr @ $850K)   $${(safetyReduction / 1e6).toFixed(1)}M         │
   │  Security Ops Efficiency  (badge admin)         $${(securityOps / 1e6).toFixed(1)}M         │
   │  Checkpoint Throughput  (retail uplift)         $${(checkpointRetailUplift / 1e6).toFixed(0)}M        │
+  │  ACDBE Revenue Uplift  (42 firms enabled)       $${(acdbeLift / 1e6).toFixed(1)}M         │
+  │  Workforce Wage Progression  (58K workers)      $${(workforceWageLift / 1e6).toFixed(0)}M       │
+  │  Visitor Economic Bridge  (incremental)         $${(communityVisitorBridge / 1e6).toFixed(0)}M        │
   │  ─────────────────────────────────────────────────────────────  │
-  │  Total Annual Value                             $${(total / 1e6).toFixed(0)}M        │
-  │  Platform Cost (Enterprise)                     $${(platformCost / 1e6).toFixed(1)}M         │
-  │  Net Annual Gain                                $${((total - platformCost) / 1e6).toFixed(0)}M        │
-  │  ROI                                            ${roi}%                │
+  │  Total Annual Value                             $${(total / 1e6).toFixed(0)}M       │
+  │  Platform Cost (Enterprise + Community)         $${(platformCost / 1e6).toFixed(1)}M         │
+  │  Net Annual Gain                                $${((total - platformCost) / 1e6).toFixed(0)}M       │
+  │  ROI                                            ${roi}%               │
   └─────────────────────────────────────────────────────────────────┘`);
 
   console.log(`
   ┌─────────────────────────────────────────────────────────────────┐
-  │  FULL RSHIP ENTERPRISE STACK — 6 AGIs for DFW                  │
+  │  FULL RSHIP ENTERPRISE STACK — 7 AGIs for DFW                  │
   ├─────────────────────────────────────────────────────────────────┤
-  │  PORTEX   Airport Economy & Terminal Operations Intelligence     │
-  │  TRACTEX  Revenue Tracking & Concession Cash Flow               │
-  │  PRAEDEX  Passenger Demand Forecasting                          │
-  │  AEQUEX   Operational Quality & Service Equilibrium             │
-  │  SALUTEX  Campus-Wide Safety & Worker Credential Chain          │
-  │  SECUREX  Security Operations, Access Control, TSA Compliance   │
+  │  PORTEX    Airport Economy & Terminal Operations Intelligence    │
+  │  TRACTEX   Revenue Tracking & Concession Cash Flow              │
+  │  PRAEDEX   Passenger Demand Forecasting                         │
+  │  AEQUEX    Operational Quality & Service Equilibrium            │
+  │  SALUTEX   Campus-Wide Safety & Worker Credential Chain         │
+  │  SECUREX   Security Operations, Access Control, TSA Compliance  │
+  │  COMMUNEX  Aerotropolis Economy, ACDBE, Workforce, CBA          │
   ├─────────────────────────────────────────────────────────────────┤
-  │  Messaging: Linq — iMessage interface for every DFW team        │
-  │  Infrastructure: AEGIX monitors all 6 AGIs in real-time         │
-  │  Production App: node production-apps/rship-enterprise-dfw-airport.js │
+  │  Enterprise App:  node rship-enterprise-dfw-airport.js (6 AGIs) │
+  │  Community App:   node rship-airport-community.js   (3 AGIs)    │
+  │  Messaging:       Linq — iMessage interface for every DFW team  │
+  │  Infrastructure:  AEGIX monitors all AGIs in real-time          │
   └─────────────────────────────────────────────────────────────────┘
 `);
 
   console.log('╔══════════════════════════════════════════════════════════════════════════╗');
   console.log('║  RSHIP Enterprise — DFW Demo Complete                                   ║');
   console.log('║  Designation: RSHIP-DEMO-DFW-001                                        ║');
-  console.log('║  Ready to integrate with DFW IT infrastructure.                         ║');
+  console.log('║  7 AGIs. 2 production apps. 28-city aerotropolis.                       ║');
   console.log('╚══════════════════════════════════════════════════════════════════════════╝');
   console.log('');
 }
