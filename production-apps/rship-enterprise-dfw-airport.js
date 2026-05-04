@@ -2,8 +2,8 @@
  * PRODUCTION APPLICATION: RSHIP ENTERPRISE — DFW AIRPORT ECONOMY
  *
  * Designation: RSHIP-PROD-DFW-001
- * AGI Systems: PORTEX + TRACTEX + PRAEDEX + AEQUEX + SALUTEX
- * Industry: Airport Economy — Concessions, Cargo, Ground Transport, Operations
+ * AGI Systems: PORTEX + TRACTEX + PRAEDEX + AEQUEX + SALUTEX + SECUREX
+ * Industry: Airport Economy — Concessions, Cargo, Ground Transport, Operations, Security
  * Scale: Dallas/Fort Worth International Airport — 73M passengers/year,
  *        5 terminals, 182 gates, $1.2B+ annual economic output
  *
@@ -19,19 +19,23 @@
  * cross 5 terminals take 48+ hours to route and resolve.
  *
  * RSHIP Enterprise Solution:
- * Five sovereign AGI systems operating in concert across all five DFW terminals:
+ * Six sovereign AGI systems operating in concert across all five DFW terminals:
  * PORTEX provides airport economy intelligence, TRACTEX tracks every concession
  * revenue stream, PRAEDEX forecasts passenger demand, AEQUEX manages operational
- * quality, and SALUTEX monitors safety across the entire campus.
+ * quality, SALUTEX monitors safety across the entire campus, and SECUREX delivers
+ * end-to-end security operations intelligence: TSA checkpoint throughput prediction,
+ * real-time badge and access control for 58,000+ credentialed employees, security
+ * incident routing, perimeter integrity monitoring, and TSA/FAA compliance tracking.
  *
  * © 2026 Alfredo Medina Hernandez. All Rights Reserved.
  */
 
-import { birthPORTEX } from '../sdk/portex-agi/portex-agi.js';
+import { birthPORTEX  } from '../sdk/portex-agi/portex-agi.js';
 import { birthTRACTEX } from '../sdk/tractex-agi/tractex-agi.js';
 import { birthPRAEDEX } from '../sdk/praedex-agi/praedex-agi.js';
-import { birthAEQUEX } from '../sdk/aequex-agi/aequex-agi.js';
+import { birthAEQUEX  } from '../sdk/aequex-agi/aequex-agi.js';
 import { birthSALUTEX } from '../sdk/salutex-agi/salutex-agi.js';
+import { birthSECUREX } from '../sdk/securex-agi/securex-agi.js';
 import { PHI, PHI_INV } from '../rship-framework.js';
 
 // ── DFW Configuration ──────────────────────────────────────────────────────
@@ -51,7 +55,7 @@ const DFW = {
 
 console.log(`
 ╔════════════════════════════════════════════════════════════════════════════╗
-║      RSHIP ENTERPRISE — DFW AIRPORT ECONOMY INTELLIGENCE                   ║
+║      RSHIP ENTERPRISE — DFW AIRPORT ECONOMY & SECURITY INTELLIGENCE        ║
 ║                    RSHIP-PROD-DFW-001                                      ║
 ╠════════════════════════════════════════════════════════════════════════════╣
 ║  Airport: ${DFW.name.padEnd(64)}║
@@ -59,7 +63,7 @@ console.log(`
 ║  Concession Revenue: $${(DFW.annualConcessionRevenue / 1e6).toFixed(0)}M/yr  |  Cargo: ${(DFW.annualCargoTonnes / 1000).toFixed(0)}K tonnes/yr${' '.repeat(20)}║
 ╚════════════════════════════════════════════════════════════════════════════╝
 
-Initializing 5 Alpha AGI Systems across all DFW terminals...
+Initializing 6 Alpha AGI Systems across all DFW terminals...
 `);
 
 // ── AGI Initialization ─────────────────────────────────────────────────────
@@ -69,13 +73,15 @@ const tractex = birthTRACTEX({ learningCoefficient: PHI_INV });
 const praedex = birthPRAEDEX({ learningCoefficient: PHI_INV });
 const aequex  = birthAEQUEX({ gamma: PHI_INV });
 const salutex = birthSALUTEX({ basePrior: 0.025 }); // Large campus — slightly elevated baseline
+const securex = birthSECUREX({ airport: 'DFW', threatPrior: 0.0001 });
 
 console.log('  ✓ PORTEX  — Airport Economy & Terminal Operations Intelligence');
 console.log('  ✓ TRACTEX — Concession Revenue Tracking & Cash Flow Intelligence');
 console.log('  ✓ PRAEDEX — Passenger Demand & Market Forecasting Intelligence');
 console.log('  ✓ AEQUEX  — Operational Quality & Service Equilibrium Intelligence');
 console.log('  ✓ SALUTEX — Campus-Wide Safety & Worker Credential Intelligence');
-console.log('\n  All 5 AGI systems born alive. Running DFW intelligence simulation...\n');
+console.log('  ✓ SECUREX — Airport Security Operations & Access Control Intelligence');
+console.log('\n  All 6 AGI systems born alive. Running DFW intelligence simulation...\n');
 
 // ── Simulation ─────────────────────────────────────────────────────────────
 
@@ -239,27 +245,176 @@ async function runDFWSimulation() {
   Cargo Revenue (Q1):       ${report.cargoRevenueQ1}
   `);
 
+  // ── Scene 8: Airport Security Intelligence (SECUREX) ────────────────────
+
+  console.log('\n' + '─'.repeat(76));
+  console.log('  SCENE 8: Airport Security Operations Intelligence (SECUREX)');
+  console.log('─'.repeat(76));
+
+  // 8a — TSA Checkpoint Throughput: Terminal D morning peak (international)
+  console.log('\n  [8a] TSA Checkpoint Throughput — Terminal D Morning Peak:');
+
+  const peakTerminalD = securex.predictCheckpointWait('D', 1200); // 1,200 pax/hr arriving at D checkpoint
+  console.log(`  Passengers/hr: ${peakTerminalD.passengersPerHour}  |  Active Lanes: ${peakTerminalD.activeLanes}  |  Type: ${peakTerminalD.laneType}`);
+  console.log(`  Estimated Wait: ${peakTerminalD.estimatedWaitMinutes} min  |  TSA Standard: ${peakTerminalD.tsaStandard}  |  Status: ${peakTerminalD.withinStandard ? '✓ PASS' : '⚠ EXCEED'}`);
+  console.log(`  Recommendation: ${peakTerminalD.recommendation}`);
+
+  const preCheckD = securex.predictCheckpointWait('D', 420, { preCheck: true }); // ~35% PreCheck
+  console.log(`\n  PreCheck Lane — Terminal D: ${preCheckD.estimatedWaitMinutes} min wait  |  Status: ${preCheckD.withinStandard ? '✓ PASS' : '⚠ EXCEED'}`);
+
+  // 24-hour staffing plan for Terminal A
+  const hourlyPaxA = [80, 60, 50, 40, 70, 180, 420, 680, 750, 620, 510, 480,
+                      550, 600, 640, 710, 820, 950, 820, 680, 540, 380, 220, 120];
+  const staffingPlanA = securex.dailyCheckpointPlan('A', hourlyPaxA);
+  console.log(`\n  Terminal A — 24-Hour Checkpoint Staffing Plan (peak hours):`);
+  staffingPlanA.plan
+    .filter(h => h.inboundPax > 300)
+    .forEach(h => {
+      const alert = h.peakAlert ? ' ⚠ STAFF UP' : '';
+      console.log(`  ${h.hour}  ${String(h.inboundPax).padEnd(5)} pax | Std: ${h.standardLanes} lanes | Pre: ${h.preCheckLanes} lanes | Wait: ${h.estimatedWait} min${alert}`);
+    });
+
+  // 8b — Badge & Access Control
+  console.log('\n  [8b] Badge & Access Control:');
+
+  const badge1 = securex.issueBadge('BADGE-AA-00142', {
+    holderName:      'Carlos Vega',
+    employer:        'American Airlines Ground Ops',
+    role:            'Ramp Agent',
+    authorizedZones: ['AIRFIELD_RAMP', 'STERILE_D', 'EMPLOYEE_ONLY'],
+    backgroundCheckType: 'CHRC',
+  });
+  const badge2 = securex.issueBadge('BADGE-DFW-00891', {
+    holderName:      'Maria Torres',
+    employer:        'DFW Airport Authority — Facilities',
+    role:            'Facilities Engineer',
+    authorizedZones: ['OPERATIONS_CTR', 'EMPLOYEE_ONLY', 'CARGO_SECURE'],
+    backgroundCheckType: 'CHRC',
+    expiresAt:       Date.now() + 18 * 86400000, // expiring in 18 days — will trigger warning
+  });
+  const badge3 = securex.issueBadge('BADGE-TSA-00023', {
+    holderName:      'James Williams',
+    employer:        'TSA — DFW Federal Security Director',
+    role:            'Transportation Security Officer',
+    authorizedZones: ['CHECKPOINT_D', 'CHECKPOINT_A', 'STERILE_D', 'STERILE_A', 'EMPLOYEE_ONLY'],
+    backgroundCheckType: 'SSBI', // Special Background Investigation
+  });
+
+  console.log(`  BADGE-AA-00142  (${badge1.holder}):  ${badge1.status} | Zones: ${badge1.authorizedZones.join(', ')}`);
+  console.log(`  BADGE-DFW-00891 (${badge2.holder}): ${badge2.status} | Expires in ${badge2.daysUntilExpiry} days ⚠`);
+  console.log(`  BADGE-TSA-00023 (${badge3.holder}): ${badge3.status} | Check: ${badge3.backgroundCheck}`);
+
+  // Validate access attempts
+  const access1 = securex.validateAccess('BADGE-AA-00142', 'AIRFIELD_RAMP');  // should pass
+  const access2 = securex.validateAccess('BADGE-AA-00142', 'CUSTOMS');         // unauthorized — should alert
+  const access3 = securex.validateAccess('BADGE-TSA-00023', 'CHECKPOINT_D');   // should pass
+  const access4 = securex.validateAccess('BADGE-UNKNOWN-999', 'STERILE_A');    // unknown badge — alert
+
+  console.log(`\n  Access Validation Results:`);
+  console.log(`  BADGE-AA-00142 → AIRFIELD_RAMP:  ${access1.granted ? '✓ GRANTED' : '✗ DENIED'} — ${access1.granted ? access1.zone : access1.reason}`);
+  console.log(`  BADGE-AA-00142 → CUSTOMS:         ${access2.granted ? '✓ GRANTED' : '✗ DENIED'} — ${access2.reason || ''}${access2.alertRaised ? ' | 🚨 Alert raised' : ''}`);
+  console.log(`  BADGE-TSA-00023 → CHECKPOINT_D:   ${access3.granted ? '✓ GRANTED' : '✗ DENIED'} — ${access3.granted ? access3.zone : access3.reason}`);
+  console.log(`  BADGE-UNKNOWN  → STERILE_A:       ${access4.granted ? '✓ GRANTED' : '✗ DENIED'} — ${access4.reason}${access4.alertRaised ? ' | 🚨 Alert raised' : ''}`);
+
+  // Badge summary
+  const bs = securex.badgeSummary();
+  console.log(`\n  Badge Summary: ${bs.total} total | ${bs.active} active | ${bs.expiringSoon} expiring soon | ${bs.highAnomaly} high-anomaly`);
+
+  // 8c — Security Incidents
+  console.log('\n  [8c] Security Incident Routing:');
+
+  const inc1 = securex.reportIncident('AIRFIELD_RAMP', {
+    type:        'TAILGATING_ATTEMPT',
+    severity:    'HIGH',
+    description: 'Unauthorized individual followed credentialed ramp agent through secured door D-7',
+    reportedBy:  'BADGE-AA-00142',
+  });
+  const inc2 = securex.reportIncident('CARGO_SECURE', {
+    type:        'UNATTENDED_PACKAGE',
+    severity:    'CRITICAL',
+    description: 'Unattended bag left in cargo secure zone for 12+ minutes, no owner identified',
+    reportedBy:  'SECUREX-PERIMETER-SENSOR',
+  });
+  const inc3 = securex.reportIncident('CHECKPOINT_D', {
+    type:        'PROHIBITED_ITEM',
+    severity:    'MEDIUM',
+    description: 'Large liquid container detected in standard screening — passenger directed to secondary',
+    reportedBy:  'TSA-LANE-D4',
+  });
+
+  [inc1, inc2, inc3].forEach(inc => {
+    console.log(`  ${inc.incidentId} | ${inc.severity.padEnd(8)} | ${inc.type.padEnd(24)} | Route → ${inc.escalateTo}`);
+    console.log(`    Zone: ${inc.zoneName} | Response by: ${new Date(inc.responseDeadline).toLocaleTimeString()}`);
+  });
+
+  securex.resolveIncident(inc1.incidentId, { by: 'Security Officer Ramirez', notes: 'Individual escorted out — no further threat' });
+  securex.resolveIncident(inc3.incidentId, { by: 'TSA Officer Williams', notes: 'Passenger cleared secondary screening' });
+
+  const is = securex.incidentSummary();
+  console.log(`\n  Incident Summary: ${is.total} total | ${is.open} open | ${is.critical} critical | ${is.resolved} resolved`);
+  console.log(`  LINQ: "${inc2.linqMessage.split('\n')[0]}"`);
+
+  // 8d — Perimeter Integrity
+  console.log('\n  [8d] Perimeter Integrity Assessment:');
+
+  const perimeterChecks = [
+    { zone: 'AOA',            events: [] },
+    { zone: 'CARGO_SECURE',   events: [{ afterHours: true }, { multipleAttempts: true }] },
+    { zone: 'OPERATIONS_CTR', events: [{ unusualSequence: true }] },
+    { zone: 'AIRFIELD_RAMP',  events: [] },
+  ];
+
+  perimeterChecks.forEach(({ zone, events }) => {
+    const p = securex.assessPerimeterIntegrity(zone, events);
+    console.log(`  ${zone.padEnd(20)} Risk: ${p.riskLevel.padEnd(8)} | Threat Score: ${p.threatScore} | Alert: ${p.alertRequired ? '⚠️ YES' : 'no'}`);
+  });
+
+  // 8e — TSA / FAA Compliance
+  console.log('\n  [8e] TSA / FAA Compliance Tracking:');
+
+  const directives = [
+    { id: 'TSA-SD-2025-001', title: 'Enhanced Screening for Checked Baggage',      authority: 'TSA', status: 'COMPLIANT',    complianceRate: 0.97 },
+    { id: 'TSA-SD-2025-007', title: 'Checkpoint Lane Technology Upgrade',           authority: 'TSA', status: 'OPEN',         complianceRate: 0.72 },
+    { id: 'FAA-AC-150-2024', title: 'Wildlife Hazard Management Plan Update',       authority: 'FAA', status: 'COMPLIANT',    complianceRate: 1.0  },
+    { id: 'DHS-REAL-2025-A', title: 'REAL ID Full Enforcement Readiness',           authority: 'DHS', status: 'COMPLIANT',    complianceRate: 0.99 },
+    { id: 'TSA-CPI-2025-03', title: 'Canine Program Integration — Cargo Zone',      authority: 'TSA', status: 'OPEN',         complianceRate: 0.61 },
+  ];
+
+  directives.forEach(d => securex.registerDirective(d.id, d));
+
+  const cr = securex.complianceReport();
+  console.log(`  Total Directives: ${cr.totalDirectives} | Compliant: ${cr.compliant} | Open: ${cr.open} | Overdue: ${cr.overdue}`);
+  console.log(`  Compliance Rate: ${cr.complianceRate} | Avg Score: ${cr.avgComplianceScore} | Audit Readiness: ${cr.auditReadiness}`);
+  directives.forEach(d => {
+    const icon = d.status === 'COMPLIANT' ? '✓' : '○';
+    console.log(`  ${icon} ${d.id.padEnd(22)} ${d.authority.padEnd(4)} | ${d.status.padEnd(10)} | ${d.title}`);
+  });
+
   // ── Scene 7: Annual Economic Value Model ─────────────────────────────────
 
   console.log('─'.repeat(76));
   console.log('  SCENE 7: Annual Economic Value Model — DFW Airport Economy');
   console.log('─'.repeat(76));
 
-  const concessionRPELift = 148 * (18.50 - 11.23) * DFW.annualPassengers / 148; // per operator lift
-  const cargoForecastAccuracy = 0.05 * 0.55 * 900000 * 1000; // 5% accuracy = $24.75M in planning value
-  const gateUtilizationGain = 0.08 * 182 * 365 * 12000;  // 8% lift in gate utilization
-  const safetyIncidentReduction = 12 * 850000; // avg OSHA recordable costs DFW ~$850K each, target -12/yr
-  const totalValue = concessionRPELift + cargoForecastAccuracy + gateUtilizationGain + safetyIncidentReduction;
-  const platformCost = 1200000; // Enterprise tier
+  const concessionRPELift = 148 * (18.50 - 11.23) * DFW.annualPassengers / 148;
+  const cargoForecastAccuracy = 0.05 * 0.55 * 900000 * 1000;
+  const gateUtilizationGain = 0.08 * 182 * 365 * 12000;
+  const safetyIncidentReduction = 12 * 850000;
+  const securityOpsEfficiency = 0.15 * 58000 * 4200; // 15% reduction in badge admin overhead ($4,200/yr/employee)
+  const checkpointThroughputGain = 0.12 * 73000000 * 3.50; // 12% faster screening × $3.50 pax retail uplift
+  const totalValue = concessionRPELift + cargoForecastAccuracy + gateUtilizationGain + safetyIncidentReduction + securityOpsEfficiency + checkpointThroughputGain;
+  const platformCost = 1200000;
 
   console.log(`
   ┌─────────────────────────────────────────────────────────────────────┐
-  │  Annual Economic Value — DFW Airport Economy                        │
+  │  Annual Economic Value — DFW Airport Economy & Security             │
   ├─────────────────────────────────────────────────────────────────────┤
   │  Concession RPE Lift ($11.23→$18.50/pax):  $${(concessionRPELift / 1e6).toFixed(0)}M${' '.repeat(21)}│
   │  Cargo Forecast Accuracy (planning lift):   $${(cargoForecastAccuracy / 1e6).toFixed(0)}M${' '.repeat(21)}│
   │  Gate Utilization +8% (idle time captured): $${(gateUtilizationGain / 1e6).toFixed(0)}M${' '.repeat(21)}│
   │  Safety — Incident Reduction (-12/yr):      $${(safetyIncidentReduction / 1e6).toFixed(0)}M${' '.repeat(21)}│
+  │  Security Ops Efficiency (badge admin):     $${(securityOpsEfficiency / 1e6).toFixed(0)}M${' '.repeat(21)}│
+  │  Checkpoint Throughput (retail uplift):     $${(checkpointThroughputGain / 1e6).toFixed(0)}M${' '.repeat(21)}│
   │  ─────────────────────────────────────────────────────────────────  │
   │  Total Annual Economic Value:               $${(totalValue / 1e6).toFixed(0)}M${' '.repeat(21)}│
   │  Platform Cost (Enterprise):                $${(platformCost / 1e6).toFixed(1)}M${' '.repeat(21)}│
@@ -269,9 +424,9 @@ async function runDFWSimulation() {
 
   console.log(`
 ╔════════════════════════════════════════════════════════════════════════════╗
-║  RSHIP ENTERPRISE — DFW AIRPORT ECONOMY — Simulation Complete              ║
+║  RSHIP ENTERPRISE — DFW AIRPORT ECONOMY & SECURITY — Simulation Complete   ║
 ║  ${DFW.name.padEnd(73)}║
-║  5 AGIs: PORTEX · TRACTEX · PRAEDEX · AEQUEX · SALUTEX                    ║
+║  6 AGIs: PORTEX · TRACTEX · PRAEDEX · AEQUEX · SALUTEX · SECUREX          ║
 ║  Designation: RSHIP-PROD-DFW-001                                           ║
 ╚════════════════════════════════════════════════════════════════════════════╝
   `);
