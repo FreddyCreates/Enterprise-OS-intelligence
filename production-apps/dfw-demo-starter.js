@@ -350,18 +350,22 @@ async function runDemo() {
   │  SALUTEX   Campus-Wide Safety & Worker Credential Chain         │
   │  SECUREX   Security Operations, Access Control, TSA Compliance  │
   │  COMMUNEX  Aerotropolis Economy, ACDBE, Workforce, CBA          │
+  │  AEROLEX   Airline Ops, Turnaround, GDP, Crew, Fuel             │
+  │  VISITEX   Visitor Experience, Wayfinding, NPS, Loyalty         │
+  │  CREWEX    Crew Scheduling, Fatigue, Career Paths, Wage Equity  │
   ├─────────────────────────────────────────────────────────────────┤
   │  Enterprise App:  node rship-enterprise-dfw-airport.js (6 AGIs) │
   │  Community App:   node rship-airport-community.js   (3 AGIs)    │
+  │  Airlines App:    node rship-dfw-airlines-tourism.js (3 AGIs)   │
   │  Messaging:       Linq — iMessage interface for every DFW team  │
-  │  Infrastructure:  AEGIX monitors all AGIs in real-time          │
+  │  Infrastructure:  AEGIX monitors all 10 AGIs in real-time       │
   └─────────────────────────────────────────────────────────────────┘
 `);
 
   console.log('╔══════════════════════════════════════════════════════════════════════════╗');
   console.log('║  RSHIP Enterprise — DFW Demo Complete                                   ║');
   console.log('║  Designation: RSHIP-DEMO-DFW-001                                        ║');
-  console.log('║  7 AGIs. 2 production apps. 28-city aerotropolis.                       ║');
+  console.log('║  10 AGIs. 3 production apps. 28-city aerotropolis. 73M pax/yr.          ║');
   console.log('╚══════════════════════════════════════════════════════════════════════════╝');
   console.log('');
 }
