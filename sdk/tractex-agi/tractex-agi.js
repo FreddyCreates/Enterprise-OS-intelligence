@@ -629,11 +629,12 @@ export class TRACTEX_AGI extends RSHIPCore {
 
   _updateTransitionMatrix(fromState, toState) {
     // φ⁻¹ Bayesian update of transition probability
+    // Guard: fromState must be a known invoice state before any matrix access
+    const knownStates = new Set(Object.values(INVOICE_STATES));
+    if (!knownStates.has(fromState) || !knownStates.has(toState)) return;
+
     const transitions = this.transitionMatrix[fromState];
     if (!transitions) return;
-
-    // Guard: only operate on known, trusted invoice state keys
-    const knownStates = new Set(Object.values(INVOICE_STATES));
 
     const updated = {};
     for (const [state, prob] of Object.entries(transitions)) {
@@ -645,11 +646,16 @@ export class TRACTEX_AGI extends RSHIPCore {
       }
     }
 
-    // Normalize into a fresh object (never write to an unknown key)
+    // Normalize and replace the entire inner row atomically using a
+    // prototype-less object — eliminates all computed property write risk
     const total = Object.values(updated).reduce((s, p) => s + p, 0);
-    for (const state of Object.keys(updated)) {
-      this.transitionMatrix[fromState][state] = updated[state] / total;
+    const newRow = Object.create(null);
+    for (const state of knownStates) {
+      if (Object.prototype.hasOwnProperty.call(updated, state)) {
+        newRow[state] = updated[state] / total;
+      }
     }
+    this.transitionMatrix[fromState] = newRow;
   }
 
   _calculateAverageARAge() {

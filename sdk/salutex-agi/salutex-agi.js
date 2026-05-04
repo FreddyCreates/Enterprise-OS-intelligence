@@ -568,7 +568,7 @@ class SALUTEX extends RSHIPCore {
       openObservations: openObs.length,
       criticalObservations: criticalObs.length,
       stopWorkRequired: criticalObs.length > 0,
-      oShaComplianceRate: complianceRate !== null ? `${(complianceRate * 100).toFixed(0)}%` : 'N/A',
+      oshaComplianceRate: complianceRate !== null ? `${(complianceRate * 100).toFixed(0)}%` : 'N/A',
       registeredWorkers: this.workerCredentials.size,
       onChainWorkers: [...this.workerCredentials.values()].filter(w => w.onChainVerified).length,
     };
