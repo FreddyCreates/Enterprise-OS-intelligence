@@ -76,8 +76,7 @@ class ContactProfile {
     this.role = config.role || 'unknown'; // owner | gc | sub | designer | inspector
     this.company = config.company || '';
 
-    // Learned channel preferences (posterior = prior × likelihood)
-    this.channelPreferences = { ...CHANNEL_PROPERTIES };
+    // Learned channel response rates (updated via φ⁻¹ reinforcement)
     this.channelResponseRates = {
       iMessage: 0.34, RCS: 0.28, email: 0.18, voice: 0.55, SMS: 0.22,
     };
@@ -360,7 +359,7 @@ export class VERBEX_AGI extends RSHIPCore {
     // Truncate at last sentence boundary within limit
     const truncated = text.slice(0, limit);
     const lastPeriod = Math.max(truncated.lastIndexOf('.'), truncated.lastIndexOf('?'));
-    return lastPeriod > limit * 0.6 ? truncated.slice(0, lastPeriod + 1) : truncated + '…';
+    return lastPeriod >= limit * 0.6 ? truncated.slice(0, lastPeriod + 1) : truncated + '…';
   }
 
   _clarifyCallToAction(text, messageType) {

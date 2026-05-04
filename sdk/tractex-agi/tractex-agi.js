@@ -202,13 +202,33 @@ export class TRACTEX_AGI extends RSHIPCore {
 
   // ── Invoice Lifecycle Management ──────────────────────────────────────────
 
+  // Seed a client profile from known payment history (useful for demo/testing)
+  seedClientProfile(clientId, historyEntries = [], config = {}) {
+    const profile = new ClientPaymentProfile(clientId);
+    for (const entry of historyEntries) {
+      profile.invoiceHistory.push({
+        invoiceId: entry.invoiceId || `hist-${profile.invoiceHistory.length + 1}`,
+        amount: entry.amount || 0,
+        daysPaidLate: entry.daysPaidLate || 0,
+        state: (entry.daysPaidLate || 0) > 60 ? 'late'
+             : (entry.daysPaidLate || 0) > 30 ? 'slow' : 'on-time',
+      });
+      profile.totalBilled += entry.amount || 0;
+      profile.totalCollected += entry.amount || 0;
+    }
+    profile._recalculateHealth();
+    this.clientProfiles.set(clientId, profile);
+    return profile;
+  }
+
   trackInvoice(invoiceId, config = {}) {
     const invoice = new Invoice(invoiceId, config);
     this.invoices.set(invoiceId, invoice);
 
-    // Initialize client profile if new
-    if (!this.clientProfiles.has(config.clientId)) {
-      this.clientProfiles.set(config.clientId, new ClientPaymentProfile(config.clientId));
+    // Initialize client profile if new (guard against undefined clientId)
+    const clientId = config.clientId || 'unknown';
+    if (!this.clientProfiles.has(clientId)) {
+      this.clientProfiles.set(clientId, new ClientPaymentProfile(clientId));
     }
 
     // Predict collection probability using Markov model
@@ -272,7 +292,9 @@ export class TRACTEX_AGI extends RSHIPCore {
       const expectedDaysToCollect = this._expectedDaysToCollect(invoice);
 
       if (expectedDaysToCollect <= horizon) {
-        const dayKey = Math.min(horizon, Math.max(0, expectedDaysToCollect));
+        // Round to nearest weekly bucket key (multiples of 7)
+        const bucket7 = Math.min(horizon, Math.max(0, Math.round(expectedDaysToCollect / 7) * 7));
+        const dayKey = bucket7;
         const existing = statesByDay.get(dayKey) || { expectedCash: 0, count: 0, probSum: 0 };
         existing.expectedCash += invoice.amount * collectionProb;
         existing.count++;
@@ -610,18 +632,23 @@ export class TRACTEX_AGI extends RSHIPCore {
     const transitions = this.transitionMatrix[fromState];
     if (!transitions) return;
 
+    // Guard: only operate on known, trusted invoice state keys
+    const knownStates = new Set(Object.values(INVOICE_STATES));
+
+    const updated = {};
     for (const [state, prob] of Object.entries(transitions)) {
+      if (!knownStates.has(state)) continue; // Skip any unexpected keys
       if (state === toState) {
-        transitions[state] = Math.min(0.99, prob + PHI_INV * (1 - prob));
+        updated[state] = Math.min(0.99, prob + PHI_INV * (1 - prob));
       } else {
-        transitions[state] = Math.max(0.01, prob * (1 - PHI_INV * 0.1));
+        updated[state] = Math.max(0.01, prob * (1 - PHI_INV * 0.1));
       }
     }
 
-    // Normalize
-    const total = Object.values(transitions).reduce((s, p) => s + p, 0);
-    for (const state of Object.keys(transitions)) {
-      transitions[state] = transitions[state] / total;
+    // Normalize into a fresh object (never write to an unknown key)
+    const total = Object.values(updated).reduce((s, p) => s + p, 0);
+    for (const state of Object.keys(updated)) {
+      this.transitionMatrix[fromState][state] = updated[state] / total;
     }
   }
 

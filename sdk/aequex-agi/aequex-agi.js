@@ -41,7 +41,7 @@ import { RSHIPCore, EternalMemory, PHI, PHI_INV } from '../../rship-framework.js
 // φ-optimal operating point: speed = φ⁻¹, quality = 1 - φ⁻¹ = φ⁻²
 // This is the golden-ratio balance — fast enough without sacrificing quality.
 
-const Q_TARGET = 1 - PHI_INV;           // φ⁻² ≈ 0.382 rework rate tolerance
+const Q_TARGET = PHI_INV * PHI_INV;             // φ⁻² ≈ 0.382 rework rate tolerance
 const S_TARGET = PHI_INV;               // φ⁻¹ ≈ 0.618 schedule utilization
 const EQUILIBRIUM_POINT = PHI_INV;      // Both axes meet at φ⁻¹
 

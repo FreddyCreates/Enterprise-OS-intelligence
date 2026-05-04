@@ -69,7 +69,7 @@ class LyapunovEngine {
       for (let j = 0; j < vectors.length - 1; j++) {
         if (j === i) continue;
         const dist = this._euclidean(vectors[i], vectors[j]);
-        if (dist < epsilon && dist < nearestDist) {
+        if (dist < this.epsilon && dist < nearestDist) {
           nearestDist = dist;
           nearestJ = j;
         }
