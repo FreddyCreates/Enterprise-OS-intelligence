@@ -211,7 +211,7 @@ class COMMUNEX extends RSHIPCore {
   // ripple through indirect (supplier) and induced (household) spending by sector
   // and by city, weighted by inverse distance.
 
-  aerotropolisEconomicMap(directSpendingBySecor = {}) {
+  aerotropolisEconomicMap(directSpendingBySector = {}) {
     // Default to approximate DFW annual direct spending by sector
     const spending = {
       AIRLINE_OPS:      12500000000,  // $12.5B
@@ -221,7 +221,7 @@ class COMMUNEX extends RSHIPCore {
       CONSTRUCTION:     650000000,    // $650M capital projects
       GROUND_TRANSPORT: 480000000,    // $480M ground transport
       PROFESSIONAL_SVC: 380000000,    // $380M professional services
-      ...directSpendingBySecor,
+      ...directSpendingBySector,
     };
 
     let totalDirect = 0, totalTotal = 0, totalDirectJobs = 0, totalAllJobs = 0;
@@ -296,7 +296,7 @@ class COMMUNEX extends RSHIPCore {
         jobsSupported:  jobs,
         taxRevenue:     `$${(taxRev / 1e6).toFixed(1)}M`,
       };
-    }).sort((a, b) => b.distanceMiles - a.distanceMiles ? 0 : a.distanceMiles - b.distanceMiles);
+    }).sort((a, b) => a.distanceMiles - b.distanceMiles);
   }
 
   // ── Capability 2: ACDBE Small Business Scoring ────────────────────────────
