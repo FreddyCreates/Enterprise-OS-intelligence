@@ -221,7 +221,7 @@ class CREWEX extends RSHIPCore {
   // ── Capability 2: Biomathematical Fatigue Risk (SAFTE-FAST) ───────────────
   // Predicts cognitive effectiveness based on sleep history and circadian phase.
 
-  fatiguRiskScore(config = {}) {
+  fatigueRiskScore(config = {}) {
     const {
       employeeId      = null,
       lastSleepHours  = 7.5,    // hours of sleep before current shift

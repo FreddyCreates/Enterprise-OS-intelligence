@@ -411,7 +411,7 @@ async function runAeroTourismSimulation() {
   ];
 
   fatigueAssessments.forEach(cfg => {
-    const result = crewex.fatiguRiskScore(cfg);
+    const result = crewex.fatigueRiskScore(cfg);
     console.log(`\n  ${cfg.label}`);
     console.log(`  Last Sleep: ${result.lastSleepHours}h  |  Hours Awake: ${result.hoursAwake}h  |  Assessment: ${result.assessmentHour}`);
     console.log(`  Cognitive Effectiveness: ${result.cognitiveEffectiveness}  |  Risk: ${result.riskLevel}`);
