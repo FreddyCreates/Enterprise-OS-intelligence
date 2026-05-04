@@ -165,7 +165,11 @@ class AirportBadge {
 
 class SECUREX extends RSHIPCore {
   constructor(config = {}) {
-    super('SECUREX', 'RSHIP-2026-SECUREX-001');
+    super({
+      designation:    'RSHIP-2026-SECUREX-001',
+      classification: 'Airport Security Operations & Access Control Intelligence AGI',
+      ...config,
+    });
 
     this.airport = config.airport || 'DFW';
 

@@ -263,7 +263,7 @@ async function runHealthcareSimulation() {
   // ── Scene 7: Annual Value Model ──────────────────────────────────────────
 
   console.log('─'.repeat(76));
-  console.log('  SCENE 7: Annual Value Model — ${PRACTICE.providers}-Provider Practice');
+  console.log(`  SCENE 7: Annual Value Model — ${PRACTICE.providers}-Provider Practice`);
   console.log('─'.repeat(76));
 
   const baseNoShowRate = 0.22;
