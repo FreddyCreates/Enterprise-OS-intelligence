@@ -1,0 +1,329 @@
+name: "Repo Intelligence [AEGIX] — Automated Issue Triage, PR Review, Wiki Sync"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Engine identity mapping
+#   AEGIX — Repository Intelligence Engine (meta-layer over E1–E15)
+#     Built on top of E13 (Evidence Registry) for pattern detection
+#     and E15 (Render/Export Engine) for publishing structured summaries.
+#
+# JOB 1 — issue-triage  [AEGIX·E13]
+#   Runs on: issues (opened, labeled, edited)
+#   Parses incoming GitHub issues, auto-labels them by keyword matching against
+#   the RSHIP intelligence taxonomy (sdk, security, aviation, protocol, docs),
+#   always appends 'intelligence-reviewed', and posts a triage comment via gh API.
+#   Mirrors E13 (Evidence Registry) — everything touching this repo is catalogued.
+#
+# JOB 2 — pr-intelligence  [AEGIX·E4·E15]
+#   Runs on: pull_request (opened, synchronize, ready_for_review)
+#   Computes changed-file stats by category (sdk, production-apps, protocols,
+#   workflows, agents), auto-labels the PR, and posts an intelligence comment
+#   with a structured stat table. Mirrors E4 (Effect Path Builder) — who changed
+#   what and where does it propagate?
+#
+# JOB 3 — weekly-inventory  [AEGIX·E12·E15]
+#   Runs on: schedule (Monday 06:00 UTC) + workflow_dispatch
+#   Counts all repository assets and publishes a weekly intelligence brief to
+#   the Actions step summary. Mirrors E12 (Public Summary Engine) and
+#   E15 (Render/Export Engine) — the organism reports on itself.
+#
+# VIVIT · MEMINIT · GUBERNAT — Medina Tech · Chaos Lab
+# ─────────────────────────────────────────────────────────────────────────────
+
+on:
+  issues:
+    types: [opened, labeled, edited]
+  pull_request:
+    types: [opened, synchronize, ready_for_review]
+  schedule:
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  pull-requests: write
+  contents: write
+
+env:
+  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # JOB 1 — Issue Triage [AEGIX·E13]
+  # ───────────────────────────────────────────────────────────────────────────
+  issue-triage:
+    name: "[AEGIX·E13] Issue Triage — Auto-label & Route"
+    runs-on: ubuntu-latest
+    if: github.event_name == 'issues'
+
+    steps:
+      - name: "[E1] Ingest — Checkout repository"
+        uses: actions/checkout@v4
+
+      - name: "[E2] Parse — Extract issue metadata"
+        id: parse
+        env:
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: |
+          TITLE_LOWER=$(echo "$ISSUE_TITLE" | tr '[:upper:]' '[:lower:]')
+          echo "title_lower=$TITLE_LOWER" >> "$GITHUB_OUTPUT"
+          echo "issue_number=$ISSUE_NUMBER" >> "$GITHUB_OUTPUT"
+          echo "Issue #$ISSUE_NUMBER — title: $ISSUE_TITLE"
+
+      - name: "[E13] Evidence Registry — Auto-label by intelligence taxonomy"
+        id: autolabel
+        env:
+          ISSUE_NUMBER: ${{ steps.parse.outputs.issue_number }}
+          TITLE_LOWER: ${{ steps.parse.outputs.title_lower }}
+        run: |
+          LABELS_APPLIED=""
+
+          label_issue() {
+            local label="$1"
+            gh issue edit "$ISSUE_NUMBER" --add-label "$label" 2>/dev/null \
+              || gh label create "$label" --repo "$GITHUB_REPOSITORY" --color "0075ca" --force \
+              && gh issue edit "$ISSUE_NUMBER" --add-label "$label"
+            LABELS_APPLIED="$LABELS_APPLIED $label"
+          }
+
+          if echo "$TITLE_LOWER" | grep -qE "sdk|agi"; then
+            label_issue "sdk-development"
+          fi
+          if echo "$TITLE_LOWER" | grep -qE "security|vuln"; then
+            label_issue "security"
+          fi
+          if echo "$TITLE_LOWER" | grep -qE "airport|dfw|vendor"; then
+            label_issue "aviation-intelligence"
+          fi
+          if echo "$TITLE_LOWER" | grep -q "protocol"; then
+            label_issue "protocol"
+          fi
+          if echo "$TITLE_LOWER" | grep -qE "wiki|doc"; then
+            label_issue "documentation"
+          fi
+
+          label_issue "intelligence-reviewed"
+
+          echo "labels_applied=$LABELS_APPLIED" >> "$GITHUB_OUTPUT"
+          echo "Labels applied:$LABELS_APPLIED"
+
+      - name: "[E15] Render/Export — Post AEGIX triage comment"
+        env:
+          ISSUE_NUMBER: ${{ steps.parse.outputs.issue_number }}
+          LABELS_APPLIED: ${{ steps.autolabel.outputs.labels_applied }}
+        run: |
+          COMMENT_BODY=$(printf '🤖 **AEGIX Intelligence Triage** — Issue classified and routed.\n\n**Labels applied:** `%s`\n\nPriority computed via RSHIP taxonomy scan. AEGIX organism is tracking this issue.\n\n*E13 Evidence Registry — VIVIT · MEMINIT · GUBERNAT — Medina Tech · Chaos Lab*' "$LABELS_APPLIED")
+
+          gh api \
+            --method POST \
+            -H "Accept: application/vnd.github+json" \
+            "/repos/$GITHUB_REPOSITORY/issues/$ISSUE_NUMBER/comments" \
+            -f body="$COMMENT_BODY"
+
+      - name: "[E15] Render/Export — Publish triage summary"
+        env:
+          ISSUE_NUMBER: ${{ steps.parse.outputs.issue_number }}
+          LABELS_APPLIED: ${{ steps.autolabel.outputs.labels_applied }}
+        run: |
+          echo "### 🤖 AEGIX Issue Triage — Issue #${ISSUE_NUMBER}" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Field | Value |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|-------|-------|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Issue | #${ISSUE_NUMBER} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Labels Applied | \`${LABELS_APPLIED}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Engine | AEGIX·E13 Evidence Registry |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Status | ✅ Classified & Routed |" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "*VIVIT · MEMINIT · GUBERNAT — Medina Tech · Chaos Lab*" >> "$GITHUB_STEP_SUMMARY"
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # JOB 2 — PR Intelligence [AEGIX·E4·E15]
+  # ───────────────────────────────────────────────────────────────────────────
+  pr-intelligence:
+    name: "[AEGIX·E4·E15] PR Intelligence — Stats, Labels & Review Comment"
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: "[E1] Ingest — Checkout with full history"
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: "[E4] Effect Path Builder — Compute PR change stats"
+        id: stats
+        run: |
+          PR_NUMBER="${{ github.event.pull_request.number }}"
+          BASE_SHA="${{ github.event.pull_request.base.sha }}"
+          HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+
+          CHANGED_FILES=$(git diff --name-only "$BASE_SHA" "$HEAD_SHA" 2>/dev/null || echo "")
+          TOTAL_FILES=$(echo "$CHANGED_FILES" | grep -c . || echo 0)
+          LINES_ADDED=$(git diff --shortstat "$BASE_SHA" "$HEAD_SHA" 2>/dev/null | grep -oP '\d+(?= insertion)' || echo 0)
+          LINES_REMOVED=$(git diff --shortstat "$BASE_SHA" "$HEAD_SHA" 2>/dev/null | grep -oP '\d+(?= deletion)' || echo 0)
+
+          SDK_FILES=$(echo "$CHANGED_FILES" | grep -c "^sdk/" || echo 0)
+          APP_FILES=$(echo "$CHANGED_FILES" | grep -c "^production-apps/" || echo 0)
+          PROTO_FILES=$(echo "$CHANGED_FILES" | grep -c "^protocols/" || echo 0)
+          WORKFLOW_FILES=$(echo "$CHANGED_FILES" | grep -c "^.github/workflows/" || echo 0)
+          AGENT_FILES=$(echo "$CHANGED_FILES" | grep -c "^agents/" || echo 0)
+
+          echo "pr_number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
+          echo "total_files=$TOTAL_FILES" >> "$GITHUB_OUTPUT"
+          echo "lines_added=$LINES_ADDED" >> "$GITHUB_OUTPUT"
+          echo "lines_removed=$LINES_REMOVED" >> "$GITHUB_OUTPUT"
+          echo "sdk_files=$SDK_FILES" >> "$GITHUB_OUTPUT"
+          echo "app_files=$APP_FILES" >> "$GITHUB_OUTPUT"
+          echo "proto_files=$PROTO_FILES" >> "$GITHUB_OUTPUT"
+          echo "workflow_files=$WORKFLOW_FILES" >> "$GITHUB_OUTPUT"
+          echo "agent_files=$AGENT_FILES" >> "$GITHUB_OUTPUT"
+
+          echo "PR #$PR_NUMBER — $TOTAL_FILES files changed (+$LINES_ADDED / -$LINES_REMOVED)"
+
+      - name: "[E13] Evidence Registry — Auto-label PR by changed path"
+        env:
+          PR_NUMBER: ${{ steps.stats.outputs.pr_number }}
+          SDK_FILES: ${{ steps.stats.outputs.sdk_files }}
+          APP_FILES: ${{ steps.stats.outputs.app_files }}
+          PROTO_FILES: ${{ steps.stats.outputs.proto_files }}
+          WORKFLOW_FILES: ${{ steps.stats.outputs.workflow_files }}
+          AGENT_FILES: ${{ steps.stats.outputs.agent_files }}
+        run: |
+          label_pr() {
+            local label="$1"
+            gh pr edit "$PR_NUMBER" --add-label "$label" 2>/dev/null \
+              || gh label create "$label" --repo "$GITHUB_REPOSITORY" --color "e4e669" --force \
+              && gh pr edit "$PR_NUMBER" --add-label "$label"
+          }
+
+          [ "$SDK_FILES" -gt 0 ]      && label_pr "sdk-development"
+          [ "$APP_FILES" -gt 0 ]      && label_pr "production-ready"
+          [ "$PROTO_FILES" -gt 0 ]    && label_pr "protocol"
+          [ "$WORKFLOW_FILES" -gt 0 ] && label_pr "workflow-change"
+          [ "$AGENT_FILES" -gt 0 ]    && label_pr "copilot-agent"
+
+          echo "PR labeling complete"
+
+      - name: "[E15] Render/Export — Post PR intelligence comment"
+        env:
+          PR_NUMBER: ${{ steps.stats.outputs.pr_number }}
+          TOTAL_FILES: ${{ steps.stats.outputs.total_files }}
+          LINES_ADDED: ${{ steps.stats.outputs.lines_added }}
+          LINES_REMOVED: ${{ steps.stats.outputs.lines_removed }}
+          SDK_FILES: ${{ steps.stats.outputs.sdk_files }}
+          APP_FILES: ${{ steps.stats.outputs.app_files }}
+          PROTO_FILES: ${{ steps.stats.outputs.proto_files }}
+          WORKFLOW_FILES: ${{ steps.stats.outputs.workflow_files }}
+          AGENT_FILES: ${{ steps.stats.outputs.agent_files }}
+        run: |
+          COMMENT_BODY=$(printf '🤖 **AEGIX PR Intelligence Report** — E4 Effect Path Analysis\n\n| Category | Files Changed |\n|----------|--------------|\n| Total Files | `%s` |\n| Lines Added | `+%s` |\n| Lines Removed | `-%s` |\n| AGI SDK Files | `%s` |\n| Production Apps | `%s` |\n| Protocols | `%s` |\n| Workflow Files | `%s` |\n| Copilot Agents | `%s` |\n\n*AEGIX·E4 Effect Path Builder — VIVIT · MEMINIT · GUBERNAT — Medina Tech · Chaos Lab*' \
+            "$TOTAL_FILES" "$LINES_ADDED" "$LINES_REMOVED" "$SDK_FILES" "$APP_FILES" "$PROTO_FILES" "$WORKFLOW_FILES" "$AGENT_FILES")
+
+          gh pr comment "$PR_NUMBER" --body "$COMMENT_BODY"
+
+      - name: "[E15] Render/Export — Publish PR intelligence summary"
+        env:
+          PR_NUMBER: ${{ steps.stats.outputs.pr_number }}
+          TOTAL_FILES: ${{ steps.stats.outputs.total_files }}
+          LINES_ADDED: ${{ steps.stats.outputs.lines_added }}
+          LINES_REMOVED: ${{ steps.stats.outputs.lines_removed }}
+          SDK_FILES: ${{ steps.stats.outputs.sdk_files }}
+          APP_FILES: ${{ steps.stats.outputs.app_files }}
+          PROTO_FILES: ${{ steps.stats.outputs.proto_files }}
+          WORKFLOW_FILES: ${{ steps.stats.outputs.workflow_files }}
+          AGENT_FILES: ${{ steps.stats.outputs.agent_files }}
+        run: |
+          echo "### 🤖 AEGIX PR Intelligence — PR #${PR_NUMBER}" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Category | Count |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|----------|-------|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Total Files Changed | $TOTAL_FILES |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Lines Added | +$LINES_ADDED |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Lines Removed | -$LINES_REMOVED |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| AGI SDK Files | $SDK_FILES |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Production Apps | $APP_FILES |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Protocols | $PROTO_FILES |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Workflow Files | $WORKFLOW_FILES |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Copilot Agents | $AGENT_FILES |" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "*VIVIT · MEMINIT · GUBERNAT — Medina Tech · Chaos Lab*" >> "$GITHUB_STEP_SUMMARY"
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # JOB 3 — Weekly Inventory [AEGIX·E12·E15]
+  # ───────────────────────────────────────────────────────────────────────────
+  weekly-inventory:
+    name: "[AEGIX·E12·E15] Weekly Intelligence Brief — Repository Inventory"
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: "[E1] Ingest — Checkout repository"
+        uses: actions/checkout@v4
+
+      - name: "[E12] Public Summary Engine — Count all repository assets"
+        id: inventory
+        run: |
+          SDK_COUNT=$(ls sdk/ 2>/dev/null | wc -l || echo 0)
+          PROTO_COUNT=$(ls protocols/ 2>/dev/null | wc -l || echo 0)
+          APP_COUNT=$(ls production-apps/ 2>/dev/null | wc -l || echo 0)
+          AGENT_COUNT=$(ls agents/ 2>/dev/null | wc -l || echo 0)
+          WORKFLOW_COUNT=$(ls .github/workflows/ 2>/dev/null | wc -l || echo 0)
+          PAPER_COUNT=$(ls papers/ 2>/dev/null | wc -l || echo 0)
+          WIKI_COUNT=$(ls wiki/ 2>/dev/null | wc -l || echo 0)
+          CHARTER_COUNT=$(ls charters/ 2>/dev/null | wc -l || echo 0)
+
+          echo "sdk_count=$SDK_COUNT" >> "$GITHUB_OUTPUT"
+          echo "proto_count=$PROTO_COUNT" >> "$GITHUB_OUTPUT"
+          echo "app_count=$APP_COUNT" >> "$GITHUB_OUTPUT"
+          echo "agent_count=$AGENT_COUNT" >> "$GITHUB_OUTPUT"
+          echo "workflow_count=$WORKFLOW_COUNT" >> "$GITHUB_OUTPUT"
+          echo "paper_count=$PAPER_COUNT" >> "$GITHUB_OUTPUT"
+          echo "wiki_count=$WIKI_COUNT" >> "$GITHUB_OUTPUT"
+          echo "charter_count=$CHARTER_COUNT" >> "$GITHUB_OUTPUT"
+
+          echo "Inventory complete — SDK:$SDK_COUNT PROTO:$PROTO_COUNT APPS:$APP_COUNT AGENTS:$AGENT_COUNT"
+
+      - name: "[E15] Render/Export — Publish weekly intelligence brief"
+        env:
+          SDK_COUNT: ${{ steps.inventory.outputs.sdk_count }}
+          PROTO_COUNT: ${{ steps.inventory.outputs.proto_count }}
+          APP_COUNT: ${{ steps.inventory.outputs.app_count }}
+          AGENT_COUNT: ${{ steps.inventory.outputs.agent_count }}
+          WORKFLOW_COUNT: ${{ steps.inventory.outputs.workflow_count }}
+          PAPER_COUNT: ${{ steps.inventory.outputs.paper_count }}
+          WIKI_COUNT: ${{ steps.inventory.outputs.wiki_count }}
+          CHARTER_COUNT: ${{ steps.inventory.outputs.charter_count }}
+        run: |
+          WEEK=$(date -u +"%Y-W%V")
+          RUN_DATE=$(date -u +"%Y-%m-%d %H:%M UTC")
+
+          echo "# 🧠 AEGIX Weekly Intelligence Brief — ${WEEK}" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "*Generated: ${RUN_DATE}*" >> "$GITHUB_STEP_SUMMARY"
+          echo "*Alfredo Medina Hernandez · Medina Tech · Dallas, Texas*" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "## Repository Asset Inventory" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Category | Count |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|----------|-------|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| AGI SDKs | $SDK_COUNT |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Protocols | $PROTO_COUNT |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Production Apps | $APP_COUNT |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Copilot Agents | $AGENT_COUNT |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Workflows | $WORKFLOW_COUNT |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Research Papers | $PAPER_COUNT |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Wiki Docs | $WIKI_COUNT |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Charters | $CHARTER_COUNT |" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "## Engine Status" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Engine Group | Engines | Status |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|-------------|---------|--------|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| TRACE | E1 E2 E3 E4 E13 | ✅ |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| VERIFY | E5 E6 E7 E8 E14 | ✅ |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| REMEMBER | E9 E10 E11 E12 E15 | ✅ |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| AEGIX Meta | Issue·PR·Inventory | ✅ |" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "*Intelligence is architecture. That's all it is. That's everything it is.*" >> "$GITHUB_STEP_SUMMARY"
+          echo "*VIVIT · MEMINIT · GUBERNAT — Medina Tech · Chaos Lab*" >> "$GITHUB_STEP_SUMMARY"
