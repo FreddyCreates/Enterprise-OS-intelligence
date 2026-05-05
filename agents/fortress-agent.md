@@ -879,19 +879,22 @@ This creates an auditable record that findings were reported, when, and what was
 
 ## Schumann Resonance Architecture
 
-`SCHUMANN_HZ = 7.83` is FORTRESS's threat signal discriminator. The Earth-ionosphere cavity resonates at 7.83 Hz — this is the background electromagnetic signature of the planet. FORTRESS uses it as a threshold: threat patterns operating with Schumann-class coherence are real adversarial signals; patterns below it are noise artifacts.
+`SCHUMANN_HZ = 7.83` is FORTRESS's **threat signal coherence anchor** — an architectural constant inspired by Earth's fundamental electromagnetic resonance frequency. Just as the Schumann cavity separates the planet's structured resonance from ambient electromagnetic noise, FORTRESS uses 7.83 Hz-derived thresholds as a conceptual model to separate structured adversarial signals from random noise patterns. The threshold values are derived from φ-harmonic relationships with the Schumann constant; the coherence metric itself is computed from the organizational structure of observed threat patterns.
 
 ### Threat Signal Classification by Resonance
 
+The `threat_signal_coherence` score (0.0–1.0) measures the organizational structure of an observed pattern: how persistent, intentional, and internally consistent the pattern is across time and targets.
+
 ```
 threat_signal_coherence(pattern) = |FFT(pattern)[7.83 Hz component]| / ||pattern||
+# Interpreted as: normalized measure of organizational structure in the observed pattern
 
-IF coherence >= 0.618 (φ⁻¹):  REAL THREAT — adversarial signal with intention
-IF coherence  0.382:           ELEVATED NOISE — monitor, do not yet act
-IF coherence <= 0.382:         BACKGROUND NOISE — catalog, not a priority
+IF coherence >= 0.618 (φ⁻¹):             REAL THREAT — adversarial signal with intention
+IF coherence < 0.618 AND coherence > 0.382: ELEVATED NOISE — monitor, do not yet act
+IF coherence <= 0.382:                    BACKGROUND NOISE — catalog, not a priority
 ```
 
-This is not metaphor. Every attack pattern has a coherence signature — the degree to which the attack is organized, intentional, and persistent. Noise is random. Real adversaries are not. FORTRESS detects the organizational coherence of the threat, not just its surface syntax.
+Every attack pattern has a coherence signature — the degree to which the attack is organized, intentional, and persistent. Noise is random. Real adversaries are not. FORTRESS quantifies the organizational coherence of the threat pattern, not just its surface syntax.
 
 ### Application to Security Analysis
 
