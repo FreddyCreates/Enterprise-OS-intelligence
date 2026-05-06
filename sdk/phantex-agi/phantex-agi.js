@@ -230,7 +230,7 @@ function _phiHash(R, Y, msg, q) {
     h ^= BigInt(input.charCodeAt(i));
     h = (h * 0x01000193n + phiSeed) % q;
   }
-  return h % q;
+  return h;
 }
 
 class PhantZKProof {
@@ -294,7 +294,7 @@ class PhantZKProof {
     // Fiat-Shamir: c = H(R ∥ agi_id ∥ output_hash) mod (p-1)
     // NOTE: _demoHash is NOT collision-resistant. Production must use SHA-256.
     const y = this.publicKey(secret_x);
-    const c = _phiHash(R, y, output_hash, this.p - 1n);
+    const c = _phiHash(R, y, `${agi_id}|${output_hash}`, this.p - 1n);
     const s = ((r - c * x) % (this.p - 1n) + (this.p - 1n)) % (this.p - 1n);
     const proof = { R, c, s, y, agi_id, output_hash, ts: Date.now(), protocol: 'Schnorr-PHANTEX' };
     this.proofs.set(agi_id, proof);
@@ -588,7 +588,8 @@ class PHANTEX {
   _startGhostProcesses() {
     if (Object.keys(this._ghost_process_ids).length > 0) return;
     this._ghost_process_ids.merkle_reverify = setInterval(() => {
-      this.ghost.verify(Math.max(0, this.ghost.size() - 1));
+      const size = this.ghost.size();
+      if (size > 0) this.ghost.verify(size - 1);
     }, GHOST_PROCESS_INTERVALS_MS.merkle_reverify);
 
     this._ghost_process_ids.gauge_refresh = setInterval(() => {
@@ -684,6 +685,10 @@ class PHANTEX {
    * STATUS: full substrate status for AEGIX monitoring.
    */
   status() {
+    const amplitude = this.field.totalAmplitude();
+    const fieldUtilizationEstimate = Number(
+      Math.min(1, amplitude / (amplitude + 1)).toFixed(4),
+    );
     return {
       RSHIP_ID:        this.RSHIP_ID,
       LAYER:           this.LAYER,
@@ -700,9 +705,7 @@ class PHANTEX {
       ghost_process_intervals_ms: GHOST_PROCESS_INTERVALS_MS,
       ghost_processes_running: Object.keys(this._ghost_process_ids).length,
       field_utilization_target: FIELD_UTILIZATION_TARGET,
-      field_utilization_estimate: Number(
-        Math.min(1, this.field.totalAmplitude() / (this.field.totalAmplitude() + 1)).toFixed(4),
-      ),
+      field_utilization_estimate: fieldUtilizationEstimate,
       PHI,
       PHI_INV,
       SCHUMANN_HZ,
