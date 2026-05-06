@@ -223,12 +223,17 @@ function _demoHash(input, mod) {
  * For production, replace with SHA-256/SHA-3 and reduce modulo q.
  */
 function _phiHash(R, Y, msg, q) {
-  const phiSeed = BigInt(Math.floor(PHI * 1_000_000));
-  const input = `${R}|${Y}|${msg}|phi:${PHI}`;
+  const phiSeed = 1618033n; // φ-seed constant (scaled)
+  const segments = [String(R), String(Y), String(msg), `phi:${PHI}`];
   let h = (0x811c9dc5n ^ phiSeed) % q;
-  for (let i = 0; i < input.length; i++) {
-    h ^= BigInt(input.charCodeAt(i));
-    h = (h * 0x01000193n + phiSeed) % q;
+  // Length-prefixed domain separation to avoid ambiguity collisions:
+  // <len>:<segment><len>:<segment>...
+  for (const seg of segments) {
+    const framed = `${seg.length}:${seg}`;
+    for (let i = 0; i < framed.length; i++) {
+      h ^= BigInt(framed.charCodeAt(i));
+      h = (h * 0x01000193n + phiSeed) % q;
+    }
   }
   return h;
 }
@@ -545,6 +550,7 @@ class PHANTEX {
     this._heartbeat_id = null;
     this._ghost_process_ids = {};
     this._cycle = 0;
+    this._ghost_verify_cursor = 0;
 
     // Constants exposed to all other AGIs
     this.SCHUMANN_HZ      = SCHUMANN_HZ;
@@ -589,7 +595,11 @@ class PHANTEX {
     if (Object.keys(this._ghost_process_ids).length > 0) return;
     this._ghost_process_ids.merkle_reverify = setInterval(() => {
       const size = this.ghost.size();
-      if (size > 0) this.ghost.verify(size - 1);
+      if (size > 0) {
+        const idx = this._ghost_verify_cursor % size;
+        this.ghost.verify(idx);
+        this._ghost_verify_cursor++;
+      }
     }, GHOST_PROCESS_INTERVALS_MS.merkle_reverify);
 
     this._ghost_process_ids.gauge_refresh = setInterval(() => {
