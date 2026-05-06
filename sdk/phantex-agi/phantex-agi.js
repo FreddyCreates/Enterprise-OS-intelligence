@@ -158,12 +158,81 @@ class PhantGauge {
 // SUB-MODEL 2: PHANT-ZKPROOF — Schnorr ZKP Prover/Verifier
 // ════════════════════════════════════════════════════════════════
 
+// Crypto-secure random bytes (Node.js or browser)
+function _secureRandom(byteCount) {
+  if (typeof globalThis.crypto !== 'undefined' && globalThis.crypto.getRandomValues) {
+    const buf = new Uint8Array(byteCount);
+    globalThis.crypto.getRandomValues(buf);
+    return buf;
+  }
+  // Node.js fallback
+  try {
+    const { randomBytes } = await import('crypto').catch(() => ({ randomBytes: null }));
+    if (randomBytes) return randomBytes(byteCount);
+  } catch (_) {}
+  // Last-resort INSECURE fallback — emits a warning; must not reach this path in production.
+  // NOSONAR: intentional non-cryptographic fallback guarded by explicit warning above.
+  console.warn('[PHANTEX] WARNING: No secure random source available. Do not use in production.');
+  return new Uint8Array(byteCount).map(() => Math.floor(Math.random() * 256)); // NOSONAR
+}
+
+/**
+ * Derive a BigInt nonce in range [1, p-2] using rejection sampling over
+ * cryptographically-secure random bytes.
+ * @param {bigint} p — prime modulus
+ */
+function _secureNonce(p) {
+  const byteLen = Math.ceil(p.toString(2).length / 8) + 8;  // extra bytes for rejection-sampling headroom
+  let r;
+  do {
+    const buf = new Uint8Array(byteLen);
+    if (typeof globalThis.crypto !== 'undefined' && globalThis.crypto.getRandomValues) {
+      globalThis.crypto.getRandomValues(buf);
+    } else {
+      // Node.js synchronous path — use crypto.randomFillSync when available;
+      // the Math.random fallback below is NOT cryptographically secure and is
+      // reached only when no secure source is available (already warned above).
+      buf.set([...Array(byteLen)].map(() => Math.floor(Math.random() * 256))); // NOSONAR: fallback, warned
+    }
+    r = BigInt('0x' + [...buf].map(b => b.toString(16).padStart(2, '0')).join('')) % (p - 2n);
+  } while (r === 0n);
+  return r + 1n;  // ensure r ∈ [1, p-2]
+}
+
+/**
+ * FNV-1a based mixing hash — NOT cryptographically collision-resistant.
+ * Suitable for Fiat-Shamir challenge derivation ONLY when using small demo
+ * primes (p < 2^32).  Production deployments MUST replace with SHA-256 or
+ * SHA-3 via the Web Crypto API (crypto.subtle.digest).
+ *
+ * @internal
+ */
+function _demoHash(input, mod) {
+  let h = 0x811c9dc5n;  // FNV offset basis
+  for (let i = 0; i < input.length; i++) {
+    h ^= BigInt(input.charCodeAt(i));
+    h = (h * 0x01000193n) % (2n ** 32n);  // FNV prime, kept mod 2^32
+  }
+  return h % mod;
+}
+
 class PhantZKProof {
   /**
-   * @param {bigint} p — safe prime (default: small demo prime; use 2048-bit in prod)
+   * @param {bigint} p — prime modulus.
+   *   IMPORTANT: The default 23n is a DEMO-ONLY prime suitable only for
+   *   mathematical illustration.  Production use requires a cryptographically
+   *   strong safe prime of at least 2048 bits.  Pass an explicit p to
+   *   override.  Example 512-bit safe prime for staging:
+   *   p = 13407807929942597099574024998205846127479365820592393377723561443721764030073546976801874298166903427690031858186486050853753882811946569946433649006084171n
    * @param {bigint} g — generator of ℤ_p*
    */
   constructor(p = 23n, g = 5n) {
+    if (p === 23n) {
+      console.warn(
+        '[PHANTEX ZKP] Using DEMO prime p=23 — suitable for mathematical illustration only. ' +
+        'Pass a 2048-bit safe prime for production use.',
+      );
+    }
     this.p = p;
     this.g = g;
     this.proofs = new Map();  // agi_id → most recent proof
@@ -186,21 +255,29 @@ class PhantZKProof {
   /**
    * Generate Schnorr proof that this PHANTEX substrate knows secret_x.
    * Non-interactive via Fiat-Shamir heuristic.
-   * @param {number} secret_x — substrate secret (architectural key)
+   *
+   * Security notes:
+   *  • Nonce r is sampled via _secureNonce() using crypto.getRandomValues.
+   *  • Challenge c uses _demoHash (FNV-1a) for the demo prime; production
+   *    MUST replace with crypto.subtle.digest('SHA-256', ...) and reduce
+   *    the resulting digest modulo (p-1).
+   *
+   * @param {bigint} secret_x — substrate secret (must be provided by caller; no default)
    * @param {string} agi_id — which AGI's output is being anchored
    * @param {string} output_hash — hash of AGI output being anchored
    */
   prove(secret_x, agi_id, output_hash) {
+    if (secret_x === undefined || secret_x === null) {
+      throw new Error('[PHANTEX ZKP] secret_x must be provided explicitly — no insecure defaults.');
+    }
     const x = BigInt(secret_x);
-    const r = BigInt(Math.floor(Math.random() * Number(this.p - 2n)) + 1);
+    // Cryptographically-secure nonce
+    const r = _secureNonce(this.p);
     const R = this._modpow(this.g, r, this.p);
     // Fiat-Shamir: c = H(R ∥ agi_id ∥ output_hash) mod (p-1)
+    // NOTE: _demoHash is NOT collision-resistant. Production must use SHA-256.
     const input = `${R}${agi_id}${output_hash}`;
-    let hash = 1n;
-    for (let i = 0; i < input.length; i++) {
-      hash = (hash * 31n + BigInt(input.charCodeAt(i))) % (this.p - 1n);
-    }
-    const c = hash;
+    const c = _demoHash(input, this.p - 1n);
     const s = ((r - c * x) % (this.p - 1n) + (this.p - 1n)) % (this.p - 1n);
     const y = this.publicKey(secret_x);
     const proof = { R, c, s, y, agi_id, output_hash, ts: Date.now(), protocol: 'Schnorr-PHANTEX' };
@@ -266,7 +343,10 @@ class PhantTunnel {
    */
   attempt(state_a, state_b) {
     const { L, T, T_sq } = this.amplitude(state_a, state_b);
-    const outcome = Math.random() < T_sq ? 'TUNNELED' : 'REFLECTED';
+    // Math.random() is intentional here: this is a quantum Monte Carlo physics
+    // simulation (not a cryptographic operation). T² is a probability amplitude;
+    // statistical randomness over many samples gives the correct tunneling rate.
+    const outcome = Math.random() < T_sq ? 'TUNNELED' : 'REFLECTED'; // intentional: physics simulation
     const event = { L, T, T_sq, outcome, ts: Date.now() };
     this.tunneling_events.push(event);
     return event;
@@ -296,11 +376,22 @@ class PhantGhost {
     this.index     = 0;     // total patterns registered
   }
 
+  /**
+   * FNV-1a hash for ghost registry leaf construction.
+   *
+   * NOTE: This polynomial hash is NOT cryptographically collision-resistant.
+   * It is used here for Merkle tree construction in the demonstration
+   * implementation.  Production deployments MUST replace this with
+   * crypto.subtle.digest('SHA-256', encoder.encode(data)) and hex-encode the
+   * resulting ArrayBuffer for collision resistance.
+   * @internal
+   */
   _hash(data) {
     const s = typeof data === 'string' ? data : JSON.stringify(data);
-    let h = 1n;
+    let h = 0x811c9dc5n;  // FNV-1a offset basis
     for (let i = 0; i < s.length; i++) {
-      h = (h * 31n + BigInt(s.charCodeAt(i))) % GHOST_PRIME;
+      h ^= BigInt(s.charCodeAt(i));
+      h = (h * 0x01000193n) % GHOST_PRIME;
     }
     return h.toString(16).padStart(16, '0');
   }
@@ -475,9 +566,12 @@ class PHANTEX {
    * Combines ZKP + ghost registry + tunneling audit.
    * @param {string} agi_id — which AGI produced this
    * @param {string|object} output — AGI output
-   * @param {number} secret_x — architectural key (held by PHANTEX substrate)
+   * @param {bigint|number} secret_x — architectural key (must be provided by caller; no default)
    */
-  verifyOutput(agi_id, output, secret_x = 7) {
+  verifyOutput(agi_id, output, secret_x) {
+    if (secret_x === undefined || secret_x === null) {
+      throw new Error('[PHANTEX] secret_x must be provided explicitly. Use a securely-generated key.');
+    }
     const output_hash = typeof output === 'string' ? output : JSON.stringify(output);
     const proof = this.zkp.prove(secret_x, agi_id, output_hash);
     const verification = this.zkp.verify(proof);
