@@ -225,7 +225,7 @@ function _demoHash(input, mod) {
  */
 function _phiHash(R, Y, msg, q) {
   const phiSeed = 1618033n; // φ-seed constant (scaled)
-  const segments = [String(R), String(Y), String(msg), `phi:${PHI}`];
+  const segments = [String(R), String(Y), String(msg), `phi-seed:${phiSeed}`];
   let h = (0x811c9dc5n ^ phiSeed) % q;
   // Length-prefixed domain separation to avoid ambiguity collisions:
   // <len>:<segment><len>:<segment>...
@@ -299,7 +299,7 @@ class PhantZKProof {
     const R = this._modpow(this.g, r, this.p);
     // Fiat-Shamir: c = H(R ∥ agi_id ∥ output_hash) mod (p-1)
     // NOTE: _demoHash is NOT collision-resistant. Production must use SHA-256.
-    const y = this.publicKey(secret_x);
+    const y = this.publicKey(x);
     const c = _phiHash(R, y, `${agi_id}|${output_hash}`, this.p - 1n);
     const s = ((r - c * x) % (this.p - 1n) + (this.p - 1n)) % (this.p - 1n);
     const proof = { R, c, s, y, agi_id, output_hash, ts: Date.now(), protocol: 'Schnorr-PHANTEX' };
@@ -597,9 +597,8 @@ class PHANTEX {
     this._ghost_process_ids.merkle_reverify = setInterval(() => {
       const size = this.ghost.size();
       if (size > 0) {
-        const idx = this._ghost_verify_cursor % size;
+        const idx = this._ghost_verify_cursor++ % size;
         this.ghost.verify(idx);
-        this._ghost_verify_cursor++;
       }
     }, GHOST_PROCESS_INTERVALS_MS.merkle_reverify);
 
@@ -668,7 +667,7 @@ class PHANTEX {
   /**
    * Four primary attempts. If all fail, activate phantom tunnel path.
    */
-  tunnel_attempt_4x(state_a, state_b, attempts = 4) {
+  tunnel_multi_attempt_with_fallback(state_a, state_b, attempts = 4) {
     const attemptsLog = [];
     for (let i = 0; i < attempts; i++) {
       const res = this.tunnel.attempt(state_a, state_b);
@@ -681,8 +680,11 @@ class PHANTEX {
 
     // phantom fallback path: deterministic substrate tunnel activation
     const amp = this.tunnel.amplitude(state_a, state_b);
-    // inject(mode=1, amplitude=max(T,φ⁻¹), imagPhase=0)
-    this.field.inject(1, Math.max(amp.T, PHI_INV), 0);
+    this.field.inject(
+      1, // mode index: primary tunnel excitation mode
+      Math.max(amp.T, PHI_INV), // real amplitude floor at φ⁻¹
+      0, // imaginary phase component
+    );
     const fallback = {
       outcome: 'PHANTOM_TUNNEL_ACTIVATED',
       ...amp,
@@ -693,6 +695,11 @@ class PHANTEX {
     return fallback;
   }
 
+  // Backward-compatible alias
+  tunnel_attempt_4x(state_a, state_b, attempts = 4) {
+    return this.tunnel_multi_attempt_with_fallback(state_a, state_b, attempts);
+  }
+
   /**
    * STATUS: full substrate status for AEGIX monitoring.
    */
@@ -700,7 +707,7 @@ class PHANTEX {
     const amplitude = this.field.totalAmplitude();
     const fieldUtilizationEstimate = Math.min(
       1,
-      Math.round((amplitude / (amplitude + 1)) * 10_000) / 10_000,
+      Math.round((amplitude / FIELD_UTILIZATION_TARGET) * 10_000) / 10_000,
     );
     return {
       RSHIP_ID:        this.RSHIP_ID,
