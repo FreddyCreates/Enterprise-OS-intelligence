@@ -111,7 +111,7 @@ class AurorexRecall {
     const cumdev = dev.reduce((acc, d) => { acc.push((acc[acc.length - 1] || 0) + d); return acc; }, []);
     const R = Math.max(...cumdev) - Math.min(...cumdev);
     const S = Math.sqrt(dev.reduce((s, d) => s + d * d, 0) / series.length);
-    return S === 0 ? 0.5 : parseFloat(Math.log(R / S) / Math.log(series.length)).toFixed(4);
+    return S === 0 ? 0.5 : parseFloat((Math.log(R / S) / Math.log(series.length)).toFixed(4));
   }
 }
 
