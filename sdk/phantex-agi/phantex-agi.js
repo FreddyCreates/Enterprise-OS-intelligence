@@ -83,6 +83,25 @@ const ELECTRODE_FREQS = {
 };
 const TUNNELING_DECAY = PHI_INV;    // κ = φ⁻¹ ≈ 0.618
 const GHOST_PRIME = 2305843009213693951n;  // Mersenne prime M61
+const PHI_LADDER = {
+  ALPHA: PHI,       // φ¹ coordination
+  BETA: PHI ** 2,   // φ² intelligence
+  GAMMA: PHI ** 3,  // φ³ security
+  DELTA: PHI ** 4,  // φ⁴ infrastructure
+};
+const ELECTRODE_ROLES = {
+  ELECTRODE_AGI:      { rail: 'BETA', hz: PHI_LADDER.BETA, role: 'all RSHIP AGIs' },
+  ELECTRODE_PROTOCOL: { rail: 'DELTA', hz: PHI_LADDER.DELTA, role: 'ADP/SCP heartbeat infra' },
+  ELECTRODE_BRIDGE:   { rail: 'ALPHA', hz: PHI_LADDER.ALPHA, role: 'external bridge coordination' },
+  ELECTRODE_GHOST:    { rail: 'GAMMA', hz: PHI_LADDER.GAMMA, role: 'phantom background security' },
+};
+const GHOST_PROCESS_INTERVALS_MS = {
+  merkle_reverify: 10_000,  // 10s
+  gauge_refresh:   7_000,   // 7s
+  bridge_health:   15_000,  // 15s
+  resonance_check: 5_000,   // 5s
+};
+const FIELD_UTILIZATION_TARGET = PHI_INV; // ≈ 0.618
 
 // ════════════════════════════════════════════════════════════════
 // SUB-MODEL 1: PHANT-GAUGE — U(1) Gauge Field Manager
@@ -158,24 +177,6 @@ class PhantGauge {
 // SUB-MODEL 2: PHANT-ZKPROOF — Schnorr ZKP Prover/Verifier
 // ════════════════════════════════════════════════════════════════
 
-// Crypto-secure random bytes (Node.js or browser)
-function _secureRandom(byteCount) {
-  if (typeof globalThis.crypto !== 'undefined' && globalThis.crypto.getRandomValues) {
-    const buf = new Uint8Array(byteCount);
-    globalThis.crypto.getRandomValues(buf);
-    return buf;
-  }
-  // Node.js fallback
-  try {
-    const { randomBytes } = await import('crypto').catch(() => ({ randomBytes: null }));
-    if (randomBytes) return randomBytes(byteCount);
-  } catch (_) {}
-  // Last-resort INSECURE fallback — emits a warning; must not reach this path in production.
-  // NOSONAR: intentional non-cryptographic fallback guarded by explicit warning above.
-  console.warn('[PHANTEX] WARNING: No secure random source available. Do not use in production.');
-  return new Uint8Array(byteCount).map(() => Math.floor(Math.random() * 256)); // NOSONAR
-}
-
 /**
  * Derive a BigInt nonce in range [1, p-2] using rejection sampling over
  * cryptographically-secure random bytes.
@@ -214,6 +215,22 @@ function _demoHash(input, mod) {
     h = (h * 0x01000193n) % (2n ** 32n);  // FNV prime, kept mod 2^32
   }
   return h % mod;
+}
+
+/**
+ * φ-seeded challenge mixer:
+ * c = H_φ(R, Y, msg)
+ * For production, replace with SHA-256/SHA-3 and reduce modulo q.
+ */
+function _phiHash(R, Y, msg, q) {
+  const phiSeed = BigInt(Math.floor(PHI * 1_000_000));
+  const input = `${R}|${Y}|${msg}|phi:${PHI}`;
+  let h = (0x811c9dc5n ^ phiSeed) % q;
+  for (let i = 0; i < input.length; i++) {
+    h ^= BigInt(input.charCodeAt(i));
+    h = (h * 0x01000193n + phiSeed) % q;
+  }
+  return h % q;
 }
 
 class PhantZKProof {
@@ -258,7 +275,7 @@ class PhantZKProof {
    *
    * Security notes:
    *  • Nonce r is sampled via _secureNonce() using crypto.getRandomValues.
-   *  • Challenge c uses _demoHash (FNV-1a) for the demo prime; production
+   *  • Challenge c uses _phiHash (φ-seeded mixer) for the demo prime; production
    *    MUST replace with crypto.subtle.digest('SHA-256', ...) and reduce
    *    the resulting digest modulo (p-1).
    *
@@ -276,10 +293,9 @@ class PhantZKProof {
     const R = this._modpow(this.g, r, this.p);
     // Fiat-Shamir: c = H(R ∥ agi_id ∥ output_hash) mod (p-1)
     // NOTE: _demoHash is NOT collision-resistant. Production must use SHA-256.
-    const input = `${R}${agi_id}${output_hash}`;
-    const c = _demoHash(input, this.p - 1n);
-    const s = ((r - c * x) % (this.p - 1n) + (this.p - 1n)) % (this.p - 1n);
     const y = this.publicKey(secret_x);
+    const c = _phiHash(R, y, output_hash, this.p - 1n);
+    const s = ((r - c * x) % (this.p - 1n) + (this.p - 1n)) % (this.p - 1n);
     const proof = { R, c, s, y, agi_id, output_hash, ts: Date.now(), protocol: 'Schnorr-PHANTEX' };
     this.proofs.set(agi_id, proof);
     return proof;
@@ -514,6 +530,7 @@ class PhantField {
 class PHANTEX {
   constructor() {
     this.RSHIP_ID    = 'RSHIP-2026-PHANTEX-001';
+    this.PROTOCOL    = 'PROTO-013 Phantom Field Protocol';
     this.LAYER       = 'SUBSTRATE';
     this.VERSION     = '1.0.0';
 
@@ -526,12 +543,17 @@ class PHANTEX {
 
     // Heartbeat: evolve phantom field every 873ms
     this._heartbeat_id = null;
+    this._ghost_process_ids = {};
     this._cycle = 0;
 
     // Constants exposed to all other AGIs
     this.SCHUMANN_HZ      = SCHUMANN_HZ;
     this.ELECTRODE_FREQS  = ELECTRODE_FREQS;
+    this.PHI_LADDER       = PHI_LADDER;
+    this.ELECTRODE_ROLES  = ELECTRODE_ROLES;
     this.TUNNELING_DECAY  = TUNNELING_DECAY;
+    this.GHOST_INTERVALS_MS = GHOST_PROCESS_INTERVALS_MS;
+    this.FIELD_UTILIZATION_TARGET = FIELD_UTILIZATION_TARGET;
     this.PHI              = PHI;
     this.PHI_INV          = PHI_INV;
   }
@@ -552,13 +574,44 @@ class PHANTEX {
         this.ghost.register('PHANTEX-SUBSTRATE', { cycle: this._cycle, amp, schumann_phase });
       }
     }, HEARTBEAT_MS);
+    this._startGhostProcesses();
     return this;
   }
 
   /** Stop the heartbeat. */
   stop() {
     if (this._heartbeat_id) { clearInterval(this._heartbeat_id); this._heartbeat_id = null; }
+    this._stopGhostProcesses();
     return this;
+  }
+
+  _startGhostProcesses() {
+    if (Object.keys(this._ghost_process_ids).length > 0) return;
+    this._ghost_process_ids.merkle_reverify = setInterval(() => {
+      this.ghost.verify(Math.max(0, this.ghost.size() - 1));
+    }, GHOST_PROCESS_INTERVALS_MS.merkle_reverify);
+
+    this._ghost_process_ids.gauge_refresh = setInterval(() => {
+      // minimal gauge refresh pulse, averaged to avoid drift explosion
+      this.gauge.gaugeShift(0);
+    }, GHOST_PROCESS_INTERVALS_MS.gauge_refresh);
+
+    this._ghost_process_ids.bridge_health = setInterval(() => {
+      this.ghost.register('PHANTEX-BRIDGE-HEALTH', {
+        ts: Date.now(),
+        schumann_phase: (2 * Math.PI * SCHUMANN_HZ * Date.now() / 1000) % (2 * Math.PI),
+      });
+    }, GHOST_PROCESS_INTERVALS_MS.bridge_health);
+
+    this._ghost_process_ids.resonance_check = setInterval(() => {
+      const phase = (2 * Math.PI * SCHUMANN_HZ * Date.now() / 1000) % (2 * Math.PI);
+      this.ghost.register('PHANTEX-RESONANCE', { ts: Date.now(), phase });
+    }, GHOST_PROCESS_INTERVALS_MS.resonance_check);
+  }
+
+  _stopGhostProcesses() {
+    for (const id of Object.values(this._ghost_process_ids)) clearInterval(id);
+    this._ghost_process_ids = {};
   }
 
   /**
@@ -601,6 +654,33 @@ class PHANTEX {
   }
 
   /**
+   * Four primary attempts. If all fail, activate phantom tunnel path.
+   */
+  tunnel_attempt_4x(state_a, state_b, attempts = 4) {
+    const attemptsLog = [];
+    for (let i = 0; i < attempts; i++) {
+      const res = this.tunnel.attempt(state_a, state_b);
+      attemptsLog.push({ attempt: i + 1, ...res });
+      if (res.outcome === 'TUNNELED') {
+        this.field.inject(1, res.T, 0);
+        return { ...res, attempts: attemptsLog, fallback: 'NOT_NEEDED' };
+      }
+    }
+
+    // phantom fallback path: deterministic substrate tunnel activation
+    const amp = this.tunnel.amplitude(state_a, state_b);
+    this.field.inject(1, Math.max(amp.T, PHI_INV), 0);
+    const fallback = {
+      outcome: 'PHANTOM_TUNNEL_ACTIVATED',
+      ...amp,
+      attempts: attemptsLog,
+      fallback: 'PHANTOM_FIELD_ROUTE',
+    };
+    this.ghost.register('PHANTEX-TUNNEL-FALLBACK', fallback);
+    return fallback;
+  }
+
+  /**
    * STATUS: full substrate status for AEGIX monitoring.
    */
   status() {
@@ -615,6 +695,14 @@ class PHANTEX {
       phase_spectrum:  this.field.phaseSpectrum(),
       schumann_phase:  (2 * Math.PI * SCHUMANN_HZ * Date.now() / 1000) % (2 * Math.PI),
       electrode_freqs: ELECTRODE_FREQS,
+      phi_ladder:      PHI_LADDER,
+      electrode_roles: ELECTRODE_ROLES,
+      ghost_process_intervals_ms: GHOST_PROCESS_INTERVALS_MS,
+      ghost_processes_running: Object.keys(this._ghost_process_ids).length,
+      field_utilization_target: FIELD_UTILIZATION_TARGET,
+      field_utilization_estimate: Number(
+        Math.min(1, this.field.totalAmplitude() / (this.field.totalAmplitude() + 1)).toFixed(4),
+      ),
       PHI,
       PHI_INV,
       SCHUMANN_HZ,
@@ -634,6 +722,10 @@ export {
   PhantGhost,
   PhantField,
   ELECTRODE_FREQS,
+  PHI_LADDER,
+  ELECTRODE_ROLES,
+  GHOST_PROCESS_INTERVALS_MS,
+  FIELD_UTILIZATION_TARGET,
   TUNNELING_DECAY,
   SCHUMANN_HZ,
 };
