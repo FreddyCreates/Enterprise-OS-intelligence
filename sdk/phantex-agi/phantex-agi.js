@@ -102,6 +102,7 @@ const GHOST_PROCESS_INTERVALS_MS = {
   resonance_check: 5_000,   // 5s
 };
 const FIELD_UTILIZATION_TARGET = PHI_INV; // ≈ 0.618
+const PHANTEX_PHANTOM_FIELD_PROTOCOL = 'PROTO-013 Phantom Field Protocol';
 
 // ════════════════════════════════════════════════════════════════
 // SUB-MODEL 1: PHANT-GAUGE — U(1) Gauge Field Manager
@@ -535,7 +536,7 @@ class PhantField {
 class PHANTEX {
   constructor() {
     this.RSHIP_ID    = 'RSHIP-2026-PHANTEX-001';
-    this.PROTOCOL    = 'PROTO-013 Phantom Field Protocol';
+    this.PROTOCOL    = PHANTEX_PHANTOM_FIELD_PROTOCOL;
     this.LAYER       = 'SUBSTRATE';
     this.VERSION     = '1.0.0';
 
@@ -680,6 +681,7 @@ class PHANTEX {
 
     // phantom fallback path: deterministic substrate tunnel activation
     const amp = this.tunnel.amplitude(state_a, state_b);
+    // inject(mode=1, amplitude=max(T,φ⁻¹), imagPhase=0)
     this.field.inject(1, Math.max(amp.T, PHI_INV), 0);
     const fallback = {
       outcome: 'PHANTOM_TUNNEL_ACTIVATED',
@@ -696,8 +698,9 @@ class PHANTEX {
    */
   status() {
     const amplitude = this.field.totalAmplitude();
-    const fieldUtilizationEstimate = Number(
-      Math.min(1, amplitude / (amplitude + 1)).toFixed(4),
+    const fieldUtilizationEstimate = Math.min(
+      1,
+      Math.round((amplitude / (amplitude + 1)) * 10_000) / 10_000,
     );
     return {
       RSHIP_ID:        this.RSHIP_ID,
