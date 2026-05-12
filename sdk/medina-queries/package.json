@@ -1,25 +1,7 @@
 {
   "name": "@medina/medina-queries",
   "version": "1.0.0",
-  "description": "Query operations for intelligence data with φ-weighted algorithms",
-  "main": "src/index.js",
-  "type": "module",
-  "keywords": [
-    "medina",
-    "queries",
-    "intelligence",
-    "phi",
-    "query-builder",
-    "time-series"
-  ],
-  "author": "Alfredo Medina Hernandez",
-  "license": "SEE LICENSE IN ../../LICENSE",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/FreddyCreates/Enterprise-OS-intelligence.git",
-    "directory": "sdk/medina-queries"
-  }
-  "description": "Internal SDK for QUERY functions — read operations that don't change state in the MEDINA ecosystem",
+  "description": "φ-weighted query builder, multi-source intelligence search, and time-series analysis utilities.",
   "type": "module",
   "main": "src/index.js",
   "exports": {
@@ -28,16 +10,22 @@
     "./organism": "./src/organism-queries.js",
     "./governance": "./src/governance-queries.js"
   },
-  "author": "Alfredo Medina Hernandez <medina@medinatech.io>",
-  "license": "MEDINA-SOVEREIGN",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/MedinaTech/medina-queries"
-  },
+  "files": [
+    "src/"
+  ],
   "keywords": [
     "queries",
     "reads",
-    "internal-sdk",
+    "query-builder",
+    "time-series",
+    "search",
     "medina"
-  ]
+  ],
+  "author": "Alfredo Medina Hernandez",
+  "license": "SEE LICENSE IN ../../LICENSE",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/FreddyCreates/Enterprise-OS-intelligence.git",
+    "directory": "sdk/medina-queries"
+  }
 }

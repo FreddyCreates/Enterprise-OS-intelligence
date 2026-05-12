@@ -2,8 +2,14 @@
   "name": "@medina/organism-ai",
   "version": "1.0.0",
   "description": "Multi-model AI orchestration engine with φ-weighted routing",
-  "main": "src/index.js",
   "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "files": [
+    "src/"
+  ],
   "keywords": [
     "medina",
     "organism",

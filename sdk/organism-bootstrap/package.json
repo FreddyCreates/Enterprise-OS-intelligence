@@ -1,17 +1,24 @@
 {
   "name": "@medina/organism-bootstrap",
   "version": "1.0.0",
-  "description": "ICP deployment helpers for self-bootstrapping intelligence organisms",
-  "main": "src/index.js",
+  "description": "ICP deployment helpers for self-bootstrapping intelligence organisms with Motoko wrapper generation.",
   "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./motoko": "./src/motoko/index.mo"
+  },
+  "files": [
+    "src/"
+  ],
   "keywords": [
-    "medina",
     "icp",
     "internet-computer",
+    "canister",
+    "organism",
     "bootstrap",
-    "deployment",
     "motoko",
-    "canister"
+    "deployment"
   ],
   "author": "Alfredo Medina Hernandez",
   "license": "SEE LICENSE IN ../../LICENSE",
@@ -20,26 +27,4 @@
     "url": "https://github.com/FreddyCreates/Enterprise-OS-intelligence.git",
     "directory": "sdk/organism-bootstrap"
   }
-  "description": "Bootstrap system for ORGANISM canisters on the Internet Computer — uses mathematical timers, NOT ICP heartbeats",
-  "type": "module",
-  "main": "src/index.js",
-  "exports": {
-    ".": "./src/index.js",
-    "./motoko": "./src/motoko/index.mo"
-  },
-  "author": "Alfredo Medina Hernandez <medina@medinatech.io>",
-  "license": "MEDINA-SOVEREIGN",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/MedinaTech/organism-bootstrap"
-  },
-  "keywords": [
-    "icp",
-    "internet-computer",
-    "canister",
-    "organism",
-    "bootstrap",
-    "motoko",
-    "mathematical-timers"
-  ]
 }
