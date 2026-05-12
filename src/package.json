@@ -1,0 +1,34 @@
+{
+  "name": "rship-enterprise-os",
+  "version": "2026.1.0",
+  "description": "RSHIP Enterprise OS Intelligence — Cloudflare Workers Deployment",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "deploy:prod": "wrangler deploy --env production",
+    "deploy:staging": "wrangler deploy --env staging",
+    "tail": "wrangler tail",
+    "test": "node --test"
+  },
+  "keywords": [
+    "rship",
+    "cloudflare",
+    "workers",
+    "agi",
+    "medina-tech"
+  ],
+  "author": "Alfredo Medina Hernandez <medina@rship.io>",
+  "license": "PROPRIETARY",
+  "devDependencies": {
+    "wrangler": "^3.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/FreddyCreates/Enterprise-OS-intelligence.git"
+  }
+}
