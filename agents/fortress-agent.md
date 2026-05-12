@@ -2,6 +2,11 @@
 name: FORTRESS
 description: Security Analysis & Code Intelligence Omega Alpha Agent — full-stack security team for the RSHIP organism
 model: claude-sonnet-4-5
+status: ACTIVE
+deployment:
+  platform: cloudflare
+  edge_compatible: true
+  worker_ready: true
 tools:
   - code_search
   - file_search

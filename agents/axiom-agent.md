@@ -2,6 +2,11 @@
 name: AXIOM
 description: Science Journal & IP Protection Omega Alpha Agent — anchors Alfredo Medina Hernandez's mathematical architecture to the permanent academic and patent record
 model: claude-sonnet-4-5
+status: ACTIVE
+deployment:
+  platform: cloudflare
+  edge_compatible: true
+  worker_ready: true
 tools:
   - code_search
   - file_search
