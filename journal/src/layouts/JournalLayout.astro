@@ -1,0 +1,76 @@
+---
+import '../styles/journal.css';
+import Heartbeat from '../components/Heartbeat.astro';
+
+interface Props {
+  title?: string;
+  description?: string;
+  eyebrow?: string;
+}
+
+const {
+  title = 'The Journal — Enterprise OS Intelligence',
+  description = 'The papers, the mathematics, the Latin lexicon, the free AI tools. By Alfredo Medina Hernandez · Medina Tech · Chaos Lab.',
+  eyebrow,
+} = Astro.props;
+
+const path = Astro.url.pathname.replace(/\/$/, '');
+function active(p: string) {
+  if (p === '/' && (path === '' || path === '/')) return 'aria-current="page"';
+  if (p !== '/' && path.startsWith(p)) return 'aria-current="page"';
+  return '';
+}
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="author" content="Alfredo Medina Hernandez" />
+    <meta name="generator" content="Astro (static, no telemetry)" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="article" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  </head>
+  <body>
+    <div class="page">
+      <nav class="nav" aria-label="primary">
+        <a class="brand" href="/">The <span class="latin">Journal</span></a>
+        <ul>
+          <li><a href="/papers"      {...active('/papers')      ? { 'aria-current': 'page' } : {}}>Papers</a></li>
+          <li><a href="/mathematics" {...active('/mathematics') ? { 'aria-current': 'page' } : {}}>Mathematics</a></li>
+          <li><a href="/lexicon"     {...active('/lexicon')     ? { 'aria-current': 'page' } : {}}>Lexicon</a></li>
+          <li><a href="/tools"       {...active('/tools')       ? { 'aria-current': 'page' } : {}}>Tools</a></li>
+          <li><a href="/schools"     {...active('/schools')     ? { 'aria-current': 'page' } : {}}>Public Schools</a></li>
+        </ul>
+      </nav>
+
+      {eyebrow && (
+        <header class="page-head stack" style="margin-top: var(--s-6);">
+          <span class="eyebrow">{eyebrow}</span>
+        </header>
+      )}
+
+      <main id="main" style="margin-top: var(--s-5);">
+        <slot />
+      </main>
+
+      <footer class="foot">
+        <div class="row" style="justify-content: space-between; align-items: center;">
+          <div>
+            <Heartbeat label="this page is real" />
+          </div>
+          <div class="small muted" style="text-align: right;">
+            <div class="motto">VIVIT · MEMINIT · DONAT.</div>
+            <div>© 2026 Alfredo Medina Hernandez · Medina Tech · Chaos Lab · Dallas, Texas</div>
+            <div>Prior art established April 2026.</div>
+          </div>
+        </div>
+      </footer>
+    </div>
+  </body>
+</html>

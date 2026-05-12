@@ -1,0 +1,65 @@
+---
+import JournalLayout from '../../layouts/JournalLayout.astro';
+import { getCollection } from 'astro:content';
+
+export async function getStaticPaths() {
+  const all = await getCollection('papers');
+  return all.map(paper => ({
+    params: { id: paper.data.id },
+    props:  { paper },
+  }));
+}
+
+const { paper } = Astro.props;
+const { Content } = await paper.render();
+---
+<JournalLayout
+  title={`${paper.data.title} — The Journal`}
+  description={paper.data.description}
+  eyebrow={paper.data.arxiv
+    ? 'ArXiv preprint'
+    : `Paper ${paper.data.roman ?? ''} · ${paper.data.layer}`}
+>
+  <article class="measure stack" style="margin-top: var(--s-4);">
+    <header class="stack-sm">
+      <h1>{paper.data.title}</h1>
+      {paper.data.subtitle && (
+        <p class="muted" style="font-size: var(--t-h5);">
+          <em>{paper.data.subtitle}</em>
+        </p>
+      )}
+      <p class="small muted">
+        <strong>Alfredo Medina Hernandez</strong> · Medina Tech · Chaos Lab · Dallas, Texas
+      </p>
+      {paper.data.threads.length > 0 && (
+        <p>
+          {paper.data.threads.map(t => (
+            <span class="pill gold" style="margin-right: var(--s-3);">{t.toLowerCase()}</span>
+          ))}
+        </p>
+      )}
+    </header>
+
+    <hr class="rule" />
+
+    <div class="prose">
+      <Content />
+    </div>
+
+    <hr class="rule" />
+
+    <footer class="small muted stack-sm">
+      <p>
+        <strong>Cite as:</strong>
+        Medina Hernandez, A. ({paper.data.roman ? `Paper ${paper.data.roman}, ` : ''}April 2026).
+        <em>{paper.data.title}</em>.
+        Sovereign Intelligence Research, Medina Tech.
+      </p>
+      <p>
+        <a href="/papers">← All papers</a>
+        ·
+        <a href={`/papers/${paper.data.id}.txt`}>Plain text</a>
+      </p>
+    </footer>
+  </article>
+</JournalLayout>

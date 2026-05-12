@@ -1,0 +1,128 @@
+---
+import JournalLayout from '../layouts/JournalLayout.astro';
+---
+<JournalLayout
+  title="For Public Schools — The Journal"
+  description="Bronze, Silver, and Gold canisters — sovereign compute units for students, schools, and districts. Built for public schools. Free for evaluation."
+  eyebrow="§ V — For Public Schools"
+>
+  <header class="measure stack" style="margin-top: var(--s-4);">
+    <h1>For Public Schools</h1>
+    <p class="muted" style="font-size: var(--t-h5); line-height: 1.5;">
+      This work was built to be useful to public schools.
+    </p>
+  </header>
+
+  <hr class="rule" />
+
+  <section class="measure stack-lg">
+    <article class="stack">
+      <span class="eyebrow">For a student</span>
+      <h2 class="latin">Bronze Canister</h2>
+      <p>
+        A <strong>Bronze Canister</strong> is a sovereign compute unit for a single
+        student — their own AI tutor, their own memory vault, their own voice
+        interface. The student owns it. The school does not. The district does not.
+        We do not.
+      </p>
+      <p class="small muted">
+        Voice-native. Persistent. The student&apos;s memories, the student&apos;s notes,
+        the student&apos;s learning trajectory — encrypted with substrate-level keys
+        only the student controls.
+      </p>
+    </article>
+
+    <article class="stack">
+      <span class="eyebrow">For a school</span>
+      <h2 class="latin">Silver Canister</h2>
+      <p>
+        A <strong>Silver Canister</strong> orchestrates many Bronze Canisters at the
+        school level — without ever reading a student&apos;s private memory.
+        It tracks what a school has to track (attendance, scheduling, curriculum,
+        announcements, the academic calendar) and nothing else.
+      </p>
+      <p class="small muted">
+        Sovereignty-safe by construction: the metadata it reads is metadata,
+        not content. A teacher dashboard sees the activity surface; the
+        underlying memory is the student&apos;s.
+      </p>
+    </article>
+
+    <article class="stack">
+      <span class="eyebrow">For a district</span>
+      <h2 class="latin">Gold Canister</h2>
+      <p>
+        A <strong>Gold Canister</strong> sits at the district level. It does
+        the work a district has to do — compliance, state reporting,
+        graduation tracking, audit — and it protects the schools beneath it
+        from data exposure they cannot afford to carry alone.
+      </p>
+      <p class="small muted">
+        FERPA-respectful by default. The compliance engine runs against the
+        metadata, not the content. The content stays where it belongs.
+      </p>
+    </article>
+  </section>
+
+  <hr class="rule" />
+
+  <section class="measure stack">
+    <span class="eyebrow">The laws that govern how this speaks to a child</span>
+    <h2>LEGES ANIMAE · Behavioural Communication Laws</h2>
+    <p>
+      Eight laws — L72 through L79 — govern how this system communicates with
+      students, parents, and staff. They are encoded in
+      <a href="/papers/v-behavioral-economics-laws">Paper V — <em class="latin">Leges Animae</em></a>.
+    </p>
+    <table>
+      <tbody>
+        <tr><td><strong>L72</strong> Anchoring</td>             <td>Every recommendation is framed relative to the student&apos;s current position.</td></tr>
+        <tr><td><strong>L73</strong> Loss weight Λ = 2.25</td>  <td>Losses are felt 2.25× more than equivalent gains. The system corrects for this; it does not exploit it.</td></tr>
+        <tr><td><strong>L74</strong> Cost of staying still</td> <td>The status quo is always priced. No free inaction.</td></tr>
+        <tr><td><strong>L75</strong> Endowment correction</td>  <td>Things already owned (a study habit, a method) are weighted appropriately in change analysis.</td></tr>
+        <tr><td><strong>L76</strong> Time language</td>         <td>Future value is expressed in the student&apos;s actual decision horizon, not in adult-sized units.</td></tr>
+        <tr><td><strong>L77</strong> Probability shape</td>     <td>Human probability perception (over-weighting small chances, under-weighting moderate ones) is corrected for.</td></tr>
+        <tr><td><strong>L78</strong> The right to both frames</td><td>Gain and loss framing are always offered. The system never picks the frame to influence the decision.</td></tr>
+        <tr><td><strong>L79</strong> Regret minimisation</td>   <td>For irreversible decisions, a regret analysis is shown alongside expected value.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <hr class="rule" />
+
+  <section class="measure stack">
+    <h2>Why this</h2>
+    <p>
+      We built this for public schools, for students, for the kids who do not
+      get to choose their AI. We are not selling it. We are talking to the
+      districts who want it directly.
+    </p>
+    <p>
+      The architecture sits in three public papers anyone can read now:
+    </p>
+    <ul>
+      <li><a href="/papers/v-behavioral-economics-laws">Paper V — <em class="latin">Leges Animae</em></a> · the behavioural communication laws.</li>
+      <li><a href="/papers/xviii-archivum-memoriae">Paper XVIII — <em class="latin">Archivum Memoriae</em></a> · sovereign memory vaults.</li>
+      <li><a href="/papers/xix-infrastructura-civica">Paper XIX — <em class="latin">Infrastructura Civica</em></a> · civic infrastructure as sovereign intelligence.</li>
+    </ul>
+    <p>
+      If you work in or with a public school system and want to talk:
+      <a href="mailto:Medinasitech@outlook.com?subject=Public%20School%20Inquiry"><strong>Medinasitech@outlook.com</strong></a>.
+      Subject line:&nbsp;<em>Public School Inquiry</em>.
+    </p>
+  </section>
+
+  <hr class="rule" />
+
+  <aside class="doctrine">
+    <h6>What we are not doing on this page</h6>
+    <p>
+      We do not name a district. We do not name a school. We do not name a
+      student. The relationships we have with public school systems stay
+      between the people doing the work and the people receiving it.
+    </p>
+    <p>
+      That is the give.
+    </p>
+  </aside>
+</JournalLayout>
