@@ -1,0 +1,137 @@
+name: "Journal — Build & Deploy"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Builds the public Journal (papers · mathematics · lexicon · tools · schools)
+# and deploys it to Cloudflare Pages.
+#
+# Pipeline (fail-closed at every step):
+#   1. Sync papers from /papers into journal/src/content/papers
+#   2. Mundator Cognitus PASS 2 — strict verify (no sensitive patterns survive)
+#   3. Astro build → journal/dist
+#   4. Copy /releases zips into dist/releases
+#   5. Verify-checksums — SHA-256 of every published zip matches CHECKSUMS.sha256
+#   6. Deploy dist to Cloudflare Pages (project: journal-medina)
+#
+# Required GitHub secrets:
+#   CLOUDFLARE_API_TOKEN   — Cloudflare API token (Workers + Pages: Edit)
+#   CLOUDFLARE_ACCOUNT_ID  — Cloudflare account ID
+#
+# No deploy bypasses any of these checks. That is the doctrine.
+# ─────────────────────────────────────────────────────────────────────────────
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'journal/**'
+      - 'papers/**'
+      - 'releases/**'
+      - 'tools/doc-sanitizer.js'
+      - '.github/workflows/journal-deploy.yml'
+  pull_request:
+    paths:
+      - 'journal/**'
+      - 'papers/**'
+      - 'releases/**'
+      - 'tools/doc-sanitizer.js'
+      - '.github/workflows/journal-deploy.yml'
+  workflow_dispatch: {}
+
+concurrency:
+  group: journal-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  preflight:
+    name: "Pre-flight: secrets present"
+    runs-on: ubuntu-latest
+    outputs:
+      can_deploy: ${{ steps.check.outputs.value }}
+    steps:
+      - id: check
+        run: |
+          MISSING=0
+          if [ -z "${{ secrets.CLOUDFLARE_API_TOKEN }}" ]; then
+            echo "::warning::CLOUDFLARE_API_TOKEN secret not set — build will run but deploy will be skipped."
+            MISSING=1
+          fi
+          if [ -z "${{ secrets.CLOUDFLARE_ACCOUNT_ID }}" ]; then
+            echo "::warning::CLOUDFLARE_ACCOUNT_ID secret not set — build will run but deploy will be skipped."
+            MISSING=1
+          fi
+          if [ "$MISSING" = "1" ]; then
+            echo "value=false" >> $GITHUB_OUTPUT
+          else
+            echo "value=true" >> $GITHUB_OUTPUT
+          fi
+
+  build-and-verify:
+    name: "Build & sanitize (fail-closed)"
+    needs: preflight
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: 'journal/package-lock.json'
+
+      - name: Install
+        working-directory: journal
+        run: npm ci || npm install
+
+      - name: Build (sync → verify → astro build → copy-releases → verify-checksums)
+        working-directory: journal
+        run: npm run build
+
+      - name: Upload dist
+        uses: actions/upload-artifact@v4
+        with:
+          name: journal-dist
+          path: journal/dist
+          retention-days: 7
+
+  deploy:
+    name: "Deploy to Cloudflare Pages"
+    needs: [preflight, build-and-verify]
+    if: ${{ needs.preflight.outputs.can_deploy == 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download dist
+        uses: actions/download-artifact@v4
+        with:
+          name: journal-dist
+          path: journal/dist
+
+      - name: Deploy to Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken:  ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: journal
+          command: pages deploy dist --project-name=journal-medina --branch=main
+
+  summary:
+    name: "Summary"
+    needs: [preflight, build-and-verify, deploy]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo "═══════════════════════════════════════════"
+          echo "  Journal Pipeline"
+          echo "═══════════════════════════════════════════"
+          echo "  Preflight: ${{ needs.preflight.result }}"
+          echo "  Build:     ${{ needs.build-and-verify.result }}"
+          echo "  Deploy:    ${{ needs.deploy.result }}"
+          echo ""
+          if [ "${{ needs.preflight.outputs.can_deploy }}" != "true" ]; then
+            echo "  ⚠ Deploy skipped — CLOUDFLARE_ACCOUNT_ID or CLOUDFLARE_API_TOKEN missing."
+            echo "    Add them at: Settings → Secrets and variables → Actions"
+          fi
+          echo "═══════════════════════════════════════════"
