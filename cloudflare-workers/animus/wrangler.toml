@@ -1,6 +1,9 @@
 name            = "animus"
 main            = "worker.js"
 compatibility_date = "2024-09-02"
+workers_dev     = true
+# Private own-domain for now: animus.<account-subdomain>.workers.dev
+# Public domain will be set when assigned — add a [[routes]] block.
 
 [vars]
 DESIGNATION     = "RSHIP-AIS-AN-001"

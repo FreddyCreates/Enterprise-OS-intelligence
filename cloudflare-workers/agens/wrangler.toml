@@ -1,6 +1,9 @@
 name            = "agens"
 main            = "worker.js"
 compatibility_date = "2024-09-02"
+workers_dev     = true
+# Private own-domain for now: agens.<account-subdomain>.workers.dev
+# Public domain will be set when assigned — add a [[routes]] block.
 
 [vars]
 DESIGNATION     = "RSHIP-AIS-AG-001"

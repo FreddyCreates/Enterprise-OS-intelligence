@@ -1,6 +1,8 @@
 name            = "rship-sentinel"
 main            = "worker.js"
 compatibility_date = "2024-09-02"
+workers_dev     = true
+# Private own-domain for now: rship-sentinel.<account-subdomain>.workers.dev
 
 # Cron trigger — alert scan every 5 minutes
 [[triggers.crons]]
