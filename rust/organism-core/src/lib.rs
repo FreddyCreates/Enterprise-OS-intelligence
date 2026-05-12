@@ -1,13 +1,12 @@
 use aes_gcm::aead::{Aead, KeyInit};
 use aes_gcm::{Aes256Gcm, Nonce};
 use base64::{engine::general_purpose::STANDARD as B64, Engine as _};
-use ed25519_dalek::{Signature, Signer, SigningKey, Verifier, VerifyingKey};
+use ed25519_dalek::{Keypair, PublicKey, Signature, Signer, Verifier};
 use hkdf::Hkdf;
 use rand::rngs::OsRng;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::fmt::{Display, Formatter};
-use uuid::Uuid;
 
 pub const PHI: f64 = 1.618_033_988_749_895;
 pub const PHI_INV: f64 = 1.0 / PHI;
@@ -83,8 +82,8 @@ pub fn derive_key(master: &[u8], salt: &[u8], info: &[u8]) -> Result<[u8; 32], O
     Ok(key)
 }
 
-pub fn generate_signing_key() -> SigningKey {
-    SigningKey::generate(&mut OsRng)
+pub fn generate_signing_key() -> Keypair {
+    Keypair::generate(&mut OsRng)
 }
 
 pub fn encrypt(key: &[u8], plaintext: &[u8]) -> Result<EncryptedPayload, OrganismError> {
@@ -127,11 +126,11 @@ pub fn decrypt(key: &[u8], payload: &EncryptedPayload) -> Result<Vec<u8>, Organi
         .map_err(|_| OrganismError::DecryptionFailed)
 }
 
-pub fn sign_bytes(signing_key: &SigningKey, message: &[u8]) -> String {
+pub fn sign_bytes(signing_key: &Keypair, message: &[u8]) -> String {
     hex::encode(signing_key.sign(message).to_bytes())
 }
 
-pub fn verify_bytes(public_key: &VerifyingKey, message: &[u8], signature_hex: &str) -> Result<(), OrganismError> {
+pub fn verify_bytes(public_key: &PublicKey, message: &[u8], signature_hex: &str) -> Result<(), OrganismError> {
     let signature_bytes = hex::decode(signature_hex).map_err(|_| OrganismError::SignatureFailed)?;
     let signature = Signature::try_from(signature_bytes.as_slice()).map_err(|_| OrganismError::SignatureFailed)?;
     public_key
@@ -141,22 +140,23 @@ pub fn verify_bytes(public_key: &VerifyingKey, message: &[u8], signature_hex: &s
 
 pub fn seal_message(
     encryption_key: &[u8],
-    signing_key: &SigningKey,
+    signing_key: &Keypair,
     payload_type: &str,
     recipient: &str,
     plaintext: &[u8],
 ) -> Result<OrganismEnvelope, OrganismError> {
     let payload = encrypt(encryption_key, plaintext)?;
-    let sender_pubkey = hex::encode(signing_key.verifying_key().to_bytes());
+    let sender_pubkey = hex::encode(signing_key.public.to_bytes());
+    let timestamp_ms = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_err(|_| OrganismError::SerializationFailed("system time before epoch".into()))?
+        .as_millis();
     let mut envelope = OrganismEnvelope {
-        id: Uuid::new_v4().to_string(),
+        id: format!("env-{timestamp_ms:x}-{:016x}", rand::random::<u64>()),
         payload_type: payload_type.to_string(),
         recipient: recipient.to_string(),
         sender_pubkey,
-        timestamp_ms: std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .map_err(|_| OrganismError::SerializationFailed("system time before epoch".into()))?
-            .as_millis(),
+        timestamp_ms,
         payload,
         signature: String::new(),
     };
@@ -176,12 +176,7 @@ pub fn seal_message(
 
 pub fn open_message(encryption_key: &[u8], envelope: &OrganismEnvelope) -> Result<Vec<u8>, OrganismError> {
     let pubkey_bytes = hex::decode(&envelope.sender_pubkey).map_err(|_| OrganismError::SignatureFailed)?;
-    let public_key = VerifyingKey::from_bytes(
-        &pubkey_bytes
-            .try_into()
-            .map_err(|_| OrganismError::SignatureFailed)?,
-    )
-    .map_err(|_| OrganismError::SignatureFailed)?;
+    let public_key = PublicKey::from_bytes(&pubkey_bytes).map_err(|_| OrganismError::SignatureFailed)?;
 
     let signable = serde_json::to_vec(&(
         &envelope.id,

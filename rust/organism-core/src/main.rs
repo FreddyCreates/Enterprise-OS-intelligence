@@ -9,7 +9,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         b"organism-demo-envelope",
     )?;
     let signing_key = generate_signing_key();
-    let message = b"TRACE · VERIFY · REMEMBER";
+    let message = b"TRACE VERIFY REMEMBER";
 
     let envelope = seal_message(&key, &signing_key, "demo", "organism-demo", message)?;
     let opened = open_message(&key, &envelope)?;
