@@ -42,6 +42,7 @@ function active(p: string) {
         <a class="brand" href="/">The <span class="latin">Journal</span></a>
         <ul>
           <li><a href="/papers"      {...active('/papers')      ? { 'aria-current': 'page' } : {}}>Papers</a></li>
+          <li><a href="/search"      {...active('/search')      ? { 'aria-current': 'page' } : {}}>Search</a></li>
           <li><a href="/mathematics" {...active('/mathematics') ? { 'aria-current': 'page' } : {}}>Mathematics</a></li>
           <li><a href="/lexicon"     {...active('/lexicon')     ? { 'aria-current': 'page' } : {}}>Lexicon</a></li>
           <li><a href="/tools"       {...active('/tools')       ? { 'aria-current': 'page' } : {}}>Tools</a></li>
@@ -63,6 +64,11 @@ function active(p: string) {
         <div class="row" style="justify-content: space-between; align-items: center;">
           <div>
             <Heartbeat label="this page is real" />
+            <div class="small muted" style="margin-top: var(--s-3);">
+              Built by <a href="/council" class="no-underline">the council</a>:
+              <span class="latin">scriba</span> · <span class="latin">lumen</span> ·
+              <span class="latin">custos</span> · <span class="latin">magister</span>.
+            </div>
           </div>
           <div class="small muted" style="text-align: right;">
             <div class="motto">VIVIT · MEMINIT · DONAT.</div>

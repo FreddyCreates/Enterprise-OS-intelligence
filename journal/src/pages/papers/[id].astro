@@ -1,6 +1,7 @@
 ---
 import JournalLayout from '../../layouts/JournalLayout.astro';
 import { getCollection } from 'astro:content';
+import graphData from '../../data/paper-graph.json';
 
 export async function getStaticPaths() {
   const all = await getCollection('papers');
@@ -12,6 +13,21 @@ export async function getStaticPaths() {
 
 const { paper } = Astro.props;
 const { Content } = await paper.render();
+
+// LUMEN graph for this paper.
+const node = graphData.byPaper[paper.data.id] ?? { related: [], cited: [], thread: {} };
+const related = (node.related ?? []).map(r => ({
+  ...graphData.lookup[r.id], id: r.id, weight: r.weight,
+})).filter(r => r.title);
+const cited   = (node.cited ?? []).map(id => ({
+  ...graphData.lookup[id], id,
+})).filter(c => c.title);
+
+// Same-thread links: collect all thread entries minus self.
+const threadGroups = Object.entries(node.thread ?? {}).map(([thread, ids]) => ({
+  thread,
+  papers: ids.map(id => ({ ...graphData.lookup[id], id })).filter(p => p.title),
+}));
 ---
 <JournalLayout
   title={`${paper.data.title} — The Journal`}
@@ -48,6 +64,77 @@ const { Content } = await paper.render();
 
     <hr class="rule" />
 
+    {(related.length > 0 || cited.length > 0 || threadGroups.length > 0) && (
+      <section class="stack" aria-label="LUMEN graph for this paper">
+        <span class="eyebrow">LUMEN · connections in the canon</span>
+
+        {related.length > 0 && (
+          <div>
+            <h3 style="font-size: var(--t-h5);">Related by content</h3>
+            <p class="small muted">Top-K cosine similarity over SCRIBA's TF-IDF index of the corpus.</p>
+            <ul style="list-style: none; padding: 0; margin: var(--s-3) 0;">
+              {related.map(r => (
+                <li style="margin-bottom: var(--s-2);">
+                  <a href={`/papers/${r.id}`} class="no-underline">
+                    <span class="mono muted" style="min-width: 4em; display:inline-block;">
+                      {r.roman ?? '—'}
+                    </span>
+                    <strong>{r.title}</strong>
+                    <span class="muted small"> · sim {r.weight}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {cited.length > 0 && (
+          <div>
+            <h3 style="font-size: var(--t-h5);">Referenced in this paper</h3>
+            <p class="small muted">Explicit citations found in the text — &quot;Paper XXI&quot;, &quot;see XXIV&quot;, or a Latin paper title used in the body.</p>
+            <ul style="list-style: none; padding: 0; margin: var(--s-3) 0;">
+              {cited.map(c => (
+                <li style="margin-bottom: var(--s-2);">
+                  <a href={`/papers/${c.id}`} class="no-underline">
+                    <span class="mono muted" style="min-width: 4em; display:inline-block;">
+                      {c.roman ?? '—'}
+                    </span>
+                    <strong>{c.title}</strong>
+                    {c.subtitle && <span class="muted"> · {c.subtitle}</span>}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {threadGroups.length > 0 && (
+          <div>
+            <h3 style="font-size: var(--t-h5);">Same thread</h3>
+            {threadGroups.map(g => (
+              <div style="margin-top: var(--s-3);">
+                <span class="pill gold">{g.thread.toLowerCase()}</span>
+                <ul style="list-style: none; padding: 0; margin: var(--s-2) 0;">
+                  {g.papers.map(p => (
+                    <li style="margin-bottom: var(--s-2);">
+                      <a href={`/papers/${p.id}`} class="no-underline">
+                        <span class="mono muted" style="min-width: 4em; display:inline-block;">
+                          {p.roman ?? '—'}
+                        </span>
+                        <strong>{p.title}</strong>
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+    )}
+
+    <hr class="rule" />
+
     <footer class="small muted stack-sm">
       <p>
         <strong>Cite as:</strong>
@@ -58,7 +145,9 @@ const { Content } = await paper.render();
       <p>
         <a href="/papers">← All papers</a>
         ·
-        <a href={`/papers/${paper.data.id}.txt`}>Plain text</a>
+        <a href="/search">Search the canon</a>
+        ·
+        <a href="/council">The Council that built this page</a>
       </p>
     </footer>
   </article>

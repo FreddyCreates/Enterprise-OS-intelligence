@@ -108,9 +108,9 @@ export const entries = [
   },
   {
     term: 'CUSTOS',
-    root: 'Latin — guardian',
-    role: 'Security / access-control agent',
-    note: 'In CIVITAS INTELLIGENTIAE, the guardian: compliance and access enforcement, never override.',
+    root: 'Latin — guardian · keeper · watchman',
+    role: 'The Journal\'s build-time guardian agent',
+    note: 'Runs on every build. Verifies that every Roman-numeral paper from I through XXXI is present in the corpus, that every published release zip matches its advertised SHA-256, that every paper referenced from the lexicon and the mathematics page actually exists. Fails the build on any drift. Never auto-fixes — corrections are explicit operator actions visible in git. Lives at journal/agents/custos.mjs.',
   },
   {
     term: 'CYCLOVEX',
@@ -169,14 +169,14 @@ export const entries = [
   {
     term: 'LUMEN',
     root: 'Latin — light',
-    role: 'Context map agent in the agent council (Paper XXIII)',
-    note: 'Reads the precedent graph and surfaces prior proposals connected to the one being traced. The light that shows what came before.',
+    role: 'Context map agent in the agent council (Paper XXIII); also the Journal\'s build-time graph builder',
+    note: 'In the ORO architecture, the agent that reads the precedent graph and surfaces prior proposals connected to the one being traced. In the Journal, the same name belongs to a build-time agent that reads SCRIBA\'s search index, computes cosine similarity between every pair of papers, and extracts explicit citations (regex matching "Paper XXI", bare Latin paper titles). Output: journal/src/data/paper-graph.json, rendered on every paper detail page as "Related by content" and "Cited in this paper".',
   },
   {
     term: 'MAGISTER',
     root: 'Latin — teacher · master of an art',
-    role: 'Training / teaching agent',
-    note: 'In CIVITAS INTELLIGENTIAE, the unit that transfers knowledge — to new agents, to staff, to the world model. Teaching is a system function, not a side activity.',
+    role: 'Training / teaching agent; also the Journal\'s lexicon-completeness reporter',
+    note: 'In CIVITAS INTELLIGENTIAE, the unit that transfers knowledge to new agents, staff, and the world model. In the Journal, the same name belongs to a build-time agent that scans every paper for ALL-CAPS Latin terms and italicised Latin phrases, then reports which ones are not yet in the lexicon. Strictly advisory — never auto-adds. The operator decides what enters the canon. Output: journal/src/data/magister-report.json.',
   },
   {
     term: 'MEDICUS',
@@ -234,9 +234,9 @@ export const entries = [
   },
   {
     term: 'SCRIBA',
-    root: 'Latin — scribe',
-    role: 'Audit / log agent',
-    note: 'In CIVITAS INTELLIGENTIAE, the recorder. Every action witnessed and committed to CHRONO. The institutional memory.',
+    root: 'Latin — scribe · recorder',
+    role: 'Audit / log agent; also the Journal\'s build-time indexer',
+    note: 'In CIVITAS INTELLIGENTIAE, the recorder — every action witnessed and committed to CHRONO. In the Journal, the same name belongs to a build-time agent that reads every sanitised paper, tokenises it, and produces a normalised TF-IDF index used by the search page and by LUMEN. Strictly deterministic — same corpus, same index. Output: journal/src/data/search-index.json.',
   },
   {
     term: 'SENTINEL',

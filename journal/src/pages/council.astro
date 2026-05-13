@@ -1,0 +1,164 @@
+---
+import JournalLayout from '../layouts/JournalLayout.astro';
+import searchIndex from '../data/search-index.json';
+import paperGraph  from '../data/paper-graph.json';
+import custosReport from '../data/custos-report.json';
+import magisterReport from '../data/magister-report.json';
+
+const stats = {
+  papers:     paperGraph.stats.papers,
+  vocabSize:  searchIndex.vocab.length,
+  relatedEdges: paperGraph.stats.related,
+  citedEdges:   paperGraph.stats.cited,
+  threadEdges:  paperGraph.stats.thread,
+  custosOk:     custosReport.ok,
+  warnings:     custosReport.warnings.length,
+  candidates:   magisterReport.candidates.length,
+  builtAt:      searchIndex.builtAt,
+};
+
+const agents = [
+  {
+    name: 'SCRIBA',
+    latin: 'scriba — the scribe',
+    role: 'Indexes the canon. Builds the search backbone.',
+    runsAt: 'build time',
+    reads:  'journal/src/content/papers/*.md (sanitiser-verified)',
+    writes: 'journal/src/data/search-index.json',
+    powers: ['/search/', 'LUMEN'],
+    summary:
+      "Reads every sanitised paper. Tokenises, removes stopwords, computes a TF-IDF vector " +
+      "per paper, normalises, retains the top 240 most-distinctive terms per document. " +
+      "Same corpus, same index — deterministic by construction.",
+    stats: `indexed ${stats.papers} papers · ${stats.vocabSize} vocabulary terms`,
+  },
+  {
+    name: 'LUMEN',
+    latin: 'lumen — the light',
+    role: 'Maps the connections. Builds the paper graph.',
+    runsAt: 'build time',
+    reads:  'SCRIBA index + paper bodies',
+    writes: 'journal/src/data/paper-graph.json',
+    powers: ['paper detail pages: Related by content, Referenced in this paper, Same thread'],
+    summary:
+      "For each paper, computes cosine similarity to every other paper using SCRIBA's TF-IDF " +
+      "vectors and keeps the top 5. Then scans the body for explicit citations of other papers " +
+      "(\"Paper XXI\", \"see XXIV\", bare Latin paper titles). Every edge is grounded — you can " +
+      "see why two papers connect by reading both.",
+    stats: `${stats.relatedEdges} related · ${stats.citedEdges} cited · ${stats.threadEdges} thread`,
+  },
+  {
+    name: 'CUSTOS',
+    latin: 'custos — the guardian',
+    role: 'Catches drift. Fails the build before it deploys a lie.',
+    runsAt: 'build time',
+    reads:  'corpus + lexicon + mathematics + releases/CHECKSUMS.sha256',
+    writes: 'journal/src/data/custos-report.json',
+    powers: ['the build pipeline (fail-closed)'],
+    summary:
+      "Verifies every Roman-numeral paper from I through XXXI is present. Verifies every " +
+      "release zip listed in src/lib/tools.js exists with the SHA-256 it advertises. " +
+      "Verifies every paper referenced from the lexicon and the mathematics page actually " +
+      "exists. Never auto-fixes — a CUSTOS failure is an explicit operator action visible in git.",
+    stats: stats.custosOk
+      ? `${stats.papers} papers verified · 0 failures · ${stats.warnings} non-fatal warnings`
+      : `BUILD FAILED — see custos-report.json`,
+  },
+  {
+    name: 'MAGISTER',
+    latin: 'magister — the teacher',
+    role: 'Surfaces Latin/Greek terms in the papers that are not yet in the lexicon.',
+    runsAt: 'build time',
+    reads:  'corpus + lexicon',
+    writes: 'journal/src/data/magister-report.json',
+    powers: ['operator review (advisory only)'],
+    summary:
+      "Scans every paper for ALL-CAPS Latin terms (≥ 4 letters) and italicised Latin phrases. " +
+      "Filters out Roman numerals, English caps, and terms already in the lexicon. " +
+      "Surfaces candidates as a report — the operator decides what enters the canon. " +
+      "MAGISTER never adds; it suggests.",
+    stats: `${stats.candidates} candidate term(s) currently surfaced`,
+  },
+];
+---
+<JournalLayout
+  title="The Council — The Journal"
+  description="The four build-time agents that maintain the Journal: SCRIBA, LUMEN, CUSTOS, MAGISTER. Each named after the math or biology it implements. Each does one thing."
+  eyebrow="The Council"
+>
+  <header class="measure stack" style="margin-top: var(--s-4);">
+    <h1>The Council</h1>
+    <p class="muted" style="font-size: var(--t-h5); line-height: 1.5;">
+      Four build-time agents maintain the Journal. They never run when a visitor loads a page.
+      They run when the site is rebuilt — once per release — and their outputs ship with the site
+      as static files.
+    </p>
+    <p>
+      Each agent is named the same way every other unit in this work is named — after the role it
+      plays in <em class="latin">civitas intelligentiae</em>, the civilization of intelligences described in the SDK. The
+      same SCRIBA that records audit trails in the production architecture is the SCRIBA that
+      indexes the canon here. Different scale. Same idea.
+    </p>
+  </header>
+
+  <hr class="rule" />
+
+  <section class="stack-lg">
+    {agents.map(a => (
+      <article class="tool-card stack-sm" id={a.name.toLowerCase()}>
+        <header class="stack-sm">
+          <span class="eyebrow">{a.runsAt}</span>
+          <h2 style="font-size: var(--t-h3);">
+            <span class="latin">{a.name}</span>
+            <span class="muted small" style="font-weight: normal; margin-left: var(--s-3);">{a.latin}</span>
+          </h2>
+          <p><em>{a.role}</em></p>
+        </header>
+
+        <p>{a.summary}</p>
+
+        <div class="grid-2">
+          <div>
+            <span class="eyebrow">Reads</span>
+            <p class="small mono">{a.reads}</p>
+          </div>
+          <div>
+            <span class="eyebrow">Writes</span>
+            <p class="small mono">{a.writes}</p>
+          </div>
+        </div>
+
+        <div>
+          <span class="eyebrow">Powers</span>
+          <p class="small">{a.powers.join(' · ')}</p>
+        </div>
+
+        <div>
+          <span class="eyebrow">Currently</span>
+          <p class="small mono">{a.stats}</p>
+        </div>
+      </article>
+    ))}
+  </section>
+
+  <hr class="rule" />
+
+  <aside class="doctrine">
+    <h6>Why the agents matter on this page</h6>
+    <p>
+      The journal is a static site. It is built once per release and served as files.
+      The agents are how the site stays honest between releases: SCRIBA ensures every word
+      can be searched; LUMEN ensures every connection between papers is real; CUSTOS ensures
+      the build will not deploy a drifted corpus; MAGISTER ensures the lexicon keeps pace with
+      the work.
+    </p>
+    <p>
+      None of them produce content that the visitor reads. They produce <em>metadata</em>
+      about content that the author wrote. The line between author and agent is preserved
+      by construction.
+    </p>
+    <p class="small muted">
+      Last council run: <code class="mono">{stats.builtAt}</code>.
+    </p>
+  </aside>
+</JournalLayout>
