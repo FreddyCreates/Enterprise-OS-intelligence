@@ -1,0 +1,5 @@
+{
+  "name": "medina-production-apps",
+  "private": true,
+  "type": "module"
+}

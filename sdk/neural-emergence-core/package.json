@@ -6,12 +6,15 @@
   "main": "src/index.js",
   "exports": {
     ".": "./src/index.js",
-    "./neural-field": "./src/neural-field.js",
-    "./pattern-recognizer": "./src/pattern-recognizer.js",
-    "./emergence-detector": "./src/emergence-detector.js",
-    "./cognitive-mesh": "./src/cognitive-mesh.js",
-    "./attention-fabric": "./src/attention-fabric.js"
+    "./neural-field": "./src/index.js",
+    "./pattern-recognizer": "./src/index.js",
+    "./emergence-detector": "./src/index.js",
+    "./cognitive-mesh": "./src/index.js",
+    "./attention-fabric": "./src/index.js"
   },
+  "files": [
+    "src/"
+  ],
   "author": "Alfredo Medina Hernandez <medina@medinatech.io>",
   "license": "MEDINA-SOVEREIGN",
   "repository": {

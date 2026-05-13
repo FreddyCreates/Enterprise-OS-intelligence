@@ -6,12 +6,15 @@
   "main": "src/index.js",
   "exports": {
     ".": "./src/index.js",
-    "./energy-distributor": "./src/energy-distributor.js",
-    "./compute-allocator": "./src/compute-allocator.js",
-    "./cycle-budget": "./src/cycle-budget.js",
-    "./thermal-governor": "./src/thermal-governor.js",
-    "./resource-throttle": "./src/resource-throttle.js"
+    "./energy-distributor": "./src/index.js",
+    "./compute-allocator": "./src/index.js",
+    "./cycle-budget": "./src/index.js",
+    "./thermal-governor": "./src/index.js",
+    "./resource-throttle": "./src/index.js"
   },
+  "files": [
+    "src/"
+  ],
   "author": "Alfredo Medina Hernandez <medina@medinatech.io>",
   "license": "MEDINA-SOVEREIGN",
   "repository": {

@@ -6,13 +6,16 @@
   "main": "src/index.js",
   "exports": {
     ".": "./src/index.js",
-    "./replication": "./src/replication-engine.js",
-    "./scalability": "./src/scalability-engine.js",
-    "./hierarchy": "./src/hierarchy-engine.js",
-    "./intelligence": "./src/intelligence-engine.js",
-    "./permanence": "./src/permanence-engine.js",
-    "./chip": "./src/chip-interface.js"
+    "./replication": "./src/index.js",
+    "./scalability": "./src/index.js",
+    "./hierarchy": "./src/index.js",
+    "./intelligence": "./src/index.js",
+    "./permanence": "./src/index.js",
+    "./chip": "./src/index.js"
   },
+  "files": [
+    "src/"
+  ],
   "author": "Alfredo Medina Hernandez <medina@medinatech.io>",
   "license": "MEDINA-SOVEREIGN",
   "repository": {

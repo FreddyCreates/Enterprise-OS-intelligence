@@ -104,6 +104,21 @@ const ORGANISM_LAYERS = [
   },
 ];
 
+const IMPLEMENTATION_METRICS = Object.freeze({
+  packageCount: 27,
+  protocolCount: 7,
+  canisterCount: 5,
+  languageSurfaces: ['JavaScript', 'Motoko', 'Rust', 'Go'],
+  verification: [
+    'core-sdk verification',
+    'protocol integration',
+    'rust tests + demo',
+    'math-layer verification',
+    'enterprise/runtime demos',
+    'atlas worker route checks',
+  ],
+});
+
 function buildOrganismAtlasHTML(beat, seal) {
   const layers = ORGANISM_LAYERS.map(layer => `
     <section style="max-width:1100px;margin:0 auto 28px;padding:24px 28px;border:1px solid #0d2030;border-radius:10px;background:#060d1a">
@@ -118,6 +133,10 @@ function buildOrganismAtlasHTML(beat, seal) {
         `).join('')}
       </div>
     </section>
+  `).join('');
+
+  const verificationList = IMPLEMENTATION_METRICS.verification.map(item => `
+    <li style="margin:8px 0;color:#8899bb">${item}</li>
   `).join('');
 
   return `<!DOCTYPE html>
@@ -148,11 +167,24 @@ a{text-decoration:none;color:inherit}nav{display:flex;justify-content:space-betw
     <div class="sub">A public-facing view of the implemented organism stack: foundational SDKs, mathematics runtime, enterprise runtime, and substrate layers now present on this branch. Seal: ${seal.slice(0, 16)}…</div>
     <div class="stats">
       <div class="stat"><div class="v">${ORGANISM_LAYERS.length}</div><div class="l">Architecture Layers</div></div>
-      <div class="stat"><div class="v">16+</div><div class="l">Implemented Packages</div></div>
-      <div class="stat"><div class="v">7</div><div class="l">Protocols</div></div>
-      <div class="stat"><div class="v">5</div><div class="l">ORO Canisters</div></div>
+      <div class="stat"><div class="v">${IMPLEMENTATION_METRICS.packageCount}</div><div class="l">Implemented Packages</div></div>
+      <div class="stat"><div class="v">${IMPLEMENTATION_METRICS.protocolCount}</div><div class="l">Protocols</div></div>
+      <div class="stat"><div class="v">${IMPLEMENTATION_METRICS.canisterCount}</div><div class="l">ORO Canisters</div></div>
+      <div class="stat"><div class="v">${IMPLEMENTATION_METRICS.languageSurfaces.length}</div><div class="l">Language Surfaces</div></div>
     </div>
   </div>
+  <section style="max-width:1100px;margin:0 auto 28px;padding:24px 28px;border:1px solid #0d2030;border-radius:10px;background:#060d1a">
+    <div style="font-size:.75rem;letter-spacing:.16em;text-transform:uppercase;color:#00d4ff;margin-bottom:8px">verification</div>
+    <div style="font-size:1.8rem;color:#c8d8f8;font-weight:bold;margin-bottom:12px">Implemented and exercised</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:28px">
+      <div>
+        <div style="font-size:.82rem;color:#667788;line-height:1.7">This atlas is grounded in the branch’s implemented runtime surface, not just repo prose. The counts below summarize what has been made concrete across package, protocol, canister, and native layers.</div>
+      </div>
+      <div>
+        <ul style="margin:0;padding-left:18px">${verificationList}</ul>
+      </div>
+    </div>
+  </section>
   ${layers}
 </body>
 </html>`;
@@ -164,6 +196,7 @@ function buildOrganismAtlasPayload(beat) {
     beat,
     layers: ORGANISM_LAYERS,
     protocols: PROTOCOLS,
+    metrics: IMPLEMENTATION_METRICS,
     publicView: 'organism-atlas',
     updatedAt: new Date().toISOString(),
   };

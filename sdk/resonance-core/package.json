@@ -6,12 +6,15 @@
   "main": "src/index.js",
   "exports": {
     ".": "./src/index.js",
-    "./phi-oscillator": "./src/phi-oscillator.js",
-    "./kuramoto-coupler": "./src/kuramoto-coupler.js",
-    "./phase-lock": "./src/phase-lock.js",
-    "./frequency-aligner": "./src/frequency-aligner.js",
-    "./harmonic-field": "./src/harmonic-field.js"
+    "./phi-oscillator": "./src/index.js",
+    "./kuramoto-coupler": "./src/index.js",
+    "./phase-lock": "./src/index.js",
+    "./frequency-aligner": "./src/index.js",
+    "./harmonic-field": "./src/index.js"
   },
+  "files": [
+    "src/"
+  ],
   "author": "Alfredo Medina Hernandez <medina@medinatech.io>",
   "license": "MEDINA-SOVEREIGN",
   "repository": {

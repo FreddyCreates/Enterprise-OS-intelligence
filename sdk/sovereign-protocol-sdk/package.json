@@ -6,13 +6,16 @@
   "main": "src/index.js",
   "exports": {
     ".": "./src/index.js",
-    "./transport": "./src/transport-layer.js",
-    "./registry": "./src/sovereign-registry.js",
-    "./versioning": "./src/version-engine.js",
-    "./messaging": "./src/entity-messaging.js",
-    "./distribution": "./src/distribution-engine.js",
-    "./server": "./src/sovereign-server.js"
+    "./transport": "./src/index.js",
+    "./registry": "./src/index.js",
+    "./versioning": "./src/index.js",
+    "./messaging": "./src/index.js",
+    "./distribution": "./src/index.js",
+    "./server": "./src/index.js"
   },
+  "files": [
+    "src/"
+  ],
   "author": "Alfredo Medina Hernandez <medina@medinatech.io>",
   "license": "MEDINA-SOVEREIGN",
   "repository": {

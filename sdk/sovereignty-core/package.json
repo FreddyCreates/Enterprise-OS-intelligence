@@ -6,12 +6,15 @@
   "main": "src/index.js",
   "exports": {
     ".": "./src/index.js",
-    "./identity-engine": "./src/identity-engine.js",
-    "./ownership-verifier": "./src/ownership-verifier.js",
-    "./data-sovereignty": "./src/data-sovereignty.js",
-    "./access-controller": "./src/access-controller.js",
-    "./self-custody": "./src/self-custody.js"
+    "./identity-engine": "./src/index.js",
+    "./ownership-verifier": "./src/index.js",
+    "./data-sovereignty": "./src/index.js",
+    "./access-controller": "./src/index.js",
+    "./self-custody": "./src/index.js"
   },
+  "files": [
+    "src/"
+  ],
   "author": "Alfredo Medina Hernandez <medina@medinatech.io>",
   "license": "MEDINA-SOVEREIGN",
   "repository": {
