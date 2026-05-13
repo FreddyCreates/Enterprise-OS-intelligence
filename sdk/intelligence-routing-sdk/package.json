@@ -13,6 +13,9 @@
     "./intelligence-wire": "./src/intelligence-wire.js",
     "./workforce-router": "./src/workforce-router.js"
   },
+  "files": [
+    "src/"
+  ],
   "keywords": [
     "ai",
     "routing",

@@ -13,6 +13,9 @@
     "./heartbeat-monitor": "./src/heartbeat-monitor.js",
     "./upgrade-controller": "./src/upgrade-controller.js"
   },
+  "files": [
+    "src/"
+  ],
   "author": "Alfredo Medina Hernandez <medina@medinatech.io>",
   "license": "MEDINA-SOVEREIGN",
   "repository": {

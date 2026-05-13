@@ -53,6 +53,122 @@ const PROTOCOLS = [
   { id:'PROTO-017', name:'Scalability Coordination', math:'boids swarm · quorum sensing' },
 ];
 
+const ORGANISM_LAYERS = [
+  {
+    id: 'foundation',
+    name: 'Foundational SDKs',
+    color: '#00d4ff',
+    items: [
+      'medina-heart',
+      'medina-registry',
+      'organism-ai',
+      'medina-queries',
+      'protocol-composer',
+      'organism-bootstrap',
+    ],
+  },
+  {
+    id: 'math',
+    name: 'Math Runtime Layer',
+    color: '#00ff88',
+    items: [
+      'medina-tensor',
+      'medina-field',
+      'medina-phase',
+      'medina-swarm',
+      'medina-timers',
+      'medina-calls',
+    ],
+  },
+  {
+    id: 'enterprise',
+    name: 'Enterprise Runtime Layer',
+    color: '#ffd700',
+    items: [
+      'intelligence-routing-sdk',
+      'multi-model-sdk',
+      'sovereign-memory-sdk',
+      'workforce-on-chain-sdk',
+    ],
+  },
+  {
+    id: 'substrate',
+    name: 'Substrate + Protocols',
+    color: '#cc44ff',
+    items: [
+      'PROTO-011 ... PROTO-017',
+      'five ORO Motoko canisters',
+      'organism-core Rust crate',
+      'Go organism gateway',
+    ],
+  },
+];
+
+function buildOrganismAtlasHTML(beat, seal) {
+  const layers = ORGANISM_LAYERS.map(layer => `
+    <section style="max-width:1100px;margin:0 auto 28px;padding:24px 28px;border:1px solid #0d2030;border-radius:10px;background:#060d1a">
+      <div style="font-size:.75rem;letter-spacing:.16em;text-transform:uppercase;color:${layer.color};margin-bottom:8px">${layer.id}</div>
+      <div style="font-size:1.8rem;color:#c8d8f8;font-weight:bold;margin-bottom:12px">${layer.name}</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px">
+        ${layer.items.map(item => `
+          <div style="border:1px solid #0d2030;border-radius:8px;padding:16px;background:rgba(2,5,15,.7);color:#8899bb">
+            <div style="color:${layer.color};font-weight:bold;margin-bottom:6px">${item}</div>
+            <div style="font-size:.8rem;line-height:1.5">Implemented on this branch as a runnable part of the organism stack.</div>
+          </div>
+        `).join('')}
+      </div>
+    </section>
+  `).join('');
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CEREBRUM — Organism Atlas</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#02050f;color:#c8d8f8;font-family:'Courier New',monospace}
+a{text-decoration:none;color:inherit}nav{display:flex;justify-content:space-between;align-items:center;padding:18px 32px;border-bottom:1px solid #0d2030;background:rgba(2,5,15,.92);position:sticky;top:0}
+.badge{display:inline-block;padding:6px 12px;border-radius:999px;border:1px solid #0d2030;background:#060d1a;color:#00d4ff;font-size:.75rem;letter-spacing:.12em}
+.hero{max-width:1100px;margin:0 auto;padding:72px 28px 44px}.title{font-size:3.5rem;font-weight:bold;margin:12px 0}.sub{color:#8899bb;max-width:760px;line-height:1.7}
+.stats{display:flex;gap:16px;flex-wrap:wrap;margin-top:24px}.stat{background:#060d1a;border:1px solid #0d2030;border-radius:8px;padding:16px 18px;min-width:180px}
+.stat .v{font-size:1.8rem;color:#00d4ff;font-weight:bold}.stat .l{font-size:.72rem;color:#445566;letter-spacing:.14em;text-transform:uppercase}
+</style>
+</head>
+<body>
+  <nav>
+    <div style="font-weight:bold;letter-spacing:.16em;color:#00d4ff">◎ CEREBRUM / ORGANISM ATLAS</div>
+    <div style="display:flex;gap:16px;align-items:center">
+      <a href="/">Main</a>
+      <a href="/api/organism-atlas">API</a>
+    </div>
+  </nav>
+  <div class="hero">
+    <div class="badge">PUBLIC ARCHITECTURE VIEW · LIVE BEAT ${beat}</div>
+    <div class="title">The Organism Atlas</div>
+    <div class="sub">A public-facing view of the implemented organism stack: foundational SDKs, mathematics runtime, enterprise runtime, and substrate layers now present on this branch. Seal: ${seal.slice(0, 16)}…</div>
+    <div class="stats">
+      <div class="stat"><div class="v">${ORGANISM_LAYERS.length}</div><div class="l">Architecture Layers</div></div>
+      <div class="stat"><div class="v">16+</div><div class="l">Implemented Packages</div></div>
+      <div class="stat"><div class="v">7</div><div class="l">Protocols</div></div>
+      <div class="stat"><div class="v">5</div><div class="l">ORO Canisters</div></div>
+    </div>
+  </div>
+  ${layers}
+</body>
+</html>`;
+}
+
+function buildOrganismAtlasPayload(beat) {
+  return {
+    designation: 'RSHIP-AIS-CB-001',
+    beat,
+    layers: ORGANISM_LAYERS,
+    protocols: PROTOCOLS,
+    publicView: 'organism-atlas',
+    updatedAt: new Date().toISOString(),
+  };
+}
+
 function computeEmergence(n, beat) {
   return parseFloat((Math.log(Math.max(1, n * beat)) * PHI_INV).toFixed(4));
 }
@@ -196,9 +312,10 @@ footer{border-top:1px solid var(--border);padding:32px 48px;
     <a href="#agents">Agents</a>
     <a href="#protocols">Protocols</a>
     <a href="#api">API</a>
+    <a href="/organism-atlas">Atlas</a>
     <a href="https://agens.rship.workers.dev">Agent Services</a>
   </div>
-  <a class="nav-cta" href="https://agens.rship.workers.dev">Deploy Agents →</a>
+  <a class="nav-cta" href="/organism-atlas">Open Atlas →</a>
 </nav>
 
 <div class="hero">
@@ -210,7 +327,7 @@ footer{border-top:1px solid var(--border);padding:32px 48px;
     One platform. Six sovereign minds.
   </div>
   <div class="hero-actions">
-    <a class="btn-primary" href="https://agens.rship.workers.dev">Deploy Agents</a>
+    <a class="btn-primary" href="/organism-atlas">Open Organism Atlas</a>
     <a class="btn-secondary" href="#api">View API</a>
   </div>
 </div>
@@ -324,6 +441,9 @@ export default {
     if (path === '/' && method === 'GET')
       return new Response(buildHTML(beat, seal), { headers:{'Content-Type':'text/html;charset=UTF-8',...cors} });
 
+    if (path === '/organism-atlas' && method === 'GET')
+      return new Response(buildOrganismAtlasHTML(beat, seal), { headers:{'Content-Type':'text/html;charset=UTF-8',...cors} });
+
     if (path === '/api/status')
       return Response.json({
         designation:'RSHIP-AIS-CB-001', name:'CEREBRUM', latin:'cerebrum', meaning:'brain',
@@ -337,6 +457,9 @@ export default {
     if (path === '/api/protocols')
       return Response.json({ protocols:PROTOCOLS, count:PROTOCOLS.length, beat }, {headers:cors});
 
+    if (path === '/api/organism-atlas')
+      return Response.json(buildOrganismAtlasPayload(beat), {headers:cors});
+
     if (path === '/api/health')
       return Response.json({
         network:'RSHIP-AIS', cerebrum:{status:'OPERATIONAL',beat,emergence},
@@ -344,7 +467,7 @@ export default {
       }, {headers:cors});
 
     return Response.json({ error:'NOT_FOUND', path,
-      available:['/', '/api/status', '/api/agents', '/api/protocols', '/api/health']
+      available:['/', '/organism-atlas', '/api/status', '/api/agents', '/api/protocols', '/api/organism-atlas', '/api/health']
     }, {status:404, headers:cors});
   },
 };

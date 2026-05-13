@@ -13,6 +13,9 @@
     "./model-registry": "./src/model-registry.js",
     "./context-manager": "./src/context-manager.js"
   },
+  "files": [
+    "src/"
+  ],
   "author": "Alfredo Medina Hernandez <medina@medinatech.io>",
   "license": "MEDINA-SOVEREIGN",
   "repository": {
