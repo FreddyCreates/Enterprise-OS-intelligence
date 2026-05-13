@@ -2,8 +2,14 @@
   "name": "@medina/medina-phase",
   "version": "1.0.0",
   "description": "Phase space dynamics with Kuramoto oscillators, Lyapunov exponents, and attractor reconstruction",
-  "main": "src/index.js",
   "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "files": [
+    "src/"
+  ],
   "keywords": [
     "medina",
     "phase-space",

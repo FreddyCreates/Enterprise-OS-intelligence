@@ -2,8 +2,14 @@
   "name": "@medina/medina-swarm",
   "version": "1.0.0",
   "description": "Distributed swarm intelligence with Reynolds boids, stigmergy, and quorum sensing",
-  "main": "src/index.js",
   "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "files": [
+    "src/"
+  ],
   "keywords": [
     "medina",
     "swarm",

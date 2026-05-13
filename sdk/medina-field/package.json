@@ -2,8 +2,14 @@
   "name": "@medina/medina-field",
   "version": "1.0.0",
   "description": "Quantum field theory with path integrals, renormalization group, and gauge theories",
-  "main": "src/index.js",
   "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "files": [
+    "src/"
+  ],
   "keywords": [
     "medina",
     "quantum-field-theory",
