@@ -6,6 +6,7 @@
  * Runs are state/step based and remain available until completion or explicit cancellation.
  */
 
+import { randomUUID } from 'node:crypto';
 import { PHI, PHI_INV } from '../../rship-framework.js';
 
 export class TRADEXToolForge {
@@ -44,7 +45,7 @@ export class TRADEXToolForge {
     const tool = this.toolRegistry.get(name);
     if (!tool) return { success: false, reason: `Tool not found: ${name}` };
 
-    const runId = `${name}-run-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const runId = `${name}-run-${randomUUID()}`;
     const runRecord = {
       runId,
       name,

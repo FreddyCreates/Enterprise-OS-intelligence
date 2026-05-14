@@ -687,6 +687,18 @@ class TradeNetwork {
       return { nodeCount: 0, linkCount: 0, resilience: 0, status: 'no-network' };
     }
 
+    if (nodes.length === 1) {
+      this.lastResilience = 1;
+      return {
+        nodeCount: 1,
+        linkCount: links.length,
+        density: 0,
+        avgLatencyMs: 0,
+        resilience: 1,
+        status: 'single-node-stable',
+      };
+    }
+
     const density = links.length / Math.max(1, nodes.length * (nodes.length - 1));
     const avgLatency = links.length
       ? links.reduce((s, l) => s + (l.latencyMs || 0), 0) / links.length
