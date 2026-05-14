@@ -12,6 +12,7 @@ import { PHI, PHI_INV } from '../../rship-framework.js';
 const MIN_NODE_WEIGHT_FLOOR = 0.0001;
 import TRADEX from '../tradex-agi/tradex-agi.js';
 import IntelligenceTransferProtocol from '../../protocols/intelligence-transfer-protocol.js';
+import TRADEXToolForge from '../tradex-toolforge/tradex-toolforge.js';
 
 export class TRADEFABRIC {
   static RSHIP_ID = 'RSHIP-2026-TRADEFABRIC-001';
@@ -28,6 +29,9 @@ export class TRADEFABRIC {
     this.transferProtocol = new IntelligenceTransferProtocol();
     this.transferBridge = this.transferProtocol.createTradingBridge('TRADEFABRIC');
     this.ecosystemLog = [];
+    this.toolForge = new TRADEXToolForge();
+    this.networkRegistry = new Map();
+    this.dataRegistry = new Map();
   }
 
   registerNode(nodeId, tradexInstance = null, nodeWeight = 1) {
@@ -114,6 +118,51 @@ export class TRADEFABRIC {
     };
   }
 
+
+  registerNetworkNode(nodeId, peers = [], latencyMs = null) {
+    this.networkRegistry.set(nodeId, {
+      peers,
+      latencyMs,
+      updatedAt: Date.now(),
+    });
+    return { registered: true, nodeId, networkNodes: this.networkRegistry.size };
+  }
+
+  ingestDataStream(streamId, metadata = {}) {
+    this.dataRegistry.set(streamId, {
+      ...metadata,
+      updatedAt: Date.now(),
+    });
+    return { ingested: true, streamId, streams: this.dataRegistry.size };
+  }
+
+  registerPersistentTool(name, executor, metadata = {}) {
+    return this.toolForge.registerTool(name, executor, metadata);
+  }
+
+  async runPersistentTool(name, payload = {}, context = {}) {
+    return this.toolForge.runTool(name, payload, context);
+  }
+
+  getPersistentToolRun(runId) {
+    return this.toolForge.getRun(runId);
+  }
+
+  combineEcosystemIntelligence() {
+    const status = this.aggregateNodeStatus();
+    const networkNodes = this.networkRegistry.size;
+    const dataStreams = this.dataRegistry.size;
+
+    return {
+      timestamp: Date.now(),
+      tradingNodes: status.nodeCount,
+      networkNodes,
+      dataStreams,
+      ecosystemRiskBand: status.ecosystemRiskBand,
+      toolforge: this.toolForge.status(),
+    };
+  }
+
   status() {
     return {
       rshipId: TRADEFABRIC.RSHIP_ID,
@@ -122,6 +171,9 @@ export class TRADEFABRIC {
       transferHistory: this.transferProtocol.transferHistory.length,
       ecosystemEvents: this.ecosystemLog.length,
       config: this.config,
+      networkNodes: this.networkRegistry.size,
+      dataStreams: this.dataRegistry.size,
+      toolForge: this.toolForge.status(),
     };
   }
 }

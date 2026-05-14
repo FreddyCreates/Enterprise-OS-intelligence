@@ -832,16 +832,21 @@ class DGIPhantexIntegration {
 
 ## Companion Sub-Paper Suite: DGI Sub-Protocols
 
-This paper now has a dedicated sub-paper expanding protocolized governance internals:
+This paper now has dedicated sub-papers expanding protocolized governance internals:
 
 1. **DGI Sub-Paper I — Policy Lattice and Stakeholder Constraint Protocols**  
    File: `research-papers/DGI-Subpaper-I-Policy-Lattice-and-Constraint-Protocols.md`
 
-It formalizes DGI governance into protocol families:
+2. **DGI Sub-Paper II — Governance Network Graphs and AI Policy Data Mesh**  
+   File: `research-papers/DGI-Subpaper-II-Governance-Network-Graphs-and-Policy-Data-Mesh.md`
+
+Together they formalize DGI governance into protocol families:
 - **DGIP-1:** Constraint Envelope Protocol
 - **DGIP-2:** Stakeholder Escalation Protocol
 - **DGIP-3:** Regulatory Reconciliation Protocol
 - **DGIP-4:** Governance Drift Detection Protocol
+- **DGIP-5:** Governance Network Topology Protocol
+- **DGIP-6:** Policy Data Lineage and Attestation Protocol
 
 ---
 

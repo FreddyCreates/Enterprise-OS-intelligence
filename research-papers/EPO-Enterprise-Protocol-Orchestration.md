@@ -859,16 +859,21 @@ class EPOPhantexIntegration {
 
 ## Companion Sub-Paper Suite: EPO Sub-Protocols
 
-This paper now has a dedicated sub-paper for control-plane sub-protocol decomposition:
+This paper now has dedicated sub-papers for control-plane decomposition and network/data fabric orchestration:
 
 1. **EPO Sub-Paper I — Domain Plane Contracts and Meta-Orchestration Protocols**  
    File: `research-papers/EPO-Subpaper-I-Control-Plane-Contracts-and-Meta-Orchestration.md`
 
-It defines EPO sub-protocol families:
+2. **EPO Sub-Paper II — Enterprise AI Network Fabric and Data Fabric Protocols**  
+   File: `research-papers/EPO-Subpaper-II-Enterprise-AI-Network-and-Data-Fabric-Protocols.md`
+
+Together they define EPO sub-protocol families:
 - **EPOP-1:** Domain Plane Contract Protocol
 - **EPOP-2:** Control-Plane Handoff Protocol
 - **EPOP-3:** Exception Escalation Mesh Protocol
 - **EPOP-4:** Compliance Replay and Audit Protocol
+- **EPOP-5:** AI Network Fabric Coordination Protocol
+- **EPOP-6:** Data Fabric Provenance and Synchronization Protocol
 
 ---
 

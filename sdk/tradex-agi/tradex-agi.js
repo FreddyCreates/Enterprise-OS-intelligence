@@ -670,6 +670,78 @@ class TradeScenarioLab {
   }
 }
 
+
+/* ═══════════════════════════════════════════════════════════════════
+   SUB-MODEL 10: TRADE-NETWORK — AI Network Intelligence
+   ═══════════════════════════════════════════════════════════════════ */
+class TradeNetwork {
+  constructor() {
+    this.lastResilience = 0;
+  }
+
+  analyzeTopology(topology = {}) {
+    const nodes = Array.isArray(topology.nodes) ? topology.nodes : [];
+    const links = Array.isArray(topology.links) ? topology.links : [];
+
+    if (!nodes.length) {
+      return { nodeCount: 0, linkCount: 0, resilience: 0, status: 'no-network' };
+    }
+
+    const density = links.length / Math.max(1, nodes.length * (nodes.length - 1));
+    const avgLatency = links.length
+      ? links.reduce((s, l) => s + (l.latencyMs || 0), 0) / links.length
+      : 0;
+
+    const resilience = Math.max(0, Math.min(1,
+      density * PHI - (avgLatency / 1000) * PHI_INV
+    ));
+
+    this.lastResilience = resilience;
+
+    return {
+      nodeCount: nodes.length,
+      linkCount: links.length,
+      density,
+      avgLatencyMs: avgLatency,
+      resilience,
+      status: resilience > PHI_INV ? 'resilient' : 'fragile',
+    };
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   SUB-MODEL 11: TRADE-DATA — AI Data Intelligence
+   ═══════════════════════════════════════════════════════════════════ */
+class TradeData {
+  constructor() {
+    this.lastQuality = 0;
+  }
+
+  assessDataFeeds(feeds = []) {
+    if (!feeds.length) {
+      return { feedCount: 0, quality: 0, status: 'no-data' };
+    }
+
+    const scored = feeds.map(f => {
+      const freshness = Math.max(0, Math.min(1, 1 - ((f.ageSeconds || 0) / 300)));
+      const completeness = Math.max(0, Math.min(1, f.completeness ?? 0.5));
+      const consistency = Math.max(0, Math.min(1, f.consistency ?? 0.5));
+      const quality = (freshness * PHI + completeness * PHI_INV + consistency * (PHI_INV ** 2)) / (PHI + PHI_INV + PHI_INV ** 2);
+      return { source: f.source || 'unknown', quality, freshness, completeness, consistency };
+    });
+
+    const quality = scored.reduce((s, x) => s + x.quality, 0) / scored.length;
+    this.lastQuality = quality;
+
+    return {
+      feedCount: scored.length,
+      quality,
+      status: quality > PHI_INV ? 'healthy' : 'degraded',
+      feeds: scored,
+    };
+  }
+}
+
 /* ═══════════════════════════════════════════════════════════════════
    MAIN CLASS: TRADEX AGI
    ═══════════════════════════════════════════════════════════════════ */
@@ -690,6 +762,8 @@ export class TRADEX extends RSHIPCore {
       enableSentimentTools: true,
       enableExecutionRouter: true,
       enableScenarioLab: true,
+      enableNetworkIntel: true,
+      enableDataIntel: true,
       riskTolerance: PHI_INV,
       ...config,
     };
@@ -704,6 +778,8 @@ export class TRADEX extends RSHIPCore {
     this.sentiment = new TradeSentiment();
     this.router = new TradeExecutionRouter();
     this.scenarioLab = new TradeScenarioLab();
+    this.network = new TradeNetwork();
+    this.data = new TradeData();
     
     // Memory systems
     this.memory = new EternalMemory('tradex');
@@ -751,7 +827,7 @@ export class TRADEX extends RSHIPCore {
    * Execute a complete trading analysis cycle
    */
   async analyze(marketData) {
-    const { prices, volumes, darkPoolVolumes, assetPairs, headlines, venues } = marketData;
+    const { prices, volumes, darkPoolVolumes, assetPairs, headlines, venues, networkTopology, dataFeeds } = marketData;
     
     const results = {
       timestamp: Date.now(),
@@ -761,6 +837,8 @@ export class TRADEX extends RSHIPCore {
       riskAssessment: null,
       sentiment: null,
       executionGuidance: null,
+      networkIntelligence: null,
+      dataIntelligence: null,
     };
     
     // 1. Phantom signal detection
@@ -794,6 +872,17 @@ export class TRADEX extends RSHIPCore {
     if (this.config.enableExecutionRouter && venues && venues.length) {
       const regime = results.riskAssessment?.regime?.name || 'NORMAL';
       results.executionGuidance = this.router.rankVenues(venues, regime);
+    }
+
+
+    // 7. AI network intelligence
+    if (this.config.enableNetworkIntel && networkTopology) {
+      results.networkIntelligence = this.network.analyzeTopology(networkTopology);
+    }
+
+    // 8. AI data intelligence
+    if (this.config.enableDataIntel && dataFeeds && dataFeeds.length) {
+      results.dataIntelligence = this.data.assessDataFeeds(dataFeeds);
     }
     // Store in memory
     await this.memory.store('analysis', results);
@@ -864,6 +953,21 @@ export class TRADEX extends RSHIPCore {
     return this.scenarioLab.runStressSuite(portfolioWeights, scenarios);
   }
 
+
+  /**
+   * Analyze AI network topology for trading ecosystem resilience
+   */
+  analyzeNetworkTopology(topology = {}) {
+    return this.network.analyzeTopology(topology);
+  }
+
+  /**
+   * Assess AI data feed quality and lineage health
+   */
+  assessDataFabric(feeds = []) {
+    return this.data.assessDataFeeds(feeds);
+  }
+
   /**
    * Optimize portfolio allocation
    */
@@ -896,6 +1000,8 @@ export class TRADEX extends RSHIPCore {
         sentiment: 'TradeSentiment (news and narrative analyzer)',
         router: 'TradeExecutionRouter (venue routing and quality scoring)',
         scenarioLab: 'TradeScenarioLab (stress and regime simulations)',
+        network: 'TradeNetwork (AI network topology intelligence)',
+        data: 'TradeData (AI data feed quality intelligence)',
       },
       config: this.config,
       metrics: {
@@ -903,6 +1009,8 @@ export class TRADEX extends RSHIPCore {
         currentVaR: this.risk.currentVaR,
         medinaCoherence: this.portfolio.medinaCoherence,
         institutionalFootprint: this.flow.institutionalFootprint,
+        networkResilience: this.network.lastResilience,
+        dataQuality: this.data.lastQuality,
       },
     };
   }
