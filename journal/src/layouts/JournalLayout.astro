@@ -6,12 +6,16 @@ interface Props {
   title?: string;
   description?: string;
   eyebrow?: string;
+  ogImage?: string;
+  jsonLd?: object;
 }
 
 const {
   title = 'The Journal — Enterprise OS Intelligence',
   description = 'The papers, the mathematics, the Latin lexicon, the free AI tools. By Alfredo Medina Hernandez · Medina Tech · Chaos Lab.',
   eyebrow,
+  ogImage,
+  jsonLd,
 } = Astro.props;
 
 const path = Astro.url.pathname.replace(/\/$/, '');
@@ -34,7 +38,15 @@ function active(p: string) {
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:type" content="article" />
+    {ogImage && <meta property="og:image" content={ogImage} />}
+    {ogImage && <meta name="twitter:card" content="summary_large_image" />}
+    {ogImage && <meta name="twitter:image" content={ogImage} />}
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="alternate" type="application/rss+xml"  title="The Journal — RSS"  href="/rss.xml" />
+    <link rel="alternate" type="application/atom+xml" title="The Journal — Atom" href="/feed.xml" />
+    {jsonLd && (
+      <script type="application/ld+json" set:html={JSON.stringify(jsonLd)}></script>
+    )}
   </head>
   <body>
     <div class="page">
@@ -47,6 +59,7 @@ function active(p: string) {
           <li><a href="/lexicon"     {...active('/lexicon')     ? { 'aria-current': 'page' } : {}}>Lexicon</a></li>
           <li><a href="/tools"       {...active('/tools')       ? { 'aria-current': 'page' } : {}}>Tools</a></li>
           <li><a href="/schools"     {...active('/schools')     ? { 'aria-current': 'page' } : {}}>Public Schools</a></li>
+          <li><a href="/audit"       {...active('/audit')       ? { 'aria-current': 'page' } : {}} class="small">Audit</a></li>
         </ul>
       </nav>
 
@@ -67,7 +80,15 @@ function active(p: string) {
             <div class="small muted" style="margin-top: var(--s-3);">
               Built by <a href="/council" class="no-underline">the council</a>:
               <span class="latin">scriba</span> · <span class="latin">lumen</span> ·
-              <span class="latin">custos</span> · <span class="latin">magister</span>.
+              <span class="latin">custos</span> · <span class="latin">magister</span> ·
+              <span class="latin">fabricor</span> · <span class="latin">nuntius</span> ·
+              <span class="latin">arbiter</span>.
+              <br/>
+              <a href="/rss.xml" class="no-underline small muted">RSS</a> ·
+              <a href="/feed.xml" class="no-underline small muted">Atom</a> ·
+              <a href="/sitemap.xml" class="no-underline small muted">sitemap</a> ·
+              <a href="/manifest.json" class="no-underline small muted">manifest</a> ·
+              <a href="/audit" class="no-underline small muted">audit</a>
             </div>
           </div>
           <div class="small muted" style="text-align: right;">

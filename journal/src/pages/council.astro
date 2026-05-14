@@ -4,6 +4,7 @@ import searchIndex from '../data/search-index.json';
 import paperGraph  from '../data/paper-graph.json';
 import custosReport from '../data/custos-report.json';
 import magisterReport from '../data/magister-report.json';
+import manifest from '../data/manifest.json';
 
 const stats = {
   papers:     paperGraph.stats.papers,
@@ -15,6 +16,12 @@ const stats = {
   warnings:     custosReport.warnings.length,
   candidates:   magisterReport.candidates.length,
   builtAt:      searchIndex.builtAt,
+  ogCount:      manifest?.counts?.og ?? 0,
+  txtCount:     manifest?.counts?.txt ?? 0,
+  apiCount:     manifest?.counts?.api ?? 0,
+  feedCount:    manifest?.counts?.feeds ?? 0,
+  totalFiles:   manifest?.counts?.total ?? 0,
+  surfaceHash:  manifest?.surfaceHash ?? '—',
 };
 
 const agents = [
@@ -78,6 +85,51 @@ const agents = [
       "Surfaces candidates as a report — the operator decides what enters the canon. " +
       "MAGISTER never adds; it suggests.",
     stats: `${stats.candidates} candidate term(s) currently surfaced`,
+  },
+  {
+    name: 'FABRICOR',
+    latin: 'fabricor — the builder',
+    role: 'Re-projects sanitised content as derivative artefacts. Never generates.',
+    runsAt: 'build time',
+    reads:  'corpus + lexicon + mathematics + tools.js',
+    writes: '/papers/<id>.txt · /og/<id>.{svg,png} · /api/*.json',
+    powers: ['social-card sharing', 'citation downloads', 'developer JSON API'],
+    summary:
+      "Three artefact families per paper: a clean plain-text export for citation and copy-paste; " +
+      "a 1200×630 OG social card in SVG and PNG (aurum gold, phyllotaxis-decorated, " +
+      "deterministic from the title alone); and a JSON API at /api/* for academic indexers and " +
+      "developers who want to consume the canon programmatically. Same words, different surface.",
+    stats: `${stats.txtCount} text exports · ${stats.ogCount} OG cards · ${stats.apiCount} JSON files`,
+  },
+  {
+    name: 'NUNTIUS',
+    latin: 'nuntius — the messenger',
+    role: 'Emits the outbound discovery surfaces. Announces what already exists.',
+    runsAt: 'build time',
+    reads:  'corpus + canonical page list',
+    writes: '/rss.xml · /feed.xml · /sitemap.xml · /robots.txt',
+    powers: ['feed readers', 'search-engine crawlers', 'academic indexers'],
+    summary:
+      "Emits an RSS 2.0 feed, an Atom 1.0 feed, a Sitemap-protocol XML, and an allow-all robots.txt " +
+      "pointing at the sitemap. Every entry mirrors what already exists on the journal — no " +
+      "descriptions are invented. NUNTIUS announces; it does not measure. It does not log who " +
+      "fetches a feed or how often. The journal stays unsurveilled.",
+    stats: `${stats.feedCount} discovery surfaces emitted (RSS · Atom · sitemap · robots)`,
+  },
+  {
+    name: 'ARBITER',
+    latin: 'arbiter — the judge',
+    role: 'Aggregates the council. Hashes every artefact. Powers /audit/.',
+    runsAt: 'build time (last)',
+    reads:  'all council outputs + every file in public/',
+    writes: 'journal/src/data/manifest.json + /manifest.json',
+    powers: ['/audit/ — the journal\'s public CHRONO'],
+    summary:
+      "Runs after every other agent. Walks the public surface, computes SHA-256 of every file, " +
+      "captures the git commit and branch, and writes a single manifest. The manifest is both " +
+      "embedded into the /audit/ page at build time and served at /manifest.json for any " +
+      "external mirror to verify against. Real, tamper-evident, by construction.",
+    stats: `${stats.totalFiles} files hashed · surface SHA-256: ${stats.surfaceHash.slice(0, 12)}…`,
   },
 ];
 ---

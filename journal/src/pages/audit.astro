@@ -1,0 +1,169 @@
+---
+import JournalLayout from '../layouts/JournalLayout.astro';
+import manifest from '../data/manifest.json';
+
+const { builtAt, git, council, surfaceHash, counts, sizes, files, doctrine, journal } = manifest;
+
+function fmtBytes(n) {
+  if (n < 1024) return `${n} B`;
+  if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
+  return `${(n / 1024 / 1024).toFixed(2)} MB`;
+}
+
+const totalBytes = (sizes.feeds + sizes.og + sizes.txt + sizes.api + sizes.other);
+---
+<JournalLayout
+  title="Audit — The Journal"
+  description="The journal's public CHRONO. Every artefact's SHA-256, the build's git context, the council's verdict. Real. Tamper-evident."
+  eyebrow="The Audit · This Build"
+>
+  <header class="measure stack" style="margin-top: var(--s-4);">
+    <h1>The Audit</h1>
+    <p class="muted" style="font-size: var(--t-h5); line-height: 1.5;">
+      Every artefact this build shipped. Every SHA-256 hash. Every council verdict.
+    </p>
+    <p>
+      This page is the journal's own <span class="latin">chrono</span> — a tamper-evident
+      record of what was published when. If a file on this site changes, its hash
+      below changes. If the canon drifts, <span class="latin">custos</span> halts
+      the build before this page is regenerated. Real, by construction.
+    </p>
+  </header>
+
+  <hr class="rule" />
+
+  <!-- ───── BUILD CONTEXT ────────────────────────────────────────────── -->
+  <section class="measure stack">
+    <h2>This build</h2>
+    <table>
+      <tbody>
+        <tr><td><strong>Built at</strong></td>      <td class="mono">{builtAt}</td></tr>
+        <tr><td><strong>Site</strong></td>          <td class="mono">{journal.site}</td></tr>
+        <tr><td><strong>Git commit</strong></td>    <td class="mono">{git.commit ?? '—'} {git.isDirty && <span class="pill">dirty</span>}</td></tr>
+        <tr><td><strong>Git branch</strong></td>    <td class="mono">{git.branch ?? '—'}</td></tr>
+        <tr><td><strong>Surface SHA-256</strong></td><td class="mono">{surfaceHash}</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ───── COUNCIL VERDICT ──────────────────────────────────────────── -->
+  <section class="measure stack" style="margin-top: var(--s-6);">
+    <h2>The Council</h2>
+    <table>
+      <thead>
+        <tr><th>Agent</th><th>Verdict</th><th>Last run</th></tr>
+      </thead>
+      <tbody>
+        {council.scriba && (
+          <tr>
+            <td><strong class="latin">SCRIBA</strong> <span class="muted small">the scribe</span></td>
+            <td>{council.scriba.papers} papers indexed · {council.scriba.vocabSize} terms</td>
+            <td class="muted small mono">{council.scriba.builtAt}</td>
+          </tr>
+        )}
+        {council.lumen && (
+          <tr>
+            <td><strong class="latin">LUMEN</strong> <span class="muted small">the light</span></td>
+            <td>
+              {council.lumen.stats.related} related ·
+              {council.lumen.stats.cited} cited ·
+              {council.lumen.stats.thread} thread edges
+            </td>
+            <td class="muted small mono">{council.lumen.builtAt}</td>
+          </tr>
+        )}
+        {council.custos && (
+          <tr>
+            <td><strong class="latin">CUSTOS</strong> <span class="muted small">the guardian</span></td>
+            <td>
+              {council.custos.ok ? (
+                <span class="gold"><strong>✓ all checks passed</strong></span>
+              ) : (
+                <span style="color: #b03030;"><strong>✗ {council.custos.failures} failure(s)</strong></span>
+              )}
+              {council.custos.warnings > 0 && (
+                <span class="muted small"> · {council.custos.warnings} warning(s)</span>
+              )}
+            </td>
+            <td class="muted small mono">{council.custos.builtAt}</td>
+          </tr>
+        )}
+        {council.magister && (
+          <tr>
+            <td><strong class="latin">MAGISTER</strong> <span class="muted small">the teacher</span></td>
+            <td>{council.magister.candidates} candidate term(s) surfaced (advisory)</td>
+            <td class="muted small mono">{council.magister.builtAt}</td>
+          </tr>
+        )}
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ───── SURFACE SUMMARY ──────────────────────────────────────────── -->
+  <section class="measure stack" style="margin-top: var(--s-6);">
+    <h2>The Public Surface</h2>
+    <p class="muted small">
+      Every file <span class="latin">fabricor</span> and <span class="latin">nuntius</span> wrote.
+      Counts and aggregate sizes; hashes per file in the sections below.
+    </p>
+    <table>
+      <thead>
+        <tr><th>Surface</th><th>Files</th><th>Size</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Feeds (RSS, Atom, sitemap, robots)</td><td>{counts.feeds}</td><td class="mono">{fmtBytes(sizes.feeds)}</td></tr>
+        <tr><td>Plain-text papers</td>                  <td>{counts.txt}</td>  <td class="mono">{fmtBytes(sizes.txt)}</td></tr>
+        <tr><td>OG social cards (SVG + PNG)</td>        <td>{counts.og}</td>   <td class="mono">{fmtBytes(sizes.og)}</td></tr>
+        <tr><td>JSON API</td>                           <td>{counts.api}</td>  <td class="mono">{fmtBytes(sizes.api)}</td></tr>
+        <tr><td>Other public assets</td>                <td>{counts.other}</td><td class="mono">{fmtBytes(sizes.other)}</td></tr>
+        <tr><td><strong>Total</strong></td>             <td><strong>{counts.total}</strong></td><td class="mono"><strong>{fmtBytes(totalBytes)}</strong></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ───── FILE MANIFEST ────────────────────────────────────────────── -->
+  <details class="measure" style="margin-top: var(--s-6);">
+    <summary style="cursor: pointer; font-family: var(--f-serif); font-size: var(--t-h4); color: var(--c-gold); padding: var(--s-3) 0;">
+      Full file manifest with SHA-256 hashes (click to expand)
+    </summary>
+    {(['feeds', 'txt', 'og', 'api', 'other']).map(group => (
+      files[group].length > 0 && (
+        <section style="margin-top: var(--s-5);">
+          <h3 style="font-size: var(--t-h5);">{group.toUpperCase()}</h3>
+          <table>
+            <thead>
+              <tr><th>Path</th><th>Size</th><th>SHA-256</th></tr>
+            </thead>
+            <tbody>
+              {files[group].map(f => (
+                <tr>
+                  <td class="mono"><code>/{f.rel}</code></td>
+                  <td class="mono small">{fmtBytes(f.size)}</td>
+                  <td class="mono small" style="word-break: break-all;">{f.sha256}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
+      )
+    ))}
+  </details>
+
+  <hr class="rule" />
+
+  <!-- ───── DOCTRINE BLOCK ───────────────────────────────────────────── -->
+  <aside class="doctrine">
+    <h6>Why this page exists</h6>
+    <p>{doctrine.authorship}</p>
+    <p>{doctrine.data}</p>
+    <p>
+      <strong>Sanitiser:</strong> {doctrine.sanitiser}.
+      <br/><strong>Gate:</strong> {doctrine.gate}.
+      <br/><strong>Prior art:</strong> {doctrine.priorArt}.
+    </p>
+    <p class="small muted">
+      The manifest is also served at <a href="/manifest.json"><code class="mono">/manifest.json</code></a>
+      for external consumers (academic citation indexes, archive crawlers, mirror verifiers).
+    </p>
+  </aside>
+</JournalLayout>
