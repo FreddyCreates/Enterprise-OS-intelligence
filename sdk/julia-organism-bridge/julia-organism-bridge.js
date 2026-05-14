@@ -81,6 +81,7 @@ class JuliaBridge extends EventEmitter {
             push!(LOAD_PATH, "${this.modulePath}")
             using Pkg
             Pkg.instantiate()
+            using JSON
             include("${this.modulePath}/organism_integration.jl")
             using .OrganismIntegration
             
