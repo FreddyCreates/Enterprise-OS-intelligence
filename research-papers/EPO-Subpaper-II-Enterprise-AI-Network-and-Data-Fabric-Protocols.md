@@ -36,11 +36,13 @@ H_{fabric} = \phi^{-1}H_{network} + \phi^{-2}H_{data} + \phi^{-3}H_{control}
 
 ## Data Synchronization
 
-Domain sync contract:
+Domain sync contract (unidirectional from \(d_i\) to \(d_j\)):
 
 \[
 Sync(d_i,d_j) \iff schema(d_i)=schema(d_j) \land lineage(d_i)\subseteq lineage(d_j)
 \]
+
+Bidirectional synchronization requires both \(Sync(d_i,d_j)\) and \(Sync(d_j,d_i)\), i.e., symmetric lineage containment under the same schema class.
 
 with attestations logged per transfer batch.
 
