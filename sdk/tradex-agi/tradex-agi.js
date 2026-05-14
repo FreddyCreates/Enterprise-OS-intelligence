@@ -521,6 +521,146 @@ class TradeRisk {
   }
 }
 
+
+/* ═══════════════════════════════════════════════════════════════════
+   SUB-MODEL 7: TRADE-SENTIMENT — Narrative and News Intelligence
+   ═══════════════════════════════════════════════════════════════════ */
+class TradeSentiment {
+  constructor() {
+    this.lastSentimentScore = 0;
+    this.lastNarrative = 'neutral';
+    this.lexicon = {
+      bullish: ['upgrade', 'beat', 'surge', 'outperform', 'expansion', 'breakout'],
+      bearish: ['downgrade', 'miss', 'lawsuit', 'decline', 'cut', 'contraction'],
+      riskOn: ['liquidity', 'stimulus', 'dovish', 'buyback'],
+      riskOff: ['default', 'tightening', 'conflict', 'shock'],
+    };
+  }
+
+  analyzeHeadlines(headlines = []) {
+    if (!headlines.length) {
+      return { sentiment: 0, narrative: 'neutral', confidence: 0 };
+    }
+
+    const normalized = headlines.map(h => String(h).toLowerCase());
+    const score = normalized.reduce((acc, h) => {
+      const bull = this.lexicon.bullish.filter(w => h.includes(w)).length;
+      const bear = this.lexicon.bearish.filter(w => h.includes(w)).length;
+      const ron = this.lexicon.riskOn.filter(w => h.includes(w)).length;
+      const roff = this.lexicon.riskOff.filter(w => h.includes(w)).length;
+      return acc + (bull - bear) * PHI_INV + (ron - roff) * (PHI_INV ** 2);
+    }, 0) / headlines.length;
+
+    const sentiment = Math.max(-1, Math.min(1, score));
+    const narrative = sentiment > 0.15 ? 'risk-on bullish' :
+                      sentiment < -0.15 ? 'risk-off bearish' : 'balanced/neutral';
+
+    this.lastSentimentScore = sentiment;
+    this.lastNarrative = narrative;
+
+    return {
+      sentiment,
+      narrative,
+      confidence: Math.min(1, Math.abs(sentiment) * PHI),
+      headlineCount: headlines.length,
+    };
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   SUB-MODEL 8: TRADE-EXECUTION-ROUTER — Venue Optimization
+   ═══════════════════════════════════════════════════════════════════ */
+class TradeExecutionRouter {
+  rankVenues(venues = [], regime = 'NORMAL') {
+    const regimePenalty = {
+      CALM: 0.98,
+      NORMAL: 1.0,
+      VOLATILE: PHI_INV,
+      TURBULENT: PHI_INV ** 2,
+      CRISIS: PHI_INV ** 3,
+    };
+
+    return venues
+      .map(v => {
+        const latencyScore = 1 / Math.max(1, v.latencyMs || 1);
+        const feeScore = 1 / Math.max(0.0001, v.feeBps || 1);
+        const fillScore = Math.max(0, Math.min(1, v.fillRate || 0.5));
+        const depthScore = Math.max(0, Math.min(1, v.depthScore || 0.5));
+        const quality = (
+          latencyScore * PHI +
+          feeScore * PHI_INV +
+          fillScore * PHI_INV ** 2 +
+          depthScore * PHI_INV ** 3
+        ) * (regimePenalty[regime] || 1.0);
+
+        return {
+          venue: v.name || 'unknown',
+          quality,
+          expectedSlippageBps: (1 - depthScore) * (v.feeBps || 1),
+          latencyMs: v.latencyMs || null,
+        };
+      })
+      .sort((a, b) => b.quality - a.quality);
+  }
+
+  selectVenue(order, rankedVenues = []) {
+    if (!rankedVenues.length) {
+      return { approved: false, reason: 'No venues provided' };
+    }
+
+    const primary = rankedVenues[0];
+    return {
+      approved: true,
+      order,
+      selectedVenue: primary.venue,
+      backupVenues: rankedVenues.slice(1, 3).map(v => v.venue),
+      expectedSlippageBps: primary.expectedSlippageBps,
+    };
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   SUB-MODEL 9: TRADE-SCENARIO-LAB — Stress and Regime Simulations
+   ═══════════════════════════════════════════════════════════════════ */
+class TradeScenarioLab {
+  constructor() {
+    this.scenarioHistory = [];
+  }
+
+  runStressSuite(portfolioWeights = {}, scenarios = []) {
+    const assets = Object.keys(portfolioWeights);
+    const results = scenarios.map((s, idx) => {
+      const pnl = assets.reduce((sum, asset) => {
+        const w = portfolioWeights[asset] || 0;
+        const shock = (s.shocks && s.shocks[asset]) ?? (s.defaultShock || 0);
+        return sum + w * shock;
+      }, 0);
+
+      const drawdown = Math.max(0, -(pnl));
+      return {
+        scenarioId: s.id || `scenario-${idx + 1}`,
+        label: s.label || 'unnamed',
+        projectedPnL: pnl,
+        projectedDrawdown: drawdown,
+        survivability: Math.max(0, 1 - drawdown * PHI),
+      };
+    });
+
+    const summary = {
+      scenariosTested: results.length,
+      worstPnL: results.reduce((m, r) => Math.min(m, r.projectedPnL), 0),
+      bestPnL: results.reduce((m, r) => Math.max(m, r.projectedPnL), 0),
+      averageSurvivability: results.length
+        ? results.reduce((a, b) => a + b.survivability, 0) / results.length
+        : null,
+    };
+
+    const suite = { timestamp: Date.now(), results, summary };
+    this.scenarioHistory.push(suite);
+    return suite;
+  }
+}
+
 /* ═══════════════════════════════════════════════════════════════════
    MAIN CLASS: TRADEX AGI
    ═══════════════════════════════════════════════════════════════════ */
@@ -538,6 +678,9 @@ export class TRADEX extends RSHIPCore {
       enableGhostFlow: true,
       enableArbitrage: true,
       enableZKVerification: true,
+      enableSentimentTools: true,
+      enableExecutionRouter: true,
+      enableScenarioLab: true,
       riskTolerance: PHI_INV,
       ...config,
     };
@@ -549,6 +692,9 @@ export class TRADEX extends RSHIPCore {
     this.verify = new TradeVerify();
     this.portfolio = new TradePortfolio();
     this.risk = new TradeRisk();
+    this.sentiment = new TradeSentiment();
+    this.router = new TradeExecutionRouter();
+    this.scenarioLab = new TradeScenarioLab();
     
     // Memory systems
     this.memory = new EternalMemory('tradex');
@@ -596,7 +742,7 @@ export class TRADEX extends RSHIPCore {
    * Execute a complete trading analysis cycle
    */
   async analyze(marketData) {
-    const { prices, volumes, darkPoolVolumes, assetPairs } = marketData;
+    const { prices, volumes, darkPoolVolumes, assetPairs, headlines, venues } = marketData;
     
     const results = {
       timestamp: Date.now(),
@@ -604,6 +750,8 @@ export class TRADEX extends RSHIPCore {
       ghostFlow: null,
       arbitrageOpportunities: [],
       riskAssessment: null,
+      sentiment: null,
+      executionGuidance: null,
     };
     
     // 1. Phantom signal detection
@@ -627,7 +775,17 @@ export class TRADEX extends RSHIPCore {
       const returns = prices.slice(1).map((p, i) => (p - prices[i]) / prices[i]);
       results.riskAssessment = this.risk.computePhiVaR(returns);
     }
-    
+
+    // 5. Market sentiment tools
+    if (this.config.enableSentimentTools && headlines && headlines.length) {
+      results.sentiment = this.sentiment.analyzeHeadlines(headlines);
+    }
+
+    // 6. Venue-level execution guidance
+    if (this.config.enableExecutionRouter && venues && venues.length) {
+      const regime = results.riskAssessment?.regime?.name || 'NORMAL';
+      results.executionGuidance = this.router.rankVenues(venues, regime);
+    }
     // Store in memory
     await this.memory.store('analysis', results);
     
@@ -674,6 +832,29 @@ export class TRADEX extends RSHIPCore {
     };
   }
 
+
+  /**
+   * Analyze market headlines with φ-weighted sentiment tools
+   */
+  analyzeSentiment(headlines = []) {
+    return this.sentiment.analyzeHeadlines(headlines);
+  }
+
+  /**
+   * Route an order to the best execution venue
+   */
+  routeExecution(order, venues = [], regime = 'NORMAL') {
+    const ranking = this.router.rankVenues(venues, regime);
+    return this.router.selectVenue(order, ranking);
+  }
+
+  /**
+   * Run scenario stress tests on portfolio allocations
+   */
+  runStrategyScenario(portfolioWeights, scenarios) {
+    return this.scenarioLab.runStressSuite(portfolioWeights, scenarios);
+  }
+
   /**
    * Optimize portfolio allocation
    */
@@ -703,6 +884,9 @@ export class TRADEX extends RSHIPCore {
         verify: 'TradeVerify (ZK prover)',
         portfolio: 'TradePortfolio (Medina optimizer)',
         risk: 'TradeRisk (φ-VaR manager)',
+        sentiment: 'TradeSentiment (news and narrative analyzer)',
+        router: 'TradeExecutionRouter (venue routing and quality scoring)',
+        scenarioLab: 'TradeScenarioLab (stress and regime simulations)',
       },
       config: this.config,
       metrics: {

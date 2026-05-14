@@ -857,4 +857,19 @@ class EPOPhantexIntegration {
 
 ---
 
+## Companion Sub-Paper Suite: EPO Sub-Protocols
+
+This paper now has a dedicated sub-paper for control-plane sub-protocol decomposition:
+
+1. **EPO Sub-Paper I — Domain Plane Contracts and Meta-Orchestration Protocols**  
+   File: `research-papers/EPO-Subpaper-I-Control-Plane-Contracts-and-Meta-Orchestration.md`
+
+It defines EPO sub-protocol families:
+- **EPOP-1:** Domain Plane Contract Protocol
+- **EPOP-2:** Control-Plane Handoff Protocol
+- **EPOP-3:** Exception Escalation Mesh Protocol
+- **EPOP-4:** Compliance Replay and Audit Protocol
+
+---
+
 **Code Availability:** github.com/MedinaTech/RSHIP/sdk/epo-orchestrator

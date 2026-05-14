@@ -817,4 +817,19 @@ class SOPNPhantexIntegration {
 
 ---
 
+## Companion Sub-Paper Suite: SOPN Sub-Protocols
+
+This paper now has a dedicated sub-paper for emergent protocol genetics and transfer:
+
+1. **SOPN Sub-Paper I — Protocol Genome, Mutation Laws, and Inter-Swarm Transfer**  
+   File: `research-papers/SOPN-Subpaper-I-Protocol-Genome-and-Transfer-Laws.md`
+
+It introduces structured SOPN sub-protocols:
+- **SOPP-1:** Genome Serialization Protocol
+- **SOPP-2:** Mutation Safety Envelope
+- **SOPP-3:** Cross-Swarm Protocol Transfer
+- **SOPP-4:** Evolutionary Rollback and Lineage Audit
+
+---
+
 **Code Availability:** github.com/MedinaTech/RSHIP/sdk/sopn-framework

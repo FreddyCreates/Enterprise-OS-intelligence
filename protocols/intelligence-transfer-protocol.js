@@ -530,6 +530,70 @@ class FidelityAnalyzer {
   }
 }
 
+
+/* ═══════════════════════════════════════════════════════════════════
+   TRADING KNOWLEDGE BRIDGE — Domain-specific transfer for TRADEX ecosystems
+   ═══════════════════════════════════════════════════════════════════ */
+class TradingKnowledgeBridge {
+  constructor(protocol, sourceAGI = 'TRADEX') {
+    this.protocol = protocol;
+    this.sourceAGI = sourceAGI;
+  }
+
+  createTradingState(playbook = {}) {
+    const state = this.protocol.createCognitiveState(this.sourceAGI);
+
+    state.memory.semantic.set('marketRegimeModel', playbook.marketRegimeModel || {
+      calm: 'carry + mean reversion',
+      volatile: 'reduced gross + wider stops',
+      crisis: 'capital preservation + correlation collapse guard',
+    });
+
+    state.memory.semantic.set('executionPolicy', playbook.executionPolicy || {
+      router: 'phi-weighted venue ranking',
+      maxSlippageBps: 8,
+      fallbackVenueCount: 2,
+    });
+
+    state.memory.procedural.set('riskPlaybook', playbook.riskPlaybook || {
+      phiVaRThreshold: 0.618,
+      deRiskTrigger: 'sentiment < -0.35 or regime >= TURBULENT',
+      hedgePreference: ['index puts', 'pair neutralization'],
+    });
+
+    state.memory.episodic.push({
+      ts: Date.now(),
+      event: 'playbook_compiled',
+      source: this.sourceAGI,
+      version: playbook.version || '1.0.0',
+    });
+
+    state.phantomAlignment = 0.97;
+    state.temporalContext.push({ ts: Date.now(), phase: 'transfer-ready' });
+
+    return state;
+  }
+
+  async distributePlaybook(targetAGIs = [], playbook = {}) {
+    const sourceState = this.createTradingState(playbook);
+    const transfers = [];
+
+    for (const target of targetAGIs) {
+      const result = await this.protocol.transfer(sourceState, target);
+      transfers.push({ target, ...result });
+    }
+
+    return {
+      sourceAGI: this.sourceAGI,
+      targets: targetAGIs,
+      transfers,
+      successful: transfers.filter(t => t.status === 'completed').length,
+      failed: transfers.filter(t => t.status !== 'completed').length,
+      timestamp: Date.now(),
+    };
+  }
+}
+
 /* ═══════════════════════════════════════════════════════════════════
    MAIN PROTOCOL CLASS
    ═══════════════════════════════════════════════════════════════════ */
@@ -630,6 +694,13 @@ export class IntelligenceTransferProtocol {
   }
 
   /**
+   * Create a trading-focused knowledge bridge on top of this protocol
+   */
+  createTradingBridge(sourceAGI = 'TRADEX') {
+    return new TradingKnowledgeBridge(this, sourceAGI);
+  }
+
+  /**
    * Get protocol status
    */
   status() {
@@ -660,6 +731,7 @@ export {
   SchnorrSigner,
   PhiChunker,
   FidelityAnalyzer,
+  TradingKnowledgeBridge,
   TRANSFER_MODES,
   FIDELITY_THRESHOLDS,
   PHI_CHUNK_SIZES,

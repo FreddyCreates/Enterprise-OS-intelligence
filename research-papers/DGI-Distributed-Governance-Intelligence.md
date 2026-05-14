@@ -830,4 +830,19 @@ class DGIPhantexIntegration {
 
 **Ethics Statement:** All deployment data anonymized per IRB protocol #2026-AI-GOV-001.
 
+## Companion Sub-Paper Suite: DGI Sub-Protocols
+
+This paper now has a dedicated sub-paper expanding protocolized governance internals:
+
+1. **DGI Sub-Paper I — Policy Lattice and Stakeholder Constraint Protocols**  
+   File: `research-papers/DGI-Subpaper-I-Policy-Lattice-and-Constraint-Protocols.md`
+
+It formalizes DGI governance into protocol families:
+- **DGIP-1:** Constraint Envelope Protocol
+- **DGIP-2:** Stakeholder Escalation Protocol
+- **DGIP-3:** Regulatory Reconciliation Protocol
+- **DGIP-4:** Governance Drift Detection Protocol
+
+---
+
 **Code Availability:** github.com/MedinaTech/RSHIP/sdk/dgi-governance
