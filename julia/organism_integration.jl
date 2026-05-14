@@ -25,28 +25,36 @@ include("engines/neural_engine.jl")
 include("engines/quantum_engine.jl")
 include("engines/resonance_engine.jl")
 include("engines/medina_field_engine.jl")
+include("engines/swarm_engine.jl")
+include("engines/memory_engine.jl")
 include("transformers/coherence_transformer.jl")
 include("transformers/emergence_transformer.jl")
 include("transformers/gauge_transformer.jl")
 include("transformers/phi_transformer.jl")
+include("transformers/topology_transformer.jl")
 include("synthesizers/intelligence_synthesizer.jl")
 include("synthesizers/protocol_synthesizer.jl")
 include("synthesizers/sovereign_synthesizer.jl")
 include("synthesizers/field_synthesizer.jl")
+include("synthesizers/evolution_synthesizer.jl")
 
 using .OrganismCoreEngine
 using .NeuralEngine
 using .QuantumEngine
 using .ResonanceEngine
 using .MedinaFieldEngine
+using .SwarmEngine
+using .MemoryEngine
 using .CoherenceTransformer
 using .EmergenceTransformer
 using .GaugeTransformer
 using .PhiTransformer
+using .TopologyTransformer
 using .IntelligenceSynthesizer
 using .ProtocolSynthesizer
 using .SovereignSynthesizer
 using .FieldSynthesizer
+using .EvolutionSynthesizer
 
 using LinearAlgebra
 using Statistics
@@ -55,6 +63,7 @@ export PHI, PHI_INV, SCHUMANN_HZ
 export JuliaOrganism, create_organism, pulse!, breathe!
 export process_signal, transform_data, synthesize_knowledge
 export organism_status, full_diagnostic
+export process_command
 
 const PHI = (1.0 + sqrt(5.0)) / 2.0
 const PHI_INV = 1.0 / PHI
@@ -99,52 +108,70 @@ mutable struct JuliaOrganism
     protocol_orch::ProtocolSynthesizer.ProtocolOrchestrator
     sovereign_core::SovereignSynthesizer.SovereignCore
     field_gen::FieldSynthesizer.FieldGenerator
-    
+    evolution::EvolutionSynthesizer.Population
+
+    # Swarm subsystem
+    swarm::SwarmEngine.Swarm
+
+    # Memory subsystem
+    memory_graph::MemoryEngine.KnowledgeGraph
+    temporal_memory::MemoryEngine.TemporalMemory
+
     # State
     is_active::Bool
     heartbeat_count::Int
     phi_accumulated::Float64
-    
+
     # Cross-language sync state
     js_sync_timestamp::Float64
     pending_exports::Vector{Dict{Symbol, Any}}
-    
+
     function JuliaOrganism(designation::String = "JULIA-ORGANISM-001")
         id = "JULORG-" * string(rand(UInt32), base=16)
-        
+
         # Create core
         core = OrganismCoreEngine.OrganismCore(designation)
-        
+
         # Create neural network (3-layer: 64-128-64)
         neural = NeuralEngine.NeuralNetwork([64, 128, 64], "$id-NEURAL")
-        
+
         # Create quantum subsystem (8 qubits)
         quantum_reg = QuantumEngine.QuantumRegister(8)
         quantum_field = QuantumEngine.QuantumField(3, 16)
-        
+
         # Create resonance network (16 oscillators, φ-topology)
         resonance = ResonanceEngine.OscillatorNetwork(16, :phi)
-        
+
         # Create Medina field
         medina = MedinaFieldEngine.MedinaField(32, (-10.0, 10.0))
-        
+
         # Create transformers
         coherence = CoherenceTransformer.CoherenceAmplifier()
         emergence = EmergenceTransformer.EmergenceDetector()
         phi_s = PhiTransformer.PhiState()
-        
+
         # Create synthesizers
         intel = IntelligenceSynthesizer.IntelligenceEngine()
         protocol = ProtocolSynthesizer.ProtocolOrchestrator()
         sovereign = SovereignSynthesizer.SovereignCore(designation)
         field = FieldSynthesizer.FieldGenerator(2, 32)
-        
+        evolution = EvolutionSynthesizer.Population(64, 32)
+
+        # Create swarm (32 agents in 4D)
+        swarm = SwarmEngine.create_swarm(32, 4)
+
+        # Create memory subsystems
+        mem_graph = MemoryEngine.KnowledgeGraph()
+        temp_mem = MemoryEngine.TemporalMemory(capacity = 512)
+
         new(
             id, designation,
             core, neural, quantum_reg, quantum_field,
             resonance, medina,
             coherence, emergence, phi_s,
-            intel, protocol, sovereign, field,
+            intel, protocol, sovereign, field, evolution,
+            swarm,
+            mem_graph, temp_mem,
             false, 0, 0.0,
             0.0, Dict{Symbol, Any}[]
         )
@@ -158,20 +185,24 @@ Create and initialize a new Julia Organism.
 """
 function create_organism(designation::String)::JuliaOrganism
     org = JuliaOrganism(designation)
-    
+
     # Initialize sovereign identity
     SovereignSynthesizer.establish!(org.sovereign_core)
-    
+
     # Activate field generator modes
     FieldSynthesizer.activate_phi_mode!(org.field_gen)
     FieldSynthesizer.activate_schumann_mode!(org.field_gen)
-    
+
     # Add some Medina field sources
     source = MedinaFieldEngine.FieldPoint(0.0, 0.0, 0.0, PHI)
     MedinaFieldEngine.add_source!(org.medina_field, source, 1.0)
-    
+
+    # Seed memory with organism identity
+    identity_vec = rand(64)
+    MemoryEngine.store!(org.memory_graph, identity_vec; metadata = Dict(:type => :identity, :designation => designation))
+
     org.is_active = true
-    
+
     return org
 end
 
@@ -188,36 +219,45 @@ function pulse!(org::JuliaOrganism)::Dict{Symbol, Any}
     if !org.is_active
         return Dict(:status => :inactive)
     end
-    
+
     dt = 1.0 / SCHUMANN_HZ  # One Schumann cycle
-    
+
     # 1. Core heartbeat
     OrganismCoreEngine.pulse!(org.core)
-    
+
     # 2. Resonance network step
     ResonanceEngine.step!(org.resonance_network, dt)
-    
+
     # 3. Quantum field evolution
     QuantumEngine.evolve_field!(org.quantum_field, dt)
-    
+
     # 4. Medina field evolution
     MedinaFieldEngine.evolve_field!(org.medina_field, dt)
-    
+
     # 5. Field synthesis
     FieldSynthesizer.generate!(org.field_gen, dt)
-    
+
     # 6. Sovereign maintenance
     SovereignSynthesizer.maintain!(org.sovereign_core)
-    
+
+    # 7. Swarm step
+    SwarmEngine.step!(org.swarm)
+
+    # 8. Memory consolidation (every 10 pulses)
+    if org.heartbeat_count % 10 == 0
+        MemoryEngine.consolidate!(org.memory_graph)
+    end
+
     # Update counts
     org.heartbeat_count += 1
-    
+
     # Accumulate φ from all subsystems
     org.phi_accumulated += org.core.state.phi_accumulated * PHI_INV * 0.01
     org.phi_accumulated += org.resonance_network.phi_accumulated * PHI_INV * 0.01
     org.phi_accumulated += org.medina_field.phi_accumulated * PHI_INV * 0.01
     org.phi_accumulated += org.sovereign_core.identity.phi_accumulated * PHI_INV * 0.01
-    
+    org.phi_accumulated += org.swarm.phi_accumulated * PHI_INV * 0.01
+
     return Dict(
         :status => :pulsed,
         :heartbeat => org.heartbeat_count,
@@ -225,6 +265,7 @@ function pulse!(org::JuliaOrganism)::Dict{Symbol, Any}
         :resonance_order => org.resonance_network.order_parameter,
         :medina_coherence => org.medina_field.total_coherence,
         :sovereignty => org.sovereign_core.state.sovereignty_score,
+        :swarm_coherence => SwarmEngine.compute_swarm_coherence(org.swarm),
         :phi_accumulated => org.phi_accumulated
     )
 end
@@ -435,14 +476,101 @@ function full_diagnostic(org::JuliaOrganism)::Dict{Symbol, Any}
         :quantum_register => QuantumEngine.register_status(org.quantum_register),
         :resonance => ResonanceEngine.network_status(org.resonance_network),
         :medina_field => MedinaFieldEngine.field_status(org.medina_field),
+        :swarm => SwarmEngine.swarm_status(org.swarm),
+        :memory => MemoryEngine.memory_status(org.memory_graph),
         :coherence_amp => CoherenceTransformer.amplifier_status(org.coherence_amp),
         :emergence_det => EmergenceTransformer.detector_status(org.emergence_det),
         :phi_transformer => PhiTransformer.transformer_status(org.phi_state),
         :intelligence => IntelligenceSynthesizer.engine_status(org.intelligence_engine),
         :protocol_orch => ProtocolSynthesizer.orchestrator_status(org.protocol_orch),
         :sovereign => SovereignSynthesizer.sovereign_status(org.sovereign_core),
-        :field_gen => FieldSynthesizer.generator_status(org.field_gen)
+        :field_gen => FieldSynthesizer.generator_status(org.field_gen),
+        :evolution => EvolutionSynthesizer.evolution_status(org.evolution)
     )
+end
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# LIVE COMMAND DISPATCHER
+# ═══════════════════════════════════════════════════════════════════════════════
+
+"""
+    process_command(org::JuliaOrganism, cmd::Dict) -> Dict
+
+Dispatch a JSON command from the JavaScript bridge.
+Returns a Dict that the server serialises back as JSON.
+"""
+function process_command(org::JuliaOrganism, cmd::Dict)::Dict
+    id = get(cmd, "id", "")
+    command = get(cmd, "command", "")
+    params = get(cmd, "params", Dict())
+
+    result = try
+        if command == "pulse"
+            r = pulse!(org)
+            Dict(String(k) => v for (k, v) in r)
+        elseif command == "breathe"
+            r = breathe!(org)
+            Dict(String(k) => v for (k, v) in r)
+        elseif command == "processSignal"
+            raw = get(params, "signal", Float64[])
+            signal = Float64.(raw)
+            r = process_signal(org, signal)
+            Dict(String(k) => v for (k, v) in r)
+        elseif command == "transformData"
+            raw = get(params, "data", Float64[])
+            data = Float64.(raw)
+            t_sym = Symbol(get(params, "transformType", "phi"))
+            out = transform_data(org, data, t_sym)
+            Dict("status" => "transformed", "data" => out)
+        elseif command == "synthesizeKnowledge"
+            r = synthesize_knowledge(org)
+            Dict(String(k) => v for (k, v) in r)
+        elseif command == "status"
+            r = organism_status(org)
+            Dict(String(k) => v for (k, v) in r)
+        elseif command == "fullDiagnostic"
+            r = full_diagnostic(org)
+            # Flatten one level for JSON serialisation
+            Dict(String(k) => string(v) for (k, v) in r)
+        elseif command == "exportState"
+            export_state(org)
+        elseif command == "importState"
+            state = get(params, "state", Dict())
+            import_state!(org, Dict{String,Any}(string(k) => v for (k,v) in state))
+            Dict("status" => "imported", "timestamp" => time())
+        elseif command == "evolve"
+            fitness_fn = x -> -sum((x .- PHI) .^ 2)   # default: maximise φ proximity
+            generations = Int(get(params, "generations", 20))
+            for _ in 1:generations
+                EvolutionSynthesizer.evolve!(org.evolution, fitness_fn)
+            end
+            r = EvolutionSynthesizer.evolution_status(org.evolution)
+            Dict(String(k) => v for (k, v) in r)
+        elseif command == "swarmOptimize"
+            iterations = Int(get(params, "iterations", 50))
+            fitness_fn = x -> -sum((x .- PHI) .^ 2)
+            best = SwarmEngine.optimize!(org.swarm, fitness_fn; iterations)
+            Dict("status" => "optimized", "best_position" => best)
+        elseif command == "remember"
+            raw = get(params, "data", Float64[])
+            content = Float64.(raw)
+            MemoryEngine.store!(org.memory_graph, content)
+            Dict("status" => "stored", "n_nodes" => length(org.memory_graph.nodes))
+        elseif command == "recall"
+            raw = get(params, "query", Float64[])
+            query = Float64.(raw)
+            k = Int(get(params, "k", 3))
+            nodes = MemoryEngine.retrieve(org.memory_graph, query; k)
+            Dict("status" => "recalled", "n_results" => length(nodes))
+        else
+            Dict("error" => "Unknown command: $command")
+        end
+    catch e
+        Dict("error" => sprint(showerror, e), "command" => command)
+    end
+
+    result["id"] = id
+    return result
 end
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -451,16 +579,17 @@ end
 
 function __init__()
     println("═══════════════════════════════════════════════════════════════════")
-    println("  JULIA ORGANISM INTEGRATION v1.0")
+    println("  JULIA ORGANISM INTEGRATION v2.0 — LIVE")
     println("  Official Designation: RSHIP-2026-JULIA-ORGANISM-INTEGRATION-001")
     println("  Classification: Julia-JavaScript Integration Layer")
     println("═══════════════════════════════════════════════════════════════════")
     println("  φ = $(PHI)")
     println("  Schumann = $(SCHUMANN_HZ) Hz")
     println("═══════════════════════════════════════════════════════════════════")
-    println("  Engines: OrganismCore, Neural, Quantum, Resonance, MedinaField")
-    println("  Transformers: Coherence, Emergence, Gauge, Phi")
-    println("  Synthesizers: Intelligence, Protocol, Sovereign, Field")
+    println("  Engines: OrganismCore, Neural, Quantum, Resonance, MedinaField,")
+    println("           Swarm, Memory")
+    println("  Transformers: Coherence, Emergence, Gauge, Phi, Topology")
+    println("  Synthesizers: Intelligence, Protocol, Sovereign, Field, Evolution")
     println("═══════════════════════════════════════════════════════════════════")
     println("  The Organism breathes. Nothing is separate.")
     println("═══════════════════════════════════════════════════════════════════")

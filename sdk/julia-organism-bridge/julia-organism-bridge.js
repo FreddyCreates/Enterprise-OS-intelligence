@@ -73,44 +73,16 @@ class JuliaBridge extends EventEmitter {
   async connect() {
     return new Promise((resolve, reject) => {
       try {
-        // Spawn Julia process
+        // Spawn the live Julia server script
+        const serverScript = path.join(this.modulePath, 'server.jl');
         this.juliaProcess = spawn(this.juliaPath, [
           '--project=' + this.modulePath,
-          '-e',
-          `
-            push!(LOAD_PATH, "${this.modulePath}")
-            using Pkg
-            Pkg.instantiate()
-            using JSON
-            include("${this.modulePath}/organism_integration.jl")
-            using .OrganismIntegration
-            
-            # Create organism
-            org = create_organism("${this.designation}")
-            
-            # Signal ready
-            println("JULIA_READY")
-            
-            # Main loop - read commands from stdin
-            while true
-              line = readline()
-              if isempty(line)
-                continue
-              end
-              
-              try
-                cmd = JSON.parse(line)
-                result = process_command(org, cmd)
-                println(JSON.json(result))
-              catch e
-                println(JSON.json(Dict("error" => string(e))))
-              end
-            end
-          `
+          serverScript,
+          this.designation
         ], {
           stdio: ['pipe', 'pipe', 'pipe']
         });
-        
+
         // Handle stdout
         let buffer = '';
         this.juliaProcess.stdout.on('data', (data) => {
