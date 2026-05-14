@@ -30,9 +30,9 @@ export const entries = [
   },
   {
     term: 'ARBITER',
-    root: 'Latin — judge · adjudicator',
-    role: 'Slack bot — task / workflow orchestration',
-    note: 'Public-named in the worker registry. The judge that routes work between agents.',
+    root: 'Latin — judge · adjudicator · the one whose verdict settles',
+    role: 'Slack bot — task / workflow orchestration; also the Journal\'s build judge',
+    note: 'In the worker registry, the bot that routes work between agents. In the Journal, the same name belongs to a build-time agent that runs last in the council: it walks every file the council produced, computes SHA-256 hashes, captures git commit and branch, and writes a single manifest. That manifest is the source of /audit/ and is also served at /manifest.json for external verification. Real and tamper-evident by construction.',
   },
   {
     term: 'ARCHON',
@@ -126,9 +126,9 @@ export const entries = [
   },
   {
     term: 'FABRICOR',
-    root: 'Latin — builder · maker',
-    role: 'Artifact / document generation agent',
-    note: 'In CIVITAS INTELLIGENTIAE, the unit that produces files (reports, drafts, configurations) on behalf of the polity.',
+    root: 'Latin — builder · maker · one who fashions',
+    role: 'Artifact / document generation agent; also the Journal\'s derivative-artefact builder',
+    note: 'In CIVITAS INTELLIGENTIAE, the unit that produces files on behalf of the polity. In the Journal, the same name belongs to a build-time agent that re-projects every sanitised paper into three derivative surfaces: plain-text exports (.txt) for citation and copy-paste; 1200×630 OG social cards (SVG + PNG) for sharing; and a JSON API at /api/* for developers and academic indexers. FABRICOR transforms — it never authors.',
   },
   {
     term: 'FORGE',
@@ -198,9 +198,9 @@ export const entries = [
   },
   {
     term: 'NUNTIUS',
-    root: 'Latin — messenger · announcer',
-    role: 'Slack bot — morning / EOD enterprise briefing',
-    note: 'Public-named in the bot registry. The voice of the organism on regular schedule.',
+    root: 'Latin — messenger · announcer · herald',
+    role: 'Slack bot — enterprise briefing; also the Journal\'s outbound-discovery agent',
+    note: 'In the bot registry, the voice of the organism on regular schedule. In the Journal, the same name belongs to a build-time agent that emits the outbound discovery surfaces every site needs: /rss.xml, /feed.xml (Atom), /sitemap.xml, and /robots.txt. Every feed entry mirrors what already exists; nothing is invented. NUNTIUS announces; it never measures who consumes the announcement.',
   },
   {
     term: 'OPUS · OPEREX · PROFECTUS · OPUS',

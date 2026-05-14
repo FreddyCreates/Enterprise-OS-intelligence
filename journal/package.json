@@ -12,6 +12,9 @@
     "lumen": "node agents/lumen.mjs",
     "custos": "node agents/custos.mjs",
     "magister": "node agents/magister.mjs",
+    "fabricor": "node agents/fabricor.mjs",
+    "nuntius": "node agents/nuntius.mjs",
+    "arbiter": "node agents/arbiter.mjs",
     "copy-releases": "node scripts/copy-releases.mjs",
     "verify-checksums": "node scripts/verify-checksums.mjs",
     "dev": "npm run sync && npm run agents && astro dev",
@@ -19,6 +22,7 @@
     "preview": "astro preview"
   },
   "dependencies": {
+    "@resvg/resvg-js": "^2.6.2",
     "astro": "^5.0.0"
   },
   "author": "Alfredo Medina Hernandez",
