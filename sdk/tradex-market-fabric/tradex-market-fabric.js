@@ -28,13 +28,14 @@ export class TRADEFABRIC {
     this.ecosystemLog = [];
   }
 
-  registerNode(nodeId, tradexInstance = null) {
+  registerNode(nodeId, tradexInstance = null, nodeWeight = 1) {
     const node = tradexInstance || new TRADEX();
     this.tradexNodes.set(nodeId, {
       node,
       joinedAt: Date.now(),
       health: 'healthy',
       lastHeartbeat: Date.now(),
+      nodeWeight: Math.max(0.0001, nodeWeight),
     });
 
     return {
@@ -71,8 +72,14 @@ export class TRADEFABRIC {
       health: data.health,
     }));
 
-    const averageVaR = nodes.length
-      ? nodes.reduce((sum, n) => sum + (n.status.metrics.currentVaR || 0), 0) / nodes.length
+    const weighted = nodes.map(n => ({
+      varValue: n.status.metrics.currentVaR || 0,
+      weight: this.tradexNodes.get(n.nodeId).nodeWeight || 1,
+    }));
+
+    const totalWeight = weighted.reduce((s, x) => s + x.weight, 0);
+    const averageVaR = totalWeight > 0
+      ? weighted.reduce((sum, x) => sum + x.varValue * x.weight, 0) / totalWeight
       : 0;
 
     return {
