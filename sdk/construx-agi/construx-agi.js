@@ -321,7 +321,7 @@ class ConstruxAGI {
     const p = this.projects.get(projectId);
     if (!p) return null;
     const rfi = {
-      rfiId: `RFI-${p.rfis.length + 1}`.padStart(8, '0').replace('RFI-', 'RFI-'),
+      rfiId: 'RFI-' + String(p.rfis.length + 1).padStart(4, '0'),
       subject, description, priority,
       status: 'open',
       submittedAt: new Date().toISOString(),
