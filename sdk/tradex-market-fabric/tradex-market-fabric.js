@@ -2,7 +2,7 @@
  * TRADEX MARKET FABRIC — Complementary Product for TRADEX + ITP
  * RSHIP ID: RSHIP-2026-TRADEFABRIC-001
  *
- * TRADE FABRIC sits above TRADEX and the Intelligence Transfer Protocol,
+ * TRADEX MARKET FABRIC sits above TRADEX and the Intelligence Transfer Protocol,
  * coordinating multi-agent strategy propagation, venue intelligence, and
  * ecosystem-level resilience metrics.
  */

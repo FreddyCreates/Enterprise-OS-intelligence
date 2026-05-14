@@ -81,6 +81,10 @@ const MARKET_RESONANCE = {
 const PHI_VAR_CONFIDENCE = 0.99;
 const MAX_POSITION_SIZE = PHI_INV;  // 61.8% max single position
 const TUNNELING_DECAY = PHI_INV;
+const SENTIMENT_BASE_WEIGHT = PHI_INV;
+const RISK_SENTIMENT_WEIGHT = PHI_INV ** 2;
+const BULLISH_THRESHOLD = 0.15;
+const BEARISH_THRESHOLD = -0.15;
 
 /* ═══════════════════════════════════════════════════════════════════
    SUB-MODEL 1: TRADE-SIGNAL — Phantom Signal Detector
@@ -548,12 +552,12 @@ class TradeSentiment {
       const bear = this.lexicon.bearish.filter(w => h.includes(w)).length;
       const ron = this.lexicon.riskOn.filter(w => h.includes(w)).length;
       const roff = this.lexicon.riskOff.filter(w => h.includes(w)).length;
-      return acc + (bull - bear) * PHI_INV + (ron - roff) * (PHI_INV ** 2);
+      return acc + (bull - bear) * SENTIMENT_BASE_WEIGHT + (ron - roff) * RISK_SENTIMENT_WEIGHT;
     }, 0) / headlines.length;
 
     const sentiment = Math.max(-1, Math.min(1, score));
-    const narrative = sentiment > 0.15 ? 'risk-on bullish' :
-                      sentiment < -0.15 ? 'risk-off bearish' : 'balanced/neutral';
+    const narrative = sentiment > BULLISH_THRESHOLD ? 'risk-on bullish' :
+                      sentiment < BEARISH_THRESHOLD ? 'risk-off bearish' : 'balanced/neutral';
 
     this.lastSentimentScore = sentiment;
     this.lastNarrative = narrative;
