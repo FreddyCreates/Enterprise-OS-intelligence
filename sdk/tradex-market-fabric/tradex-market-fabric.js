@@ -8,6 +8,8 @@
  */
 
 import { PHI, PHI_INV } from '../../rship-framework.js';
+
+const MIN_NODE_WEIGHT_FLOOR = 0.0001;
 import TRADEX from '../tradex-agi/tradex-agi.js';
 import IntelligenceTransferProtocol from '../../protocols/intelligence-transfer-protocol.js';
 
@@ -35,7 +37,7 @@ export class TRADEFABRIC {
       joinedAt: Date.now(),
       health: 'healthy',
       lastHeartbeat: Date.now(),
-      nodeWeight: Math.max(0.0001, nodeWeight),
+      nodeWeight: Math.max(MIN_NODE_WEIGHT_FLOOR, nodeWeight),
     });
 
     return {

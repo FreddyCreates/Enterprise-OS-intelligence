@@ -82,10 +82,11 @@ const PHI_VAR_CONFIDENCE = 0.99;
 const MAX_POSITION_SIZE = PHI_INV;  // 61.8% max single position
 const TUNNELING_DECAY = PHI_INV;
 const BULLISH_BEARISH_WEIGHT = PHI_INV;
-const RISK_ON_OFF_WEIGHT = PHI_INV ** 2;
+const RISK_ON_OFF_SIGNAL_WEIGHT = PHI_INV ** 2;
 const BULLISH_THRESHOLD = 0.15;
 const BEARISH_THRESHOLD = -0.15;
 const MIN_FEE_BPS_FLOOR = 0.0001;
+const MAX_FEE_SCORE_CAP = 100;
 
 /* ═══════════════════════════════════════════════════════════════════
    SUB-MODEL 1: TRADE-SIGNAL — Phantom Signal Detector
@@ -554,7 +555,7 @@ class TradeSentiment {
       const ron = this.lexicon.riskOn.filter(w => h.includes(w)).length;
       const roff = this.lexicon.riskOff.filter(w => h.includes(w)).length;
       const wordCount = Math.max(1, h.split(/\s+/).length);
-      const normalizedSignal = ((bull - bear) * BULLISH_BEARISH_WEIGHT + (ron - roff) * RISK_ON_OFF_WEIGHT) / wordCount;
+      const normalizedSignal = ((bull - bear) * BULLISH_BEARISH_WEIGHT + (ron - roff) * RISK_ON_OFF_SIGNAL_WEIGHT) / wordCount;
       return acc + normalizedSignal;
     }, 0) / headlines.length;
 
@@ -590,7 +591,8 @@ class TradeExecutionRouter {
     return venues
       .map(v => {
         const latencyScore = 1 / Math.max(1, v.latencyMs || 1);
-        const feeScore = 1 / Math.max(MIN_FEE_BPS_FLOOR, v.feeBps || 1);
+        const rawFeeScore = 1 / Math.max(MIN_FEE_BPS_FLOOR, v.feeBps || 1);
+        const feeScore = Math.min(MAX_FEE_SCORE_CAP, rawFeeScore);
         const fillScore = Math.max(0, Math.min(1, v.fillRate || 0.5));
         const depthScore = Math.max(0, Math.min(1, v.depthScore || 0.5));
         const quality = (
