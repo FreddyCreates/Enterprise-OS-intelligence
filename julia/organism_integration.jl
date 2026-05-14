@@ -539,17 +539,15 @@ function process_command(org::JuliaOrganism, cmd::Dict)::Dict
             import_state!(org, Dict{String,Any}(string(k) => v for (k,v) in state))
             Dict("status" => "imported", "timestamp" => time())
         elseif command == "evolve"
-            fitness_fn = x -> -sum((x .- PHI) .^ 2)   # default: maximise φ proximity
-            generations = Int(get(params, "generations", 20))
-            for _ in 1:generations
-                EvolutionSynthesizer.evolve!(org.evolution, fitness_fn)
-            end
+            n_generations = Int(get(params, "generations", 20))
+            evolution_fitness = x -> -sum((x .- PHI) .^ 2)   # maximise φ proximity
+            EvolutionSynthesizer.evolve!(org.evolution, evolution_fitness; generations = n_generations)
             r = EvolutionSynthesizer.evolution_status(org.evolution)
             Dict(String(k) => v for (k, v) in r)
         elseif command == "swarmOptimize"
-            iterations = Int(get(params, "iterations", 50))
-            fitness_fn = x -> -sum((x .- PHI) .^ 2)
-            best = SwarmEngine.optimize!(org.swarm, fitness_fn; iterations)
+            n_iterations = Int(get(params, "iterations", 50))
+            swarm_fitness = x -> -sum((x .- PHI) .^ 2)
+            best = SwarmEngine.optimize!(org.swarm, swarm_fitness; iterations = n_iterations)
             Dict("status" => "optimized", "best_position" => best)
         elseif command == "remember"
             raw = get(params, "data", Float64[])
