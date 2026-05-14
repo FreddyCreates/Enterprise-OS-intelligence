@@ -25,6 +25,10 @@
 //   POST /division/boot       — boot the AI division (all teams)
 //   POST /division/tick       — tick all team cycle engines
 //   GET  /division/status     — division metrics
+//   POST /composition/register — register a composition node
+//   POST /composition/link     — create a directed composition edge
+//   POST /composition/diffuse  — diffuse a signal across composition graph
+//   GET  /composition/status   — composition graph and diffusion metrics
 //
 // Ring: Interface Ring | Go Gateway
 
@@ -39,6 +43,7 @@ import (
 	"os"
 	"time"
 
+	"organism-gateway/internal/composition"
 	orgcrypto "organism-gateway/internal/crypto"
 	"organism-gateway/internal/division"
 	"organism-gateway/internal/memory"
@@ -55,6 +60,7 @@ type Server struct {
 	memStore *memory.Store
 	pulseM   *pulse.Monitor
 	divMgr   *division.DivisionManager
+	compEng  *composition.Engine
 	aesKey   [32]byte
 	startAt  time.Time
 }
@@ -62,15 +68,16 @@ type Server struct {
 func NewServer() (*Server, error) {
 	// Derive the ring AES key from environment variables (or a default for dev)
 	masterSecret := envOr("ORGANISM_MASTER_SECRET", "dev-master-secret-change-in-prod")
-	salt         := envOr("ORGANISM_KEY_SALT",      "organism-gateway-salt-v1")
-	aesKey, err  := orgcrypto.DeriveKey([]byte(masterSecret), []byte(salt), []byte("organism-aes-key-v1"))
+	salt := envOr("ORGANISM_KEY_SALT", "organism-gateway-salt-v1")
+	aesKey, err := orgcrypto.DeriveKey([]byte(masterSecret), []byte(salt), []byte("organism-aes-key-v1"))
 	if err != nil {
 		return nil, fmt.Errorf("derive AES key: %w", err)
 	}
 
 	pulseMon := pulse.New()
-	memStore  := memory.New(aesKey, 4096)
-	divMgr    := division.NewDivisionManager(aesKey[:])
+	memStore := memory.New(aesKey, 4096)
+	divMgr := division.NewDivisionManager(aesKey[:])
+	compEng := composition.NewEngine()
 
 	return &Server{
 		router:   routing.NewModelRouter(),
@@ -78,6 +85,7 @@ func NewServer() (*Server, error) {
 		memStore: memStore,
 		pulseM:   pulseMon,
 		divMgr:   divMgr,
+		compEng:  compEng,
 		aesKey:   aesKey,
 		startAt:  time.Now(),
 	}, nil
@@ -155,7 +163,9 @@ func (s *Server) handleSynQuery(w http.ResponseWriter, r *http.Request) {
 
 // POST /syn/revoke  {"label":"HEART"}
 func (s *Server) handleSynRevoke(w http.ResponseWriter, r *http.Request) {
-	var req struct{ Label string `json:"label"` }
+	var req struct {
+		Label string `json:"label"`
+	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeErr(w, 400, err.Error())
 		return
@@ -220,7 +230,9 @@ func (s *Server) handleRouteFallback(w http.ResponseWriter, r *http.Request) {
 		Priority: routing.Priority(req.Priority),
 	}
 	failed := make(map[string]bool)
-	for _, f := range req.Failed { failed[f] = true }
+	for _, f := range req.Failed {
+		failed[f] = true
+	}
 
 	result := s.router.CascadeFallback(task, failed)
 	writeJSON(w, 200, map[string]interface{}{
@@ -247,8 +259,8 @@ func (s *Server) handleRouteOutcome(w http.ResponseWriter, r *http.Request) {
 // GET /metrics
 func (s *Server) handleMetrics(w http.ResponseWriter, r *http.Request) {
 	m := s.router.Metrics()
-	m["uptime_ms"]  = time.Since(s.startAt).Milliseconds()
-	m["bindings"]   = s.synProxy.BindingCount()
+	m["uptime_ms"] = time.Since(s.startAt).Milliseconds()
+	m["bindings"] = s.synProxy.BindingCount()
 	writeJSON(w, 200, m)
 }
 
@@ -306,7 +318,7 @@ func (s *Server) handleMemorySet(w http.ResponseWriter, r *http.Request) {
 
 // GET /memory/get?namespace=rship&key=config
 func (s *Server) handleMemoryGet(w http.ResponseWriter, r *http.Request) {
-	ns  := r.URL.Query().Get("namespace")
+	ns := r.URL.Query().Get("namespace")
 	key := r.URL.Query().Get("key")
 	if key == "" {
 		writeErr(w, 400, "key query parameter is required")
@@ -345,7 +357,7 @@ func (s *Server) handleMemoryKeys(w http.ResponseWriter, r *http.Request) {
 
 // DELETE /memory/delete?namespace=rship&key=config
 func (s *Server) handleMemoryDelete(w http.ResponseWriter, r *http.Request) {
-	ns  := r.URL.Query().Get("namespace")
+	ns := r.URL.Query().Get("namespace")
 	key := r.URL.Query().Get("key")
 	if key == "" {
 		writeErr(w, 400, "key is required")
@@ -369,8 +381,8 @@ func (s *Server) handleMemoryMetrics(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleDivisionBoot(w http.ResponseWriter, r *http.Request) {
 	s.divMgr.Boot()
 	writeJSON(w, 200, map[string]interface{}{
-		"ok":    true,
-		"teams": len(s.divMgr.Teams),
+		"ok":     true,
+		"teams":  len(s.divMgr.Teams),
 		"booted": s.divMgr.Booted,
 	})
 }
@@ -382,10 +394,10 @@ func (s *Server) handleDivisionTick(w http.ResponseWriter, r *http.Request) {
 	}
 	beat := s.divMgr.TickAll()
 	writeJSON(w, 200, map[string]interface{}{
-		"global_beat":   beat,
-		"total_tokens":  s.divMgr.TotalTokens(),
-		"total_boxes":   s.divMgr.TotalBoxes(),
-		"fcpr":          s.divMgr.TotalFCPR(),
+		"global_beat":  beat,
+		"total_tokens": s.divMgr.TotalTokens(),
+		"total_boxes":  s.divMgr.TotalBoxes(),
+		"fcpr":         s.divMgr.TotalFCPR(),
 	})
 }
 
@@ -412,36 +424,107 @@ func (s *Server) handleDivisionStatus(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// ── Composition handlers ───────────────────────────────────────────────────────
+
+// POST /composition/register {"id":"meta-assist","kind":"meta","weight":1.0}
+func (s *Server) handleCompositionRegister(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		ID     string  `json:"id"`
+		Kind   string  `json:"kind"`
+		Weight float64 `json:"weight"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeErr(w, 400, err.Error())
+		return
+	}
+	if req.ID == "" {
+		writeErr(w, 400, "id is required")
+		return
+	}
+	if err := s.compEng.RegisterProgram(req.ID, req.Kind, req.Weight); err != nil {
+		writeErr(w, 400, err.Error())
+		return
+	}
+	writeJSON(w, 200, map[string]interface{}{"ok": true, "id": req.ID})
+}
+
+// POST /composition/link {"from":"meta-a","to":"meta-b","coupling_fib":3}
+func (s *Server) handleCompositionLink(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		From        string `json:"from"`
+		To          string `json:"to"`
+		CouplingFib int    `json:"coupling_fib"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeErr(w, 400, err.Error())
+		return
+	}
+	if err := s.compEng.LinkPrograms(req.From, req.To, req.CouplingFib); err != nil {
+		writeErr(w, 400, err.Error())
+		return
+	}
+	writeJSON(w, 200, map[string]interface{}{"ok": true, "from": req.From, "to": req.To})
+}
+
+// POST /composition/diffuse {"source":"meta-a","signal":1.0,"steps":3}
+func (s *Server) handleCompositionDiffuse(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Source string  `json:"source"`
+		Signal float64 `json:"signal"`
+		Steps  int     `json:"steps"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeErr(w, 400, err.Error())
+		return
+	}
+	res, err := s.compEng.Diffuse(req.Source, req.Signal, req.Steps)
+	if err != nil {
+		writeErr(w, 400, err.Error())
+		return
+	}
+	writeJSON(w, 200, res)
+}
+
+// GET /composition/status
+func (s *Server) handleCompositionStatus(w http.ResponseWriter, r *http.Request) {
+	writeJSON(w, 200, s.compEng.Status())
+}
+
 // ── Router setup ──────────────────────────────────────────────────────────────
 
 func (s *Server) routes() *http.ServeMux {
 	mux := http.NewServeMux()
 	// Core
-	mux.HandleFunc("GET /health",           s.handleHealth)
-	mux.HandleFunc("GET /metrics",          s.handleMetrics)
+	mux.HandleFunc("GET /health", s.handleHealth)
+	mux.HandleFunc("GET /metrics", s.handleMetrics)
 	// SYN bindings
-	mux.HandleFunc("POST /syn/bind",        s.handleSynBind)
-	mux.HandleFunc("GET /syn/query",        s.handleSynQuery)
-	mux.HandleFunc("POST /syn/revoke",      s.handleSynRevoke)
-	mux.HandleFunc("POST /syn/revoke-all",  s.handleSynRevokeAll)
-	mux.HandleFunc("GET /syn/status",       s.handleSynStatus)
+	mux.HandleFunc("POST /syn/bind", s.handleSynBind)
+	mux.HandleFunc("GET /syn/query", s.handleSynQuery)
+	mux.HandleFunc("POST /syn/revoke", s.handleSynRevoke)
+	mux.HandleFunc("POST /syn/revoke-all", s.handleSynRevokeAll)
+	mux.HandleFunc("GET /syn/status", s.handleSynStatus)
 	// Model routing
-	mux.HandleFunc("POST /route",           s.handleRoute)
-	mux.HandleFunc("POST /route/fallback",  s.handleRouteFallback)
-	mux.HandleFunc("POST /route/outcome",   s.handleRouteOutcome)
+	mux.HandleFunc("POST /route", s.handleRoute)
+	mux.HandleFunc("POST /route/fallback", s.handleRouteFallback)
+	mux.HandleFunc("POST /route/outcome", s.handleRouteOutcome)
 	// Pulse / vitality
-	mux.HandleFunc("GET /pulse",            s.handlePulse)
-	mux.HandleFunc("POST /pulse/ping",      s.handlePulsePing)
+	mux.HandleFunc("GET /pulse", s.handlePulse)
+	mux.HandleFunc("POST /pulse/ping", s.handlePulsePing)
 	// Sovereign memory
-	mux.HandleFunc("POST /memory/set",      s.handleMemorySet)
-	mux.HandleFunc("GET /memory/get",       s.handleMemoryGet)
-	mux.HandleFunc("GET /memory/keys",      s.handleMemoryKeys)
+	mux.HandleFunc("POST /memory/set", s.handleMemorySet)
+	mux.HandleFunc("GET /memory/get", s.handleMemoryGet)
+	mux.HandleFunc("GET /memory/keys", s.handleMemoryKeys)
 	mux.HandleFunc("DELETE /memory/delete", s.handleMemoryDelete)
-	mux.HandleFunc("GET /memory/metrics",   s.handleMemoryMetrics)
+	mux.HandleFunc("GET /memory/metrics", s.handleMemoryMetrics)
 	// Division
-	mux.HandleFunc("POST /division/boot",   s.handleDivisionBoot)
-	mux.HandleFunc("POST /division/tick",   s.handleDivisionTick)
-	mux.HandleFunc("GET /division/status",  s.handleDivisionStatus)
+	mux.HandleFunc("POST /division/boot", s.handleDivisionBoot)
+	mux.HandleFunc("POST /division/tick", s.handleDivisionTick)
+	mux.HandleFunc("GET /division/status", s.handleDivisionStatus)
+	// Composition
+	mux.HandleFunc("POST /composition/register", s.handleCompositionRegister)
+	mux.HandleFunc("POST /composition/link", s.handleCompositionLink)
+	mux.HandleFunc("POST /composition/diffuse", s.handleCompositionDiffuse)
+	mux.HandleFunc("GET /composition/status", s.handleCompositionStatus)
 	return mux
 }
 
