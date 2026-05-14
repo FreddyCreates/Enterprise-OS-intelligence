@@ -27,6 +27,7 @@ include("engines/resonance_engine.jl")
 include("engines/medina_field_engine.jl")
 include("engines/swarm_engine.jl")
 include("engines/memory_engine.jl")
+include("protocols/virtual_server_protocol.jl")
 include("transformers/coherence_transformer.jl")
 include("transformers/emergence_transformer.jl")
 include("transformers/gauge_transformer.jl")
@@ -45,6 +46,7 @@ using .ResonanceEngine
 using .MedinaFieldEngine
 using .SwarmEngine
 using .MemoryEngine
+using .VirtualServerProtocol
 using .CoherenceTransformer
 using .EmergenceTransformer
 using .GaugeTransformer
@@ -64,6 +66,7 @@ export JuliaOrganism, create_organism, pulse!, breathe!
 export process_signal, transform_data, synthesize_knowledge
 export organism_status, full_diagnostic
 export process_command
+export virtual_server_status
 
 const PHI = (1.0 + sqrt(5.0)) / 2.0
 const PHI_INV = 1.0 / PHI
@@ -116,6 +119,7 @@ mutable struct JuliaOrganism
     # Memory subsystem
     memory_graph::MemoryEngine.KnowledgeGraph
     temporal_memory::MemoryEngine.TemporalMemory
+    virtual_server::VirtualServerProtocol.VirtualServerState
 
     # State
     is_active::Bool
@@ -155,14 +159,16 @@ mutable struct JuliaOrganism
         protocol = ProtocolSynthesizer.ProtocolOrchestrator()
         sovereign = SovereignSynthesizer.SovereignCore(designation)
         field = FieldSynthesizer.FieldGenerator(2, 32)
-        evolution = EvolutionSynthesizer.Population(64, 32)
+        evolution_cfg = EvolutionSynthesizer.EvolutionConfig(pop_size = 64, gene_length = 32)
+        evolution = EvolutionSynthesizer.Population(evolution_cfg)
 
         # Create swarm (32 agents in 4D)
         swarm = SwarmEngine.create_swarm(32, 4)
 
         # Create memory subsystems
         mem_graph = MemoryEngine.KnowledgeGraph()
-        temp_mem = MemoryEngine.TemporalMemory(capacity = 512)
+        temp_mem = MemoryEngine.TemporalMemory(512)
+        virtual_server = VirtualServerProtocol.create_virtual_server("RSHIP-CLEAN-JULIA-PROTOCOL")
 
         new(
             id, designation,
@@ -171,7 +177,7 @@ mutable struct JuliaOrganism
             coherence, emergence, phi_s,
             intel, protocol, sovereign, field, evolution,
             swarm,
-            mem_graph, temp_mem,
+            mem_graph, temp_mem, virtual_server,
             false, 0, 0.0,
             0.0, Dict{Symbol, Any}[]
         )
@@ -248,6 +254,9 @@ function pulse!(org::JuliaOrganism)::Dict{Symbol, Any}
         MemoryEngine.consolidate!(org.memory_graph)
     end
 
+    # 9. Virtual server protocol pulse
+    VirtualServerProtocol.pulse_virtual!(org.virtual_server)
+
     # Update counts
     org.heartbeat_count += 1
 
@@ -257,6 +266,7 @@ function pulse!(org::JuliaOrganism)::Dict{Symbol, Any}
     org.phi_accumulated += org.medina_field.phi_accumulated * PHI_INV * 0.01
     org.phi_accumulated += org.sovereign_core.identity.phi_accumulated * PHI_INV * 0.01
     org.phi_accumulated += org.swarm.phi_accumulated * PHI_INV * 0.01
+    org.phi_accumulated += org.virtual_server.phi_accumulated * PHI_INV * 0.01
 
     return Dict(
         :status => :pulsed,
@@ -266,6 +276,7 @@ function pulse!(org::JuliaOrganism)::Dict{Symbol, Any}
         :medina_coherence => org.medina_field.total_coherence,
         :sovereignty => org.sovereign_core.state.sovereignty_score,
         :swarm_coherence => SwarmEngine.compute_swarm_coherence(org.swarm),
+        :clean_score => org.virtual_server.clean_score,
         :phi_accumulated => org.phi_accumulated
     )
 end
@@ -405,6 +416,12 @@ function export_state(org::JuliaOrganism)::Dict{String, Any}
             "totalSyntheses" => org.intelligence_engine.total_syntheses,
             "emergenceCount" => org.intelligence_engine.emergence_count
         ),
+        "virtualServer" => Dict{String, Any}(
+            "protocol" => org.virtual_server.protocol_name,
+            "cleanScore" => org.virtual_server.clean_score,
+            "pulseCount" => org.virtual_server.pulse_count,
+            "resonanceHz" => org.virtual_server.resonance_hz
+        ),
         "timestamp" => time()
     )
 end
@@ -458,9 +475,15 @@ function organism_status(org::JuliaOrganism)::Dict{Symbol, Any}
         :resonance_sync => org.resonance_network.order_parameter,
         :medina_coherence => org.medina_field.total_coherence,
         :sovereignty_score => org.sovereign_core.state.sovereignty_score,
+        :virtual_protocol => org.virtual_server.protocol_name,
+        :clean_score => org.virtual_server.clean_score,
         :n_knowledge_crystals => length(org.intelligence_engine.crystals),
         :last_js_sync => org.js_sync_timestamp
     )
+end
+
+function virtual_server_status(org::JuliaOrganism)::Dict{Symbol, Any}
+    return VirtualServerProtocol.virtual_status(org.virtual_server)
 end
 
 """
@@ -478,6 +501,7 @@ function full_diagnostic(org::JuliaOrganism)::Dict{Symbol, Any}
         :medina_field => MedinaFieldEngine.field_status(org.medina_field),
         :swarm => SwarmEngine.swarm_status(org.swarm),
         :memory => MemoryEngine.memory_status(org.memory_graph),
+        :virtual_server => VirtualServerProtocol.virtual_status(org.virtual_server),
         :coherence_amp => CoherenceTransformer.amplifier_status(org.coherence_amp),
         :emergence_det => EmergenceTransformer.detector_status(org.emergence_det),
         :phi_transformer => PhiTransformer.transformer_status(org.phi_state),
@@ -499,7 +523,7 @@ end
 Dispatch a JSON command from the JavaScript bridge.
 Returns a Dict that the server serialises back as JSON.
 """
-function process_command(org::JuliaOrganism, cmd::Dict)::Dict
+function process_command(org::JuliaOrganism, cmd::AbstractDict)::Dict
     id = get(cmd, "id", "")
     command = get(cmd, "command", "")
     params = get(cmd, "params", Dict())
@@ -547,7 +571,7 @@ function process_command(org::JuliaOrganism, cmd::Dict)::Dict
         elseif command == "swarmOptimize"
             n_iterations = Int(get(params, "iterations", 50))
             swarm_fitness = x -> -sum((x .- PHI) .^ 2)
-            best = SwarmEngine.optimize!(org.swarm, swarm_fitness; iterations = n_iterations)
+            best = SwarmEngine.optimize!(org.swarm, swarm_fitness, n_iterations)
             Dict("status" => "optimized", "best_position" => best)
         elseif command == "remember"
             raw = get(params, "data", Float64[])
@@ -558,8 +582,27 @@ function process_command(org::JuliaOrganism, cmd::Dict)::Dict
             raw = get(params, "query", Float64[])
             query = Float64.(raw)
             k = Int(get(params, "k", 3))
-            nodes = MemoryEngine.retrieve(org.memory_graph, query; k)
+            nodes = MemoryEngine.retrieve(org.memory_graph, query; top_k = k)
             Dict("status" => "recalled", "n_results" => length(nodes))
+        elseif command == "virtualStatus"
+            r = VirtualServerProtocol.virtual_status(org.virtual_server)
+            Dict(String(k) => v for (k, v) in r)
+        elseif command == "protocolPulse"
+            raw = get(params, "signal", Float64[])
+            signal = Float64.(raw)
+            r = VirtualServerProtocol.pulse_virtual!(org.virtual_server, signal)
+            Dict(String(k) => v for (k, v) in r)
+        elseif command == "applyMathematics"
+            raw = get(params, "signal", Float64[])
+            signal = Float64.(raw)
+            out = VirtualServerProtocol.apply_own_mathematics(signal)
+            Dict(
+                "status" => "mathematics_applied",
+                "signal" => out,
+                "phi" => PHI,
+                "phiInv" => PHI_INV,
+                "schumannHz" => SCHUMANN_HZ
+            )
         else
             Dict("error" => "Unknown command: $command")
         end
@@ -586,6 +629,7 @@ function __init__()
     println("═══════════════════════════════════════════════════════════════════")
     println("  Engines: OrganismCore, Neural, Quantum, Resonance, MedinaField,")
     println("           Swarm, Memory")
+    println("  Virtual Server Protocol: Clean φ-mathematics")
     println("  Transformers: Coherence, Emergence, Gauge, Phi, Topology")
     println("  Synthesizers: Intelligence, Protocol, Sovereign, Field, Evolution")
     println("═══════════════════════════════════════════════════════════════════")

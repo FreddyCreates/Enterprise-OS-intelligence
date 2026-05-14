@@ -27,7 +27,10 @@ julia/
 │   ├── protocol_synthesizer.jl     # Protocol composition
 │   ├── sovereign_synthesizer.jl    # Sovereign identity
 │   └── field_synthesizer.jl        # Field wave synthesis
+├── protocols/
+│   └── virtual_server_protocol.jl   # Clean virtual server + own mathematics
 ├── organism_integration.jl     # Master integration module
+├── server.jl                   # Live/virtual JSON server over stdio
 └── Project.toml                # Julia project configuration
 ```
 
@@ -152,6 +155,21 @@ const bridge = await createJuliaBridge();
 await bridge.pulse();
 await bridge.processSignal(signal);
 const status = await bridge.getStatus();
+const virtual = await bridge.getVirtualStatus();
+```
+
+## Virtual Server Protocol
+
+The live server can run in virtual mode and expose protocol-native commands:
+
+- `virtualStatus` → virtual protocol identity, clean score, φ ladder
+- `protocolPulse` → pulses virtual layer with optional signal
+- `applyMathematics` → applies your φ-clean mathematical transform to a signal
+
+Server launch:
+
+```bash
+julia --project=. julia/server.jl MY-ORGANISM --virtual
 ```
 
 ## Constants

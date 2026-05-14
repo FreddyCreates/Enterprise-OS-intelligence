@@ -65,6 +65,7 @@ class JuliaBridge extends EventEmitter {
     // Configuration
     this.juliaPath = config.juliaPath || 'julia';
     this.modulePath = config.modulePath || JULIA_MODULE_PATH;
+    this.virtualMode = config.virtualMode !== false;
   }
   
   /**
@@ -75,11 +76,17 @@ class JuliaBridge extends EventEmitter {
       try {
         // Spawn the live Julia server script
         const serverScript = path.join(this.modulePath, 'server.jl');
-        this.juliaProcess = spawn(this.juliaPath, [
+        const spawnArgs = [
           '--project=' + this.modulePath,
           serverScript,
           this.designation
-        ], {
+        ];
+
+        if (this.virtualMode) {
+          spawnArgs.push('--virtual');
+        }
+
+        this.juliaProcess = spawn(this.juliaPath, spawnArgs, {
           stdio: ['pipe', 'pipe', 'pipe']
         });
 
@@ -108,7 +115,9 @@ class JuliaBridge extends EventEmitter {
         
         // Handle stderr
         this.juliaProcess.stderr.on('data', (data) => {
-          this.emit('error', { type: 'stderr', message: data.toString() });
+          const message = data.toString();
+          // Julia may print package/precompile info to stderr; surface as diagnostic, not fatal.
+          this.emit('stderr', { type: 'stderr', message });
         });
         
         // Handle process exit
@@ -242,6 +251,27 @@ class JuliaBridge extends EventEmitter {
    */
   async getDiagnostic() {
     return this.sendCommand('fullDiagnostic');
+  }
+
+  /**
+   * Get virtual server protocol status
+   */
+  async getVirtualStatus() {
+    return this.sendCommand('virtualStatus');
+  }
+
+  /**
+   * Pulse the virtual protocol explicitly
+   */
+  async protocolPulse(signal = []) {
+    return this.sendCommand('protocolPulse', { signal });
+  }
+
+  /**
+   * Apply own mathematics transform on signal
+   */
+  async applyMathematics(signal) {
+    return this.sendCommand('applyMathematics', { signal });
   }
   
   /**
