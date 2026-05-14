@@ -53,7 +53,7 @@ end
 
 # ── Boot the organism ─────────────────────────────────────────────────────────
 const ORG = OrganismIntegration.create_organism(designation)
-if virtual_mode
+if virtual_mode && hasproperty(ORG, :virtual_server)
     ORG.virtual_server.protocol_name = "RSHIP-CLEAN-VIRTUAL-PROTOCOL"
 end
 
