@@ -15,6 +15,16 @@
 //   POST /route/fallback      — cascade fallback routing
 //   POST /route/outcome       — record routing outcome
 //   GET  /metrics             — aggregate gateway metrics
+//   GET  /pulse               — organism vitality & heartbeat status
+//   POST /pulse/ping          — record a component liveness ping
+//   POST /memory/set          — store a value in sovereign memory
+//   GET  /memory/get          — retrieve a value from sovereign memory
+//   GET  /memory/keys         — list keys in a namespace
+//   DELETE /memory/delete     — delete a key
+//   GET  /memory/metrics      — memory store statistics
+//   POST /division/boot       — boot the AI division (all teams)
+//   POST /division/tick       — tick all team cycle engines
+//   GET  /division/status     — division metrics
 //
 // Ring: Interface Ring | Go Gateway
 
@@ -30,6 +40,9 @@ import (
 	"time"
 
 	orgcrypto "organism-gateway/internal/crypto"
+	"organism-gateway/internal/division"
+	"organism-gateway/internal/memory"
+	"organism-gateway/internal/pulse"
 	"organism-gateway/internal/routing"
 	"organism-gateway/internal/syn"
 )
@@ -39,6 +52,9 @@ import (
 type Server struct {
 	router   *routing.ModelRouter
 	synProxy *syn.SynProxy
+	memStore *memory.Store
+	pulseM   *pulse.Monitor
+	divMgr   *division.DivisionManager
 	aesKey   [32]byte
 	startAt  time.Time
 }
@@ -52,9 +68,16 @@ func NewServer() (*Server, error) {
 		return nil, fmt.Errorf("derive AES key: %w", err)
 	}
 
+	pulseMon := pulse.New()
+	memStore  := memory.New(aesKey, 4096)
+	divMgr    := division.NewDivisionManager(aesKey[:])
+
 	return &Server{
 		router:   routing.NewModelRouter(),
 		synProxy: syn.NewSynProxy(aesKey),
+		memStore: memStore,
+		pulseM:   pulseMon,
+		divMgr:   divMgr,
 		aesKey:   aesKey,
 		startAt:  time.Now(),
 	}, nil
@@ -229,20 +252,196 @@ func (s *Server) handleMetrics(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, 200, m)
 }
 
+// ── Pulse handlers ────────────────────────────────────────────────────────────
+
+// GET /pulse
+func (s *Server) handlePulse(w http.ResponseWriter, r *http.Request) {
+	writeJSON(w, 200, s.pulseM.Status())
+}
+
+// POST /pulse/ping  {"component":"syn","latency_ms":12.3}
+func (s *Server) handlePulsePing(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Component string  `json:"component"`
+		LatencyMs float64 `json:"latency_ms"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeErr(w, 400, err.Error())
+		return
+	}
+	s.pulseM.Ping(pulse.ComponentName(req.Component), req.LatencyMs)
+	writeJSON(w, 200, map[string]interface{}{"ok": true, "beat": s.pulseM.Beat()})
+}
+
+// ── Memory handlers ───────────────────────────────────────────────────────────
+
+// POST /memory/set  {"namespace":"rship","key":"config","value":"...","ttl_ms":86400000}
+func (s *Server) handleMemorySet(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Namespace string   `json:"namespace"`
+		Key       string   `json:"key"`
+		Value     string   `json:"value"`
+		TTLMs     int64    `json:"ttl_ms"`
+		Tags      []string `json:"tags"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeErr(w, 400, err.Error())
+		return
+	}
+	if req.Key == "" {
+		writeErr(w, 400, "key is required")
+		return
+	}
+	ns := req.Namespace
+	if ns == "" {
+		ns = "default"
+	}
+	opts := memory.SetOptions{TTLMs: req.TTLMs, Tags: req.Tags}
+	if err := s.memStore.Set(ns, req.Key, []byte(req.Value), opts); err != nil {
+		writeErr(w, 500, err.Error())
+		return
+	}
+	writeJSON(w, 200, map[string]interface{}{"ok": true, "namespace": ns, "key": req.Key})
+}
+
+// GET /memory/get?namespace=rship&key=config
+func (s *Server) handleMemoryGet(w http.ResponseWriter, r *http.Request) {
+	ns  := r.URL.Query().Get("namespace")
+	key := r.URL.Query().Get("key")
+	if key == "" {
+		writeErr(w, 400, "key query parameter is required")
+		return
+	}
+	if ns == "" {
+		ns = "default"
+	}
+	val, err := s.memStore.Get(ns, key)
+	if err != nil {
+		code := 404
+		if err == memory.ErrExpired {
+			code = 410
+		}
+		writeErr(w, code, err.Error())
+		return
+	}
+	writeJSON(w, 200, map[string]interface{}{
+		"namespace": ns,
+		"key":       key,
+		"value":     string(val),
+	})
+}
+
+// GET /memory/keys?namespace=rship
+func (s *Server) handleMemoryKeys(w http.ResponseWriter, r *http.Request) {
+	ns := r.URL.Query().Get("namespace")
+	if ns == "" {
+		ns = "default"
+	}
+	writeJSON(w, 200, map[string]interface{}{
+		"namespace": ns,
+		"keys":      s.memStore.Keys(ns),
+	})
+}
+
+// DELETE /memory/delete?namespace=rship&key=config
+func (s *Server) handleMemoryDelete(w http.ResponseWriter, r *http.Request) {
+	ns  := r.URL.Query().Get("namespace")
+	key := r.URL.Query().Get("key")
+	if key == "" {
+		writeErr(w, 400, "key is required")
+		return
+	}
+	if ns == "" {
+		ns = "default"
+	}
+	deleted := s.memStore.Delete(ns, key)
+	writeJSON(w, 200, map[string]interface{}{"ok": deleted, "namespace": ns, "key": key})
+}
+
+// GET /memory/metrics
+func (s *Server) handleMemoryMetrics(w http.ResponseWriter, r *http.Request) {
+	writeJSON(w, 200, s.memStore.Metrics())
+}
+
+// ── Division handlers ─────────────────────────────────────────────────────────
+
+// POST /division/boot
+func (s *Server) handleDivisionBoot(w http.ResponseWriter, r *http.Request) {
+	s.divMgr.Boot()
+	writeJSON(w, 200, map[string]interface{}{
+		"ok":    true,
+		"teams": len(s.divMgr.Teams),
+		"booted": s.divMgr.Booted,
+	})
+}
+
+// POST /division/tick
+func (s *Server) handleDivisionTick(w http.ResponseWriter, r *http.Request) {
+	if !s.divMgr.Booted {
+		s.divMgr.Boot()
+	}
+	beat := s.divMgr.TickAll()
+	writeJSON(w, 200, map[string]interface{}{
+		"global_beat":   beat,
+		"total_tokens":  s.divMgr.TotalTokens(),
+		"total_boxes":   s.divMgr.TotalBoxes(),
+		"fcpr":          s.divMgr.TotalFCPR(),
+	})
+}
+
+// GET /division/status
+func (s *Server) handleDivisionStatus(w http.ResponseWriter, r *http.Request) {
+	teams := make(map[string]interface{})
+	for role, team := range s.divMgr.Teams {
+		teams[string(role)] = map[string]interface{}{
+			"level":          team.Level,
+			"capacity":       team.Capacity,
+			"total_tokens":   team.Engine.TotalTokens,
+			"surplus_cycles": team.Engine.SurplusCycles,
+			"total_boxes":    team.Generator.TotalMinted,
+			"fcpr":           team.Engine.FCPR(),
+		}
+	}
+	writeJSON(w, 200, map[string]interface{}{
+		"booted":       s.divMgr.Booted,
+		"global_beat":  s.divMgr.GlobalBeat,
+		"total_tokens": s.divMgr.TotalTokens(),
+		"total_boxes":  s.divMgr.TotalBoxes(),
+		"total_fcpr":   s.divMgr.TotalFCPR(),
+		"teams":        teams,
+	})
+}
+
 // ── Router setup ──────────────────────────────────────────────────────────────
 
 func (s *Server) routes() *http.ServeMux {
 	mux := http.NewServeMux()
-	mux.HandleFunc("GET /health",          s.handleHealth)
+	// Core
+	mux.HandleFunc("GET /health",           s.handleHealth)
+	mux.HandleFunc("GET /metrics",          s.handleMetrics)
+	// SYN bindings
 	mux.HandleFunc("POST /syn/bind",        s.handleSynBind)
 	mux.HandleFunc("GET /syn/query",        s.handleSynQuery)
 	mux.HandleFunc("POST /syn/revoke",      s.handleSynRevoke)
 	mux.HandleFunc("POST /syn/revoke-all",  s.handleSynRevokeAll)
 	mux.HandleFunc("GET /syn/status",       s.handleSynStatus)
+	// Model routing
 	mux.HandleFunc("POST /route",           s.handleRoute)
 	mux.HandleFunc("POST /route/fallback",  s.handleRouteFallback)
 	mux.HandleFunc("POST /route/outcome",   s.handleRouteOutcome)
-	mux.HandleFunc("GET /metrics",          s.handleMetrics)
+	// Pulse / vitality
+	mux.HandleFunc("GET /pulse",            s.handlePulse)
+	mux.HandleFunc("POST /pulse/ping",      s.handlePulsePing)
+	// Sovereign memory
+	mux.HandleFunc("POST /memory/set",      s.handleMemorySet)
+	mux.HandleFunc("GET /memory/get",       s.handleMemoryGet)
+	mux.HandleFunc("GET /memory/keys",      s.handleMemoryKeys)
+	mux.HandleFunc("DELETE /memory/delete", s.handleMemoryDelete)
+	mux.HandleFunc("GET /memory/metrics",   s.handleMemoryMetrics)
+	// Division
+	mux.HandleFunc("POST /division/boot",   s.handleDivisionBoot)
+	mux.HandleFunc("POST /division/tick",   s.handleDivisionTick)
+	mux.HandleFunc("GET /division/status",  s.handleDivisionStatus)
 	return mux
 }
 
@@ -253,6 +452,14 @@ func main() {
 	if err != nil {
 		log.Fatalf("server init: %v", err)
 	}
+
+	// Start the organism heartbeat monitor
+	srv.pulseM.Run()
+	srv.pulseM.OnBeat(func(beat uint64, vitality float64) {
+		if beat%100 == 0 {
+			log.Printf("[pulse] beat=%d vitality=%.4f", beat, vitality)
+		}
+	})
 
 	addr := envOr("ORGANISM_ADDR", ":8873") // 8873 — echoes the 873 ms heartbeat
 
@@ -270,6 +477,8 @@ func main() {
 	log.Printf("Organism Gateway listening on %s", addr)
 	log.Printf("Models pre-seeded: %d", srv.router.ModelCount())
 	log.Printf("AES key derived from ORGANISM_MASTER_SECRET")
+	log.Printf("Pulse monitor: running at %.2f Hz", pulse.HeartbeatHz)
+	log.Printf("Memory store: capacity=%d", 4096)
 
 	// In production: httpSrv.ListenAndServeTLS(certFile, keyFile)
 	// For dev, plain HTTP:
