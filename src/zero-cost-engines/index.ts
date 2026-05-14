@@ -43,7 +43,14 @@ export type EngineCapability =
   | 'theorem_proving' | 'dependent_types' | 'certified_extraction'
   | 'linear_types' | 'quantity_types' | 'totality_checking'
   | 'struct_types' | 'spans' | 'inline_functions' | 'byref_params'
-  | 'tail_recursion' | 'phi_harmonic' | 'bang_patterns';
+  | 'tail_recursion' | 'phi_harmonic' | 'bang_patterns'
+  | 'ownership' | 'zero_cost_abstractions' | 'no_std' | 'const_generics' | 'comptime_layout'
+  | 'comptime' | 'fixed_buffer_allocator' | 'no_heap' | 'inline_everything'
+  | 'value_types' | 'stack_alloc' | 'fixed_arrays'
+  | 'ets' | 'binary_pattern_matching' | 'actor_model' | 'genserver'
+  | 'static_arrays' | 'isbits' | 'zero_allocation_verified' | 'fastmath'
+  | 'escape_analysis' | 'sync_pool' | 'nosplit_hints' | 'value_receivers'
+  | 'flambda' | 'minor_heap_bypass' | 'in_place_mutation';
 
 /** Engine registration entry */
 export interface EngineEntry {
@@ -107,6 +114,110 @@ export const ENGINE_REGISTRY: Record<string, EngineEntry> = {
     capabilities: ['struct_types', 'spans', 'inline_functions', 'byref_params', 'tail_recursion', 'phi_harmonic'],
     costReductionFactor: 0.89,
     description: 'Structs and spans for zero GC overhead'
+  },
+
+  // ═══════════════════════════════════════════════════════════════
+  // Systems Languages (Direct Memory Control)
+  // ═══════════════════════════════════════════════════════════════
+  'ZCE-RUST-001': {
+    name: 'Ownership Safety Engine',
+    language: 'Rust',
+    path: './rust/zero_cost_engine.rs',
+    capabilities: ['ownership', 'zero_cost_abstractions', 'no_std', 'const_generics', 'comptime_layout', 'phi_harmonic'],
+    costReductionFactor: 0.95,
+    description: 'Ownership system provides compile-time zero-allocation guarantees'
+  },
+  'ZCE-C-001': {
+    name: 'Manual Stack Engine',
+    language: 'C',
+    path: './c/zero_cost_engine.h',
+    capabilities: ['stack_alloc', 'fixed_arrays', 'inline_functions', 'phi_harmonic'],
+    costReductionFactor: 0.98,
+    description: 'alloca and fixed arrays — no malloc/free anywhere'
+  },
+  'ZCE-ZIG-001': {
+    name: 'Comptime Stack Engine',
+    language: 'Zig',
+    path: './zig/zero_cost_engine.zig',
+    capabilities: ['comptime', 'fixed_buffer_allocator', 'no_heap', 'inline_everything', 'phi_harmonic'],
+    costReductionFactor: 0.97,
+    description: 'Comptime evaluation and FixedBufferAllocator for provable stack-only computation'
+  },
+
+  // ═══════════════════════════════════════════════════════════════
+  // Modern Systems Languages (Semi-Direct Control)
+  // ═══════════════════════════════════════════════════════════════
+  'ZCE-V-001': {
+    name: 'Value Type Stack Engine',
+    language: 'V',
+    path: './v/zero_cost_engine.v',
+    capabilities: ['value_types', 'stack_alloc', 'fixed_arrays', 'inline_functions', 'phi_harmonic'],
+    costReductionFactor: 0.93,
+    description: 'Value-type structs and fixed arrays for stack-native computation'
+  },
+  'ZCE-NIM-001': {
+    name: 'Value Type Stack Engine',
+    language: 'Nim',
+    path: './nim/zero_cost_engine.nim',
+    capabilities: ['value_types', 'stack_alloc', 'inline_functions', 'phi_harmonic'],
+    costReductionFactor: 0.92,
+    description: 'Nim value objects with inline pragmas for zero-heap computation'
+  },
+
+  // ═══════════════════════════════════════════════════════════════
+  // Functional Imperative (Indirect Control)
+  // ═══════════════════════════════════════════════════════════════
+  'ZCE-OCAML-001': {
+    name: 'Unboxed Functional Engine',
+    language: 'OCaml',
+    path: './ocaml/zero_cost_engine.ml',
+    capabilities: ['unboxed_types', 'flambda', 'minor_heap_bypass', 'in_place_mutation', 'tail_recursion', 'phi_harmonic'],
+    costReductionFactor: 0.88,
+    description: 'Unboxed arrays and flambda optimisation for minimal allocation'
+  },
+
+  // ═══════════════════════════════════════════════════════════════
+  // Actor Model (Process-Based)
+  // ═══════════════════════════════════════════════════════════════
+  'ZCE-ELIXIR-001': {
+    name: 'Actor ETS Engine',
+    language: 'Elixir',
+    path: './elixir/zero_cost_engine.ex',
+    capabilities: ['ets', 'binary_pattern_matching', 'actor_model', 'genserver', 'tail_recursion', 'phi_harmonic'],
+    costReductionFactor: 0.88,
+    description: 'ETS off-heap storage with tail-recursive actor processes'
+  },
+
+  // ═══════════════════════════════════════════════════════════════
+  // High-Level / Runtime-Managed
+  // ═══════════════════════════════════════════════════════════════
+  'ZCE-CRYSTAL-001': {
+    name: 'Struct Value Engine',
+    language: 'Crystal',
+    path: './crystal/zero_cost_engine.cr',
+    capabilities: ['struct_types', 'static_arrays', 'value_types', 'inline_functions', 'phi_harmonic'],
+    costReductionFactor: 0.91,
+    description: 'Crystal struct value types and StaticArray for zero GC pressure'
+  },
+  'ZCE-GO-001': {
+    name: 'Escape Analysis Engine',
+    language: 'Go',
+    path: './go/zero_cost_engine.go',
+    capabilities: ['escape_analysis', 'sync_pool', 'fixed_arrays', 'nosplit_hints', 'value_receivers', 'phi_harmonic'],
+    costReductionFactor: 0.90,
+    description: 'Go escape analysis + sync.Pool for near-zero heap allocation'
+  },
+
+  // ═══════════════════════════════════════════════════════════════
+  // Scientific / Domain-Specific
+  // ═══════════════════════════════════════════════════════════════
+  'ZCE-JULIA-001': {
+    name: 'isbits StaticArray Engine',
+    language: 'Julia',
+    path: './julia/ZeroCostEngine.jl',
+    capabilities: ['isbits', 'static_arrays', 'zero_allocation_verified', 'fastmath', 'inline_functions', 'phi_harmonic'],
+    costReductionFactor: 0.90,
+    description: 'StaticArrays + @allocated verification for provable zero-allocation'
   }
 };
 
