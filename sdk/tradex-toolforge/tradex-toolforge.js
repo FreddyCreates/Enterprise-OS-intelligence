@@ -9,6 +9,12 @@
 import { randomUUID } from 'node:crypto';
 import { PHI, PHI_INV } from '../../rship-framework.js';
 
+const TOOL_PROFILES = {
+  BLUNT: { profile: 'blunt', aggression: PHI_INV, strategy: 'direct-utility' },
+  ALPHA_CORE: { profile: 'alpha-core', aggression: PHI, strategy: 'signal-seeking' },
+  ALPHA_NETWORK: { profile: 'alpha-network', aggression: PHI ** 2, strategy: 'network-data-fusion' },
+};
+
 export class TRADEXToolForge {
   static RSHIP_ID = 'RSHIP-2026-TOOLFORGE-001';
   static VERSION = '1.0.0';
@@ -22,6 +28,28 @@ export class TRADEXToolForge {
 
     this.toolRegistry = new Map();
     this.runLedger = new Map();
+  }
+
+
+  registerBluntTool(name, executor, metadata = {}) {
+    return this.registerTool(name, executor, {
+      ...TOOL_PROFILES.BLUNT,
+      ...metadata,
+    });
+  }
+
+  registerAlphaTool(name, executor, metadata = {}) {
+    return this.registerTool(name, executor, {
+      ...TOOL_PROFILES.ALPHA_CORE,
+      ...metadata,
+    });
+  }
+
+  registerAlphaNetworkTool(name, executor, metadata = {}) {
+    return this.registerTool(name, executor, {
+      ...TOOL_PROFILES.ALPHA_NETWORK,
+      ...metadata,
+    });
   }
 
   registerTool(name, executor, metadata = {}) {
@@ -112,6 +140,7 @@ export class TRADEXToolForge {
       runsFailed: runs.filter(r => r.status === 'failed').length,
       durabilityMode: 'non-time-based',
       harmonicLoadIndex: (runs.length * PHI_INV) / Math.max(1, this.toolRegistry.size),
+      profiles: TOOL_PROFILES,
     };
   }
 }

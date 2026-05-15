@@ -13,6 +13,8 @@ const MIN_NODE_WEIGHT_FLOOR = 0.0001;
 import TRADEX from '../tradex-agi/tradex-agi.js';
 import IntelligenceTransferProtocol from '../../protocols/intelligence-transfer-protocol.js';
 import TRADEXToolForge from '../tradex-toolforge/tradex-toolforge.js';
+import BLUNTTools from '../blunt-tools/blunt-tools.js';
+import ALPHAToolMesh from '../alpha-toolmesh/alpha-toolmesh.js';
 
 export class TRADEFABRIC {
   static RSHIP_ID = 'RSHIP-2026-TRADEFABRIC-001';
@@ -32,6 +34,8 @@ export class TRADEFABRIC {
     this.toolForge = new TRADEXToolForge();
     this.networkRegistry = new Map();
     this.dataRegistry = new Map();
+    this.bluntTools = new BLUNTTools();
+    this.alphaToolMesh = new ALPHAToolMesh();
   }
 
   registerNode(nodeId, tradexInstance = null, nodeWeight = 1) {
@@ -163,6 +167,41 @@ export class TRADEFABRIC {
     };
   }
 
+
+  registerBluntProductTool(name, executor, metadata = {}) {
+    return this.bluntTools.register(name, executor, metadata);
+  }
+
+  registerAlphaProductTool(name, executor, metadata = {}) {
+    return this.alphaToolMesh.registerAlpha(name, executor, metadata);
+  }
+
+  async runBluntProductTool(name, payload = {}, context = {}) {
+    return this.bluntTools.run(name, payload, context);
+  }
+
+  async runAlphaProductTool(name, payload = {}, context = {}) {
+    return this.alphaToolMesh.run(name, payload, context);
+  }
+
+  registerAlphaNetworkNode(nodeId, peers = []) {
+    return this.alphaToolMesh.registerNode(nodeId, peers);
+  }
+
+  registerAlphaDataDomain(domainId, meta = {}) {
+    return this.alphaToolMesh.registerDataDomain(domainId, meta);
+  }
+
+  crossEcosystemStatus() {
+    return {
+      timestamp: Date.now(),
+      toolForge: this.toolForge.status(),
+      crossEcosystem: this.crossEcosystemStatus(),
+      blunt: this.bluntTools.status(),
+      alpha: this.alphaToolMesh.status(),
+    };
+  }
+
   status() {
     return {
       rshipId: TRADEFABRIC.RSHIP_ID,
@@ -174,6 +213,7 @@ export class TRADEFABRIC {
       networkNodes: this.networkRegistry.size,
       dataStreams: this.dataRegistry.size,
       toolForge: this.toolForge.status(),
+      crossEcosystem: this.crossEcosystemStatus(),
     };
   }
 }
