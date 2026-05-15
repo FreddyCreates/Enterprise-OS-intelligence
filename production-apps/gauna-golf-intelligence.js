@@ -22,6 +22,7 @@ class GaunaGolfIntelligenceProgram {
     this.logistex = new LogistexAGI();
     this.players = new Map();
     this.rounds = new Map();
+    this.tournamentBooks = new Map();
     this.majorDataStreams = new Map();
     this.intelligenceReports = new Map();
   }
@@ -33,11 +34,68 @@ class GaunaGolfIntelligenceProgram {
       carryDistanceYds: profile.carryDistanceYds ?? 245,
       shotDispersionYds: profile.shotDispersionYds ?? 27,
       puttingConfidence: profile.puttingConfidence ?? 0.62,
+      swingSpeedMph: profile.swingSpeedMph ?? 108,
+      competitiveLevel: profile.competitiveLevel ?? 'amateur',
+      pressureIndex: profile.pressureIndex ?? 0.58,
+      strokesGained: profile.strokesGained || {
+        offTee: 0,
+        approach: 0,
+        aroundGreen: 0,
+        putting: 0,
+      },
+      caddieModel: profile.caddieModel ?? 'standard',
       tempo: profile.tempo ?? PHI_INV,
       style: profile.style ?? 'balanced',
     };
     this.players.set(playerId, player);
     return { ok: true, player };
+  }
+
+  registerPGAPlayer(playerId, profile = {}) {
+    const pgaProfile = {
+      ...profile,
+      handicap: profile.handicap ?? 1,
+      carryDistanceYds: profile.carryDistanceYds ?? 300,
+      shotDispersionYds: profile.shotDispersionYds ?? 14,
+      puttingConfidence: profile.puttingConfidence ?? 0.82,
+      swingSpeedMph: profile.swingSpeedMph ?? 118,
+      competitiveLevel: 'PGA',
+      pressureIndex: profile.pressureIndex ?? 0.84,
+      strokesGained: {
+        offTee: profile.strokesGained?.offTee ?? 0.42,
+        approach: profile.strokesGained?.approach ?? 0.36,
+        aroundGreen: profile.strokesGained?.aroundGreen ?? 0.21,
+        putting: profile.strokesGained?.putting ?? 0.31,
+      },
+      caddieModel: profile.caddieModel ?? 'tour-grade',
+    };
+    return this.registerPlayer(playerId, pgaProfile);
+  }
+
+  preparePGATournamentBook(bookId, playerId, config = {}) {
+    const player = this.players.get(playerId);
+    if (!player) return { ok: false, error: `player not found: ${playerId}` };
+    if (player.competitiveLevel !== 'PGA') {
+      return { ok: false, error: `player is not PGA-ready: ${playerId}` };
+    }
+
+    const tournamentBook = {
+      bookId,
+      playerId,
+      tour: config.tour || 'PGA TOUR',
+      eventName: config.eventName || 'Major Championship',
+      courseName: config.courseName || this.courseName,
+      targetCutLine: config.targetCutLine ?? -2,
+      weatherBands: config.weatherBands || ['calm', 'crosswind', 'rain'],
+      scoringPlan: config.scoringPlan || {
+        attackPar5: true,
+        centerGreensOnCrosswind: true,
+        avoidDoubleBogeyRisk: true,
+      },
+      createdAt: new Date().toISOString(),
+    };
+    this.tournamentBooks.set(bookId, tournamentBook);
+    return { ok: true, tournamentBook };
   }
 
   startRound(roundId, playerId, holeCount = 18) {
@@ -69,30 +127,40 @@ class GaunaGolfIntelligenceProgram {
     const player = this.players.get(round.playerId);
     const hole = round.holes.find(h => h.hole === holeNumber);
     if (!hole) return { ok: false, error: `hole not found: ${holeNumber}` };
+    const pgaAdjustment = player.competitiveLevel === 'PGA' ? 8 : 0;
 
     const windPenalty = hole.windMph * 0.35;
     const elevationPenalty = Math.max(0, hole.elevationFt * 0.5);
     const liePenalty = lie === 'rough' ? 12 : lie === 'bunker' ? 18 : 0;
-    const adjustedCarry = Math.max(120, player.carryDistanceYds - windPenalty - elevationPenalty - liePenalty);
+    const adjustedCarry = Math.max(120, player.carryDistanceYds + pgaAdjustment - windPenalty - elevationPenalty - liePenalty);
 
     const riskScore = Math.min(
       1,
       (player.shotDispersionYds / 35) * PHI_INV +
       (hole.hazards.length * 0.09) +
-      (hole.windMph / 30) * (1 - PHI_INV)
+      (hole.windMph / 30) * (1 - PHI_INV) +
+      ((1 - player.pressureIndex) * 0.08)
     );
 
     const expectedStrokes = Number((hole.par + riskScore - PHI_INV * 0.12).toFixed(3));
+    const confidence = Number((1 - riskScore * PHI_INV).toFixed(4));
+    const pgaShotShape = riskScore > 0.58 ? 'controlled-fade' : 'aggressive-draw';
     const shot = {
       roundId,
       hole: holeNumber,
       lie,
       club: adjustedCarry > 230 ? 'driver' : adjustedCarry > 180 ? '5-wood' : '7-iron',
       targetLine: riskScore > 0.55 ? 'safe-center' : 'aggressive-pin',
+      shotShape: player.competitiveLevel === 'PGA' ? pgaShotShape : 'neutral',
       adjustedCarryYds: Number(adjustedCarry.toFixed(1)),
       riskScore: Number(riskScore.toFixed(4)),
       expectedStrokes,
-      confidence: Number((1 - riskScore * PHI_INV).toFixed(4)),
+      confidence,
+      mathGrade:
+        riskScore < 0.22 && confidence > 0.86 ? 'A+' :
+        riskScore < 0.30 && confidence > 0.8 ? 'A' :
+        riskScore < 0.45 && confidence > 0.7 ? 'B' :
+        riskScore < 0.60 && confidence > 0.58 ? 'C' : 'D',
     };
 
     round.recommendations.push({ ...shot, ts: new Date().toISOString() });
@@ -241,6 +309,42 @@ class GaunaGolfIntelligenceProgram {
     return { ok: true, reportId, actions };
   }
 
+  pgaReadinessReport(playerId, roundId) {
+    const player = this.players.get(playerId);
+    if (!player) return { ok: false, error: `player not found: ${playerId}` };
+    const round = this.rounds.get(roundId);
+    if (!round) return { ok: false, error: `round not found: ${roundId}` };
+    const holesPlayed = round.performanceLedger.length || 1;
+    const avgQuality = round.performanceLedger.reduce((sum, h) => sum + h.quality, 0) / holesPlayed;
+    const shotRiskAvg = round.recommendations.length === 0
+      ? 1
+      : round.recommendations.reduce((sum, r) => sum + r.riskScore, 0) / round.recommendations.length;
+    const strokesGainedTotal = Object.values(player.strokesGained || {}).reduce((s, v) => s + v, 0);
+
+    const readinessScore = Math.max(
+      0,
+      Math.min(
+        100,
+        (avgQuality * 38) +
+        ((1 - shotRiskAvg) * 32) +
+        (player.pressureIndex * 20) +
+        (Math.max(0, strokesGainedTotal) * 10)
+      )
+    );
+    return {
+      ok: true,
+      playerId,
+      roundId,
+      competitiveLevel: player.competitiveLevel,
+      readinessScore: Number(readinessScore.toFixed(3)),
+      readinessTier: readinessScore >= 82 ? 'PGA-ready' : readinessScore >= 70 ? 'Tour-watch' : 'Development',
+      pressureIndex: Number(player.pressureIndex.toFixed(4)),
+      avgQuality: Number(avgQuality.toFixed(4)),
+      shotRiskAvg: Number(shotRiskAvg.toFixed(4)),
+      strokesGainedTotal: Number(strokesGainedTotal.toFixed(4)),
+    };
+  }
+
   status(roundId) {
     const round = this.rounds.get(roundId);
     if (!round) return { ok: false, error: `round not found: ${roundId}` };
@@ -257,6 +361,7 @@ class GaunaGolfIntelligenceProgram {
       holesPlayed,
       recommendations: round.recommendations.length,
       avgQuality: Number(avgQuality.toFixed(4)),
+      tournamentBooks: this.tournamentBooks.size,
       majorDataStreams: this.majorDataStreams.size,
       intelligenceReports: this.intelligenceReports.size,
       aiCores: ['FINOTEX', 'LOGISTEX'],
@@ -267,12 +372,24 @@ class GaunaGolfIntelligenceProgram {
 
 function demo() {
   const gauna = new GaunaGolfIntelligenceProgram({ courseName: 'Gauna National' });
-  gauna.registerPlayer('PLAYER-ALPHA', {
-    handicap: 8,
-    carryDistanceYds: 262,
-    shotDispersionYds: 21,
-    puttingConfidence: 0.7,
+  gauna.registerPGAPlayer('PLAYER-ALPHA', {
+    handicap: 2,
+    carryDistanceYds: 309,
+    shotDispersionYds: 13,
+    puttingConfidence: 0.85,
+    pressureIndex: 0.89,
+    strokesGained: {
+      offTee: 0.48,
+      approach: 0.52,
+      aroundGreen: 0.24,
+      putting: 0.33,
+    },
   });
+  console.log(gauna.preparePGATournamentBook('PGA-BOOK-001', 'PLAYER-ALPHA', {
+    eventName: 'U.S. Open',
+    courseName: 'Pinehurst No. 2',
+    targetCutLine: -1,
+  }));
 
   console.log(gauna.startRound('ROUND-001', 'PLAYER-ALPHA', 18));
   console.log(gauna.recommendShot('ROUND-001', 1, 'tee'));
@@ -300,6 +417,7 @@ function demo() {
   }));
   console.log(gauna.synthesizeMajorIntelligence('INTEL-001', ['STREAM-MARKETS', 'STREAM-LOGISTICS']));
   console.log(gauna.recommendMajorActions('INTEL-001'));
+  console.log(gauna.pgaReadinessReport('PLAYER-ALPHA', 'ROUND-001'));
   console.log(gauna.status('ROUND-001'));
 }
 
