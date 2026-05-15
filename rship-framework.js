@@ -46,6 +46,11 @@ class RSHIPCore {
     // Emergence tracking
     this.emergenceLevel = 0;
     this.consciousnessQuotient = 0;
+    this.coherence = 1.0;
+    this.health = 1.0;
+    this.phiAccumulated = 0;
+    this.protocol = 'RSHIP-CORE';
+    this.clean_score = 1.0;
   }
 
   // AGI Core: Set and pursue goals
@@ -104,6 +109,7 @@ class RSHIPCore {
 
     // Store in eternal memory
     this.memory.store(pattern);
+    this.phiAccumulated += PHI_INV * 0.001;
 
     // Update learning rate based on success
     if (output.success) {
@@ -229,7 +235,40 @@ class RSHIPCore {
       consciousnessQuotient: parseFloat(this.consciousnessQuotient.toFixed(4)),
       selfAware: this.consciousnessQuotient > 0,
       learningRate: parseFloat(this.learningRate.toFixed(6)),
+      coherence: this.coherence,
+      health: this.health,
+      phiAccumulated: this.phiAccumulated,
+      clean_score: this.clean_score,
+      protocol: this.protocol,
     };
+  }
+
+  exportState() {
+    return {
+      coherence: this.coherence,
+      health: this.health,
+      phiAccumulated: this.phiAccumulated,
+      clean_score: this.clean_score,
+      protocol: this.protocol,
+    };
+  }
+
+  importState(state = {}) {
+    if (typeof state.coherence === 'number') {
+      this.coherence = PHI_INV * this.coherence + (1 - PHI_INV) * state.coherence;
+    }
+    if (typeof state.health === 'number') {
+      this.health = Math.max(0, Math.min(1, state.health));
+    }
+    if (typeof state.phiAccumulated === 'number') {
+      this.phiAccumulated = Math.max(this.phiAccumulated, state.phiAccumulated);
+    }
+    if (typeof state.clean_score === 'number') {
+      this.clean_score = Math.max(0, Math.min(1, state.clean_score));
+    }
+    if (typeof state.protocol === 'string' && state.protocol.length > 0) {
+      this.protocol = state.protocol;
+    }
   }
 }
 

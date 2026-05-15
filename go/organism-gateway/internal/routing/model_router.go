@@ -81,6 +81,9 @@ type ModelRouter struct {
 	mu     sync.RWMutex
 	models map[string]*ModelEntry
 
+	protocolCleanScore     float64
+	protocolPhiAccumulated float64
+
 	totalRouted  int64
 	totalSuccess int64
 	totalLatency float64
@@ -114,8 +117,8 @@ func (r *ModelRouter) seed(id string, caps map[TaskType]float64) {
 
 // Route returns the best model for a task.
 func (r *ModelRouter) Route(task Task) RoutingResult {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
+	r.mu.Lock()
+	defer r.mu.Unlock()
 
 	type scored struct {
 		id    string
@@ -123,7 +126,7 @@ func (r *ModelRouter) Route(task Task) RoutingResult {
 	}
 	results := make([]scored, 0, len(r.models))
 	for id, m := range r.models {
-		results = append(results, scored{id, m.score(task)})
+		results = append(results, scored{id, r.weightedScore(task, m)})
 	}
 	sort.Slice(results, func(i, j int) bool {
 		return results[i].score > results[j].score
@@ -156,8 +159,10 @@ func (r *ModelRouter) CascadeFallback(task Task, failed map[string]bool) Routing
 	}
 	results := make([]scored, 0)
 	for id, m := range r.models {
-		if failed[id] { continue }
-		results = append(results, scored{id, m.score(task)})
+		if failed[id] {
+			continue
+		}
+		results = append(results, scored{id, r.weightedScore(task, m)})
 	}
 	sort.Slice(results, func(i, j int) bool {
 		return results[i].score > results[j].score
@@ -180,7 +185,9 @@ func (r *ModelRouter) RecordOutcome(modelID string, success bool, latencyMs floa
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	m, ok := r.models[modelID]
-	if !ok { return }
+	if !ok {
+		return
+	}
 	m.TotalTasks++
 	obs := 0.0
 	if success {
@@ -188,8 +195,8 @@ func (r *ModelRouter) RecordOutcome(modelID string, success bool, latencyMs floa
 		obs = 1.0
 		r.totalSuccess++
 	}
-	m.Reputation    = PHIInv*obs + (1-PHIInv)*m.Reputation
-	m.AvgLatencyMs  = PHIInv*latencyMs + (1-PHIInv)*m.AvgLatencyMs
+	m.Reputation = PHIInv*obs + (1-PHIInv)*m.Reputation
+	m.AvgLatencyMs = PHIInv*latencyMs + (1-PHIInv)*m.AvgLatencyMs
 	r.totalLatency += latencyMs
 }
 
@@ -222,58 +229,89 @@ func (r *ModelRouter) Metrics() map[string]interface{} {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	successRate := 0.0
-	avgLatency  := 0.0
+	avgLatency := 0.0
 	if r.totalRouted > 0 {
 		successRate = float64(r.totalSuccess) / float64(r.totalRouted)
-		avgLatency  = r.totalLatency / float64(r.totalRouted)
+		avgLatency = r.totalLatency / float64(r.totalRouted)
 	}
 	return map[string]interface{}{
-		"total_routed":   r.totalRouted,
-		"success_rate":   successRate,
-		"avg_latency_ms": avgLatency,
-		"model_count":    len(r.models),
+		"total_routed":             r.totalRouted,
+		"success_rate":             successRate,
+		"avg_latency_ms":           avgLatency,
+		"model_count":              len(r.models),
+		"protocol_clean_score":     r.protocolCleanScore,
+		"protocol_phi_accumulated": r.protocolPhiAccumulated,
 	}
 }
 
+// UpdateProtocolMetrics injects protocol-native math from Julia/bridge into
+// routing score weighting.
+func (r *ModelRouter) UpdateProtocolMetrics(cleanScore, phiAccumulated float64) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	if cleanScore < 0 {
+		cleanScore = 0
+	}
+	if cleanScore > 1 {
+		cleanScore = 1
+	}
+	if phiAccumulated < 0 {
+		phiAccumulated = 0
+	}
+	r.protocolCleanScore = cleanScore
+	r.protocolPhiAccumulated = phiAccumulated
+}
+
+func (r *ModelRouter) weightedScore(t Task, m *ModelEntry) float64 {
+	base := m.score(t)
+	// clean score nudges quality preference in [0.85, 1.15]
+	cleanFactor := 0.85 + (r.protocolCleanScore * 0.30)
+	// phi factor is intentionally bounded so protocol energy influences routing
+	// without dominating capability/reputation.
+	phiFactor := 1.0 + math.Min(r.protocolPhiAccumulated, PHI*100.0)/(PHI*1000.0)
+	return base * cleanFactor * phiFactor
+}
+
 func (r *ModelRouter) seedDefaultModels() {
-	r.seed("gpt-4o",            cap5(0.90, 0.85, 0.80, 0.88, 0.85))
-	r.seed("gpt-4-turbo",       cap5(0.88, 0.83, 0.78, 0.86, 0.84))
-	r.seed("gpt-4",             cap5(0.85, 0.80, 0.75, 0.85, 0.83))
-	r.seed("gpt-3.5-turbo",     cap5(0.75, 0.70, 0.70, 0.72, 0.80))
-	r.seed("o1-preview",        cap5(0.92, 0.87, 0.70, 0.91, 0.70))
-	r.seed("o1-mini",           cap5(0.88, 0.83, 0.65, 0.87, 0.68))
-	r.seed("o3-mini",           cap5(0.90, 0.86, 0.68, 0.89, 0.70))
-	r.seed("o3",                cap5(0.93, 0.88, 0.72, 0.92, 0.72))
+	r.seed("gpt-4o", cap5(0.90, 0.85, 0.80, 0.88, 0.85))
+	r.seed("gpt-4-turbo", cap5(0.88, 0.83, 0.78, 0.86, 0.84))
+	r.seed("gpt-4", cap5(0.85, 0.80, 0.75, 0.85, 0.83))
+	r.seed("gpt-3.5-turbo", cap5(0.75, 0.70, 0.70, 0.72, 0.80))
+	r.seed("o1-preview", cap5(0.92, 0.87, 0.70, 0.91, 0.70))
+	r.seed("o1-mini", cap5(0.88, 0.83, 0.65, 0.87, 0.68))
+	r.seed("o3-mini", cap5(0.90, 0.86, 0.68, 0.89, 0.70))
+	r.seed("o3", cap5(0.93, 0.88, 0.72, 0.92, 0.72))
 	r.seed("claude-3.5-sonnet", cap5(0.88, 0.80, 0.90, 0.87, 0.88))
-	r.seed("claude-3.5-haiku",  cap5(0.82, 0.75, 0.85, 0.80, 0.85))
-	r.seed("claude-3-opus",     cap5(0.87, 0.78, 0.92, 0.86, 0.90))
-	r.seed("claude-3-sonnet",   cap5(0.85, 0.76, 0.88, 0.84, 0.88))
-	r.seed("claude-3-haiku",    cap5(0.78, 0.70, 0.82, 0.76, 0.82))
-	r.seed("claude-4",          cap5(0.92, 0.84, 0.94, 0.90, 0.92))
-	r.seed("gemini-2.0-flash",  cap5(0.84, 0.78, 0.80, 0.88, 0.82))
-	r.seed("gemini-1.5-pro",    cap5(0.85, 0.76, 0.80, 0.90, 0.80))
-	r.seed("gemini-1.5-flash",  cap5(0.80, 0.72, 0.76, 0.85, 0.78))
-	r.seed("gemini-ultra",      cap5(0.88, 0.80, 0.84, 0.92, 0.84))
-	r.seed("llama-3.1-405b",    cap5(0.80, 0.82, 0.70, 0.78, 0.75))
-	r.seed("llama-3.1-70b",     cap5(0.75, 0.80, 0.65, 0.72, 0.72))
-	r.seed("llama-3.1-8b",      cap5(0.65, 0.70, 0.58, 0.62, 0.65))
-	r.seed("llama-3.2-90b",     cap5(0.78, 0.82, 0.68, 0.75, 0.74))
-	r.seed("mistral-large",     cap5(0.78, 0.82, 0.70, 0.76, 0.74))
-	r.seed("mistral-medium",    cap5(0.72, 0.76, 0.65, 0.70, 0.70))
-	r.seed("mistral-small",     cap5(0.65, 0.70, 0.60, 0.63, 0.65))
-	r.seed("mixtral-8x22b",     cap5(0.76, 0.82, 0.68, 0.74, 0.72))
-	r.seed("mixtral-8x7b",      cap5(0.70, 0.76, 0.62, 0.68, 0.68))
-	r.seed("command-r-plus",    cap5(0.78, 0.72, 0.74, 0.80, 0.78))
-	r.seed("command-r",         cap5(0.72, 0.66, 0.68, 0.74, 0.72))
-	r.seed("command-light",     cap5(0.60, 0.55, 0.58, 0.62, 0.65))
-	r.seed("deepseek-v3",       cap5(0.82, 0.88, 0.68, 0.80, 0.72))
-	r.seed("deepseek-r1",       cap5(0.80, 0.85, 0.64, 0.78, 0.70))
-	r.seed("deepseek-coder",    cap5(0.70, 0.90, 0.50, 0.68, 0.60))
-	r.seed("qwen-2.5-72b",      cap5(0.78, 0.80, 0.70, 0.76, 0.72))
-	r.seed("qwen-2.5-32b",      cap5(0.72, 0.74, 0.65, 0.70, 0.68))
-	r.seed("phi-3-medium",      cap5(0.65, 0.72, 0.60, 0.64, 0.65))
-	r.seed("phi-3-mini",        cap5(0.58, 0.65, 0.55, 0.58, 0.60))
-	r.seed("dbrx",              cap5(0.72, 0.74, 0.64, 0.70, 0.68))
-	r.seed("gpt-5-mini",        cap5(0.86, 0.82, 0.80, 0.88, 0.86))
-	r.seed("gemma-2-27b",       cap5(0.70, 0.72, 0.66, 0.68, 0.68))
+	r.seed("claude-3.5-haiku", cap5(0.82, 0.75, 0.85, 0.80, 0.85))
+	r.seed("claude-3-opus", cap5(0.87, 0.78, 0.92, 0.86, 0.90))
+	r.seed("claude-3-sonnet", cap5(0.85, 0.76, 0.88, 0.84, 0.88))
+	r.seed("claude-3-haiku", cap5(0.78, 0.70, 0.82, 0.76, 0.82))
+	r.seed("claude-4", cap5(0.92, 0.84, 0.94, 0.90, 0.92))
+	r.seed("gemini-2.0-flash", cap5(0.84, 0.78, 0.80, 0.88, 0.82))
+	r.seed("gemini-1.5-pro", cap5(0.85, 0.76, 0.80, 0.90, 0.80))
+	r.seed("gemini-1.5-flash", cap5(0.80, 0.72, 0.76, 0.85, 0.78))
+	r.seed("gemini-ultra", cap5(0.88, 0.80, 0.84, 0.92, 0.84))
+	r.seed("llama-3.1-405b", cap5(0.80, 0.82, 0.70, 0.78, 0.75))
+	r.seed("llama-3.1-70b", cap5(0.75, 0.80, 0.65, 0.72, 0.72))
+	r.seed("llama-3.1-8b", cap5(0.65, 0.70, 0.58, 0.62, 0.65))
+	r.seed("llama-3.2-90b", cap5(0.78, 0.82, 0.68, 0.75, 0.74))
+	r.seed("mistral-large", cap5(0.78, 0.82, 0.70, 0.76, 0.74))
+	r.seed("mistral-medium", cap5(0.72, 0.76, 0.65, 0.70, 0.70))
+	r.seed("mistral-small", cap5(0.65, 0.70, 0.60, 0.63, 0.65))
+	r.seed("mixtral-8x22b", cap5(0.76, 0.82, 0.68, 0.74, 0.72))
+	r.seed("mixtral-8x7b", cap5(0.70, 0.76, 0.62, 0.68, 0.68))
+	r.seed("command-r-plus", cap5(0.78, 0.72, 0.74, 0.80, 0.78))
+	r.seed("command-r", cap5(0.72, 0.66, 0.68, 0.74, 0.72))
+	r.seed("command-light", cap5(0.60, 0.55, 0.58, 0.62, 0.65))
+	r.seed("deepseek-v3", cap5(0.82, 0.88, 0.68, 0.80, 0.72))
+	r.seed("deepseek-r1", cap5(0.80, 0.85, 0.64, 0.78, 0.70))
+	r.seed("deepseek-coder", cap5(0.70, 0.90, 0.50, 0.68, 0.60))
+	r.seed("qwen-2.5-72b", cap5(0.78, 0.80, 0.70, 0.76, 0.72))
+	r.seed("qwen-2.5-32b", cap5(0.72, 0.74, 0.65, 0.70, 0.68))
+	r.seed("phi-3-medium", cap5(0.65, 0.72, 0.60, 0.64, 0.65))
+	r.seed("phi-3-mini", cap5(0.58, 0.65, 0.55, 0.58, 0.60))
+	r.seed("dbrx", cap5(0.72, 0.74, 0.64, 0.70, 0.68))
+	r.seed("gpt-5-mini", cap5(0.86, 0.82, 0.80, 0.88, 0.86))
+	r.seed("gemma-2-27b", cap5(0.70, 0.72, 0.66, 0.68, 0.68))
 }

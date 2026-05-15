@@ -92,16 +92,20 @@ class JuliaBridge extends EventEmitter {
 
         // Handle stdout
         let buffer = '';
+        let resolved = false;
         this.juliaProcess.stdout.on('data', (data) => {
           buffer += data.toString();
           const lines = buffer.split('\n');
           buffer = lines.pop(); // Keep incomplete line in buffer
           
           for (const line of lines) {
-            if (line === 'JULIA_READY') {
+            if (line === 'JULIA_READY' || line === 'JULIA_VIRTUAL_READY') {
               this.isConnected = true;
               this.emit('connected');
-              resolve({ status: 'connected', id: this.id });
+              if (!resolved) {
+                resolved = true;
+                resolve({ status: 'connected', id: this.id });
+              }
             } else if (line.trim()) {
               try {
                 const response = JSON.parse(line);
@@ -491,6 +495,38 @@ class MockJuliaBridge extends EventEmitter {
     return {
       organism: this.state,
       mock: true
+    };
+  }
+
+  async getVirtualStatus() {
+    return {
+      protocol: 'RSHIP-CLEAN-MOCK-PROTOCOL',
+      clean_score: Math.max(0, Math.min(1, this.state.coherence * this.state.health)),
+      pulse_count: this.state.heartbeatCount,
+      coherence: this.state.coherence,
+      health: this.state.health,
+      phiAccumulated: this.state.phiAccumulated
+    };
+  }
+
+  async protocolPulse(signal = []) {
+    await this.pulse();
+    const mapped = signal.map((x, i) => PHI_INV * x + (1 - PHI_INV) * Math.sin(i + this.state.heartbeatCount));
+    return {
+      status: 'pulsed',
+      signal: mapped,
+      clean_score: Math.max(0, Math.min(1, this.state.coherence * this.state.health)),
+      pulse_count: this.state.heartbeatCount
+    };
+  }
+
+  async applyMathematics(signal = []) {
+    return {
+      status: 'mathematics_applied',
+      signal: signal.map((x, i) => x * PHI + Math.sin(i * SCHUMANN_HZ) * PHI_INV),
+      phi: PHI,
+      phiInv: PHI_INV,
+      schumannHz: SCHUMANN_HZ
     };
   }
   
