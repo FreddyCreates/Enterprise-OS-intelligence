@@ -11,6 +11,8 @@
 //   POST /syn/revoke          — revoke a binding
 //   POST /syn/revoke-all      — nuclear revoke all
 //   GET  /syn/status          — list all binding metadata
+//   GET  /composition/status  — gateway composition status
+//   POST /composition/register — register a composition component
 //   POST /route               — phi-weighted model routing
 //   POST /route/fallback      — cascade fallback routing
 //   POST /route/outcome       — record routing outcome
@@ -46,8 +48,8 @@ type Server struct {
 func NewServer() (*Server, error) {
 	// Derive the ring AES key from environment variables (or a default for dev)
 	masterSecret := envOr("ORGANISM_MASTER_SECRET", "dev-master-secret-change-in-prod")
-	salt         := envOr("ORGANISM_KEY_SALT",      "organism-gateway-salt-v1")
-	aesKey, err  := orgcrypto.DeriveKey([]byte(masterSecret), []byte(salt), []byte("organism-aes-key-v1"))
+	salt := envOr("ORGANISM_KEY_SALT", "organism-gateway-salt-v1")
+	aesKey, err := orgcrypto.DeriveKey([]byte(masterSecret), []byte(salt), []byte("organism-aes-key-v1"))
 	if err != nil {
 		return nil, fmt.Errorf("derive AES key: %w", err)
 	}
@@ -132,7 +134,9 @@ func (s *Server) handleSynQuery(w http.ResponseWriter, r *http.Request) {
 
 // POST /syn/revoke  {"label":"HEART"}
 func (s *Server) handleSynRevoke(w http.ResponseWriter, r *http.Request) {
-	var req struct{ Label string `json:"label"` }
+	var req struct {
+		Label string `json:"label"`
+	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeErr(w, 400, err.Error())
 		return
@@ -153,6 +157,44 @@ func (s *Server) handleSynRevokeAll(w http.ResponseWriter, r *http.Request) {
 // GET /syn/status
 func (s *Server) handleSynStatus(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, 200, s.synProxy.Status())
+}
+
+// GET /composition/status
+func (s *Server) handleCompositionStatus(w http.ResponseWriter, r *http.Request) {
+	writeJSON(w, 200, map[string]interface{}{
+		"state":     "composed",
+		"uptime_ms": time.Since(s.startAt).Milliseconds(),
+		"models":    s.router.ModelCount(),
+		"bindings":  s.synProxy.BindingCount(),
+		"timestamp": time.Now().UnixMilli(),
+	})
+}
+
+// POST /composition/register {"component_id":"...", "role":"...", "metadata":{...}}
+func (s *Server) handleCompositionRegister(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		ComponentID string                 `json:"component_id"`
+		Role        string                 `json:"role"`
+		Metadata    map[string]interface{} `json:"metadata"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeErr(w, 400, "invalid JSON: "+err.Error())
+		return
+	}
+	if req.ComponentID == "" || req.Role == "" {
+		writeErr(w, 400, "component_id and role are required")
+		return
+	}
+
+	compositionKey := fmt.Sprintf("%s:%s", req.Role, req.ComponentID)
+	writeJSON(w, 200, map[string]interface{}{
+		"ok":              true,
+		"component_id":    req.ComponentID,
+		"role":            req.Role,
+		"composition_key": compositionKey,
+		"metadata":        req.Metadata,
+		"registered_at":   time.Now().UnixMilli(),
+	})
 }
 
 // POST /route  {"task_type":"CODING","priority":3}
@@ -197,7 +239,9 @@ func (s *Server) handleRouteFallback(w http.ResponseWriter, r *http.Request) {
 		Priority: routing.Priority(req.Priority),
 	}
 	failed := make(map[string]bool)
-	for _, f := range req.Failed { failed[f] = true }
+	for _, f := range req.Failed {
+		failed[f] = true
+	}
 
 	result := s.router.CascadeFallback(task, failed)
 	writeJSON(w, 200, map[string]interface{}{
@@ -224,8 +268,8 @@ func (s *Server) handleRouteOutcome(w http.ResponseWriter, r *http.Request) {
 // GET /metrics
 func (s *Server) handleMetrics(w http.ResponseWriter, r *http.Request) {
 	m := s.router.Metrics()
-	m["uptime_ms"]  = time.Since(s.startAt).Milliseconds()
-	m["bindings"]   = s.synProxy.BindingCount()
+	m["uptime_ms"] = time.Since(s.startAt).Milliseconds()
+	m["bindings"] = s.synProxy.BindingCount()
 	writeJSON(w, 200, m)
 }
 
@@ -233,16 +277,18 @@ func (s *Server) handleMetrics(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) routes() *http.ServeMux {
 	mux := http.NewServeMux()
-	mux.HandleFunc("GET /health",          s.handleHealth)
-	mux.HandleFunc("POST /syn/bind",        s.handleSynBind)
-	mux.HandleFunc("GET /syn/query",        s.handleSynQuery)
-	mux.HandleFunc("POST /syn/revoke",      s.handleSynRevoke)
-	mux.HandleFunc("POST /syn/revoke-all",  s.handleSynRevokeAll)
-	mux.HandleFunc("GET /syn/status",       s.handleSynStatus)
-	mux.HandleFunc("POST /route",           s.handleRoute)
-	mux.HandleFunc("POST /route/fallback",  s.handleRouteFallback)
-	mux.HandleFunc("POST /route/outcome",   s.handleRouteOutcome)
-	mux.HandleFunc("GET /metrics",          s.handleMetrics)
+	mux.HandleFunc("GET /health", s.handleHealth)
+	mux.HandleFunc("POST /syn/bind", s.handleSynBind)
+	mux.HandleFunc("GET /syn/query", s.handleSynQuery)
+	mux.HandleFunc("POST /syn/revoke", s.handleSynRevoke)
+	mux.HandleFunc("POST /syn/revoke-all", s.handleSynRevokeAll)
+	mux.HandleFunc("GET /syn/status", s.handleSynStatus)
+	mux.HandleFunc("GET /composition/status", s.handleCompositionStatus)
+	mux.HandleFunc("POST /composition/register", s.handleCompositionRegister)
+	mux.HandleFunc("POST /route", s.handleRoute)
+	mux.HandleFunc("POST /route/fallback", s.handleRouteFallback)
+	mux.HandleFunc("POST /route/outcome", s.handleRouteOutcome)
+	mux.HandleFunc("GET /metrics", s.handleMetrics)
 	return mux
 }
 

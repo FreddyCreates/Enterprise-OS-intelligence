@@ -1,0 +1,23 @@
+{
+  "name": "@medina/compositex-agi",
+  "version": "1.0.0",
+  "description": "COMPOSITEX AGI — cross-layer enterprise composition intelligence",
+  "main": "compositex-agi.js",
+  "type": "module",
+  "keywords": [
+    "medina",
+    "rship",
+    "compositex",
+    "agi",
+    "composition",
+    "orchestration"
+  ],
+  "author": "Alfredo Medina Hernandez",
+  "license": "SEE LICENSE IN ../../LICENSE",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/FreddyCreates/Enterprise-OS-intelligence.git",
+    "directory": "sdk/compositex-agi"
+  }
+}
+
