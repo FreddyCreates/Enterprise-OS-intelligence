@@ -1,9 +1,9 @@
-# GAUNA Golf Intelligence Paper
-## Multi-Engine AI for Precision Golf Decisioning
+# GAUNA Intelligence Paper
+## Multi-Engine AI for Golf + Major Data Intelligence
 
 **Document ID:** GAUNA-PAPER-2026-001  
 **Official Designation:** RSHIP-PROD-GAUNA-001  
-**Product Name:** GAUNA Golf Intelligence Program  
+**Product Name:** GAUNA Intelligence Program  
 **Author:** Alfredo Medina Hernandez  
 **Affiliation:** Medina Tech, Dallas, Texas  
 **Date:** May 2026  
@@ -13,7 +13,7 @@
 
 ## Abstract
 
-GAUNA is a golf intelligence program for real-time shot recommendation, risk control, and round optimization.  
+GAUNA is an intelligence program for real-time golf optimization plus major-data decisioning across markets, logistics, and operations.  
 It combines multiple AI engines inside one organism runtime: tactical shot risk modeling, route-aware course management, and confidence-aware execution guidance.
 
 The system is designed to deliver practical on-course guidance while preserving interpretability through explicit math grades and deterministic scoring functions.
@@ -118,6 +118,21 @@ GAUNA can be extended into:
 - personalized training cohorts
 - immersive wearable integrations (Meta glasses)
 - synthetic practice simulators
+- multi-domain command intelligence (markets, logistics, operations)
+- major-data stream ingestion with global math grades
+
+---
+
+## 7. Major-Data Intelligence Layer
+
+GAUNA now includes a major-data intelligence path in addition to golf:
+
+- ingest weighted metrics per domain (`markets`, `logistics`, `operations`, etc.)
+- evaluate domain-level score and confidence
+- assign global math grade from aggregated domain signals
+- emit ranked priority actions (`P0`, `P1`, `P2`) for real-world response
+
+This turns GAUNA into a true organism controller rather than a single-use sports engine.
 
 ---
 
