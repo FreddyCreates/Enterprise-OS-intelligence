@@ -15,6 +15,7 @@
  *   GET  /                      → B2B product portal + interactive AGENS agent
  *   GET  /api/status            → Worker health
  *   GET  /api/catalog           → Full agent catalog with deployment info
+ *   GET  /api/error-agents      → Error-created AI agents (defense/offense telemetry)
  *   POST /api/agents/deploy     → Deploy an agent (returns deployment spec)
  *   POST /api/quote             → Get a pricing quote
  *   POST /api/agent/chat        → Talk to AGENS — the master agent
@@ -114,7 +115,47 @@ const TIERS = {
 // ── Deployments Log (ephemeral) ───────────────────────────────────────────────
 const deployments = [];
 const contactLog  = [];
+const errorAgents = [];
 let   chatCount   = 0;
+let   errorAgentCounter = 0;
+
+function createErrorAI(errorCode, context = {}) {
+  errorAgentCounter++;
+  const ts = Date.now();
+  const code = String(errorCode || 'UNKNOWN_ERROR');
+  const hash = phiHash(`${code}:${ts}:${errorAgentCounter}`);
+  const severity = code === 'NOT_FOUND' ? 'LOW'
+    : code === 'NO_MESSAGE' || code === 'INVALID_JSON' ? 'MEDIUM'
+    : 'HIGH';
+  const agent = {
+    id: `EAI-${hash.slice(0, 10).toUpperCase()}`,
+    designation: `RSHIP-AIS-EAI-${String(errorAgentCounter).padStart(3, '0')}`,
+    type: 'ERROR_RESPONSE_AGENT',
+    errorCode: code,
+    severity,
+    role: 'Convert failures into intelligence signals and response actions.',
+    context: {
+      path: context.path || '',
+      method: context.method || '',
+      status: context.status || 500,
+      beat: context.beat || beat,
+    },
+    actions: [
+      'Capture event telemetry and preserve trace context.',
+      'Classify failure mode and risk tier.',
+      'Recommend mitigation and route hardening steps.',
+    ],
+    createdAt: ts,
+  };
+  errorAgents.push(agent);
+  if (errorAgents.length > 250) errorAgents.shift();
+  return agent;
+}
+
+function jsonError(errorCode, status, cors, context = {}, extra = {}) {
+  const errorAI = createErrorAI(errorCode, { ...context, status });
+  return Response.json({ error: errorCode, errorAI, ...extra }, { status, headers: cors });
+}
 
 // ── AGENS Master Agent Brain ───────────────────────────────────────────────────
 function agensRespond(message) {
@@ -614,81 +655,89 @@ export default {
     const seal = phiHash(`agens:${beat}:${startTime}`);
     const cors = { 'Access-Control-Allow-Origin':'*','Access-Control-Allow-Methods':'GET,POST,OPTIONS','Access-Control-Allow-Headers':'Content-Type' };
 
-    if (method === 'OPTIONS') return new Response(null, { status:204, headers:cors });
+    try {
+      if (method === 'OPTIONS') return new Response(null, { status:204, headers:cors });
 
-    if (path === '/' && method === 'GET')
-      return new Response(buildHTML(), { headers:{'Content-Type':'text/html;charset=UTF-8',...cors} });
+      if (path === '/' && method === 'GET')
+        return new Response(buildHTML(), { headers:{'Content-Type':'text/html;charset=UTF-8',...cors} });
 
-    if (path === '/api/status')
-      return Response.json({
-        designation:'RSHIP-AIS-AG-001', name:'AGENS', latin:'agens', meaning:'the one who acts',
-        beat, seal:seal.slice(0,16)+'…', agentsAvailable:CATALOG.length,
-        deployments:deployments.length, chatCount, phi:PHI,
-        uptimeSec:parseFloat(((Date.now()-startTime)/1000).toFixed(2)), alive:true
-      }, {headers:cors});
+      if (path === '/api/status')
+        return Response.json({
+          designation:'RSHIP-AIS-AG-001', name:'AGENS', latin:'agens', meaning:'the one who acts',
+          beat, seal:seal.slice(0,16)+'…', agentsAvailable:CATALOG.length,
+          deployments:deployments.length, chatCount, errorAgents:errorAgents.length, phi:PHI,
+          uptimeSec:parseFloat(((Date.now()-startTime)/1000).toFixed(2)), alive:true
+        }, {headers:cors});
 
-    if (path === '/api/catalog')
-      return Response.json({ agents:CATALOG, count:CATALOG.length, beat }, {headers:cors});
+      if (path === '/api/catalog')
+        return Response.json({ agents:CATALOG, count:CATALOG.length, beat }, {headers:cors});
 
-    if (path === '/api/agents/deploy' && method === 'POST') {
-      let body = {}; try { body = await request.json(); } catch {}
-      const agentId = String(body.agentId || '');
-      const agent   = CATALOG.find(a => a.id === agentId || a.name.toLowerCase() === agentId.toLowerCase());
-      if (!agent) return Response.json({ error:'AGENT_NOT_FOUND', available:CATALOG.map(a=>a.id) }, {status:404,headers:cors});
-      const deploymentId = `DEPLOY-${phiHash(agentId+Date.now()).slice(0,8).toUpperCase()}`;
-      const dep = {
-        deploymentId,
-        agentId: agent.id,
-        agentName: agent.name,
-        industry: String(body.industry || 'general'),
-        scale: String(body.scale || 'production'),
-        tier: String(body.tier || 'PROFESSIONAL'),
-        endpoint: agent.url,
-        wranglerToml: `name = "${agent.name.toLowerCase()}"\nmain = "worker.js"\ncompatibility_date = "2024-09-02"`,
-        estimatedMonthlyCost: TIERS[body.tier || 'PROFESSIONAL']?.price ?? 'Custom',
-        apiEndpoints: agent.apiEndpoints,
-        deployedAt: Date.now(),
-        status: 'PROVISIONED',
-      };
-      deployments.push(dep);
-      return Response.json({ success:true, deployment:dep, message:`${agent.name} deployment provisioned. Endpoint: ${agent.url}` }, {headers:cors});
+      if (path === '/api/error-agents')
+        return Response.json({ count:errorAgents.length, agents:errorAgents, beat }, {headers:cors});
+
+      if (path === '/api/agents/deploy' && method === 'POST') {
+        let body = {}; try { body = await request.json(); } catch {}
+        const agentId = String(body.agentId || '');
+        const agent   = CATALOG.find(a => a.id === agentId || a.name.toLowerCase() === agentId.toLowerCase());
+        if (!agent) return jsonError('AGENT_NOT_FOUND', 404, cors, { path, method, beat }, { available: CATALOG.map(a => a.id) });
+        const deploymentId = `DEPLOY-${phiHash(agentId+Date.now()).slice(0,8).toUpperCase()}`;
+        const dep = {
+          deploymentId,
+          agentId: agent.id,
+          agentName: agent.name,
+          industry: String(body.industry || 'general'),
+          scale: String(body.scale || 'production'),
+          tier: String(body.tier || 'PROFESSIONAL'),
+          endpoint: agent.url,
+          wranglerToml: `name = "${agent.name.toLowerCase()}"\nmain = "worker.js"\ncompatibility_date = "2024-09-02"`,
+          estimatedMonthlyCost: TIERS[body.tier || 'PROFESSIONAL']?.price ?? 'Custom',
+          apiEndpoints: agent.apiEndpoints,
+          deployedAt: Date.now(),
+          status: 'PROVISIONED',
+        };
+        deployments.push(dep);
+        return Response.json({ success:true, deployment:dep, message:`${agent.name} deployment provisioned. Endpoint: ${agent.url}` }, {headers:cors});
+      }
+
+      if (path === '/api/quote' && method === 'POST') {
+        let body = {}; try { body = await request.json(); } catch {}
+        const agentNames = Array.isArray(body.agents) ? body.agents : [];
+        const tier       = String(body.tier || 'PROFESSIONAL');
+        const matched    = agentNames.map(n => CATALOG.find(a => a.name.toLowerCase() === n.toLowerCase())).filter(Boolean);
+        const basePrice  = TIERS[tier]?.price ?? null;
+        const agentTotal = matched.reduce((s,a) => s + (a.monthlyPrice || 0), 0);
+        return Response.json({
+          agents: matched.map(a => ({ id:a.id, name:a.name, monthlyPrice:a.monthlyPrice })),
+          tier, basePrice, agentTotal,
+          estimatedMonthly: basePrice ? Math.max(basePrice, agentTotal) : 'Contact for Enterprise',
+          note: tier === 'ENTERPRISE' ? 'Enterprise pricing is custom — contact us for a precise quote.' : undefined,
+          beat,
+        }, {headers:cors});
+      }
+
+      if (path === '/api/agent/chat' && method === 'POST') {
+        let body = {}; try { body = await request.json(); } catch {}
+        const message = String(body.message || '').trim();
+        if (!message) return jsonError('NO_MESSAGE', 400, cors, { path, method, beat });
+        chatCount++;
+        const result = agensRespond(message);
+        return Response.json({ agent:'AGENS', message, ...result, beat, totalChats:chatCount }, {headers:cors});
+      }
+
+      if (path === '/api/contact' && method === 'POST') {
+        let body = {}; try { body = await request.json(); } catch {}
+        const entry = { id:`CONTACT-${contactLog.length+1}`, name:String(body.name||''),
+          email:String(body.email||''), message:String(body.message||'').slice(0,500), ts:Date.now() };
+        contactLog.push(entry);
+        return Response.json({ received:true, id:entry.id, message:'We will respond within 24 hours.' }, {headers:cors});
+      }
+
+      return jsonError('NOT_FOUND', 404, cors, { path, method, beat }, {
+        path,
+        available:['/', '/api/status', '/api/catalog', '/api/error-agents', '/api/agents/deploy', '/api/quote', '/api/agent/chat', '/api/contact'],
+      });
+    } catch (err) {
+      return jsonError('UNHANDLED_EXCEPTION', 500, cors, { path, method, beat });
     }
-
-    if (path === '/api/quote' && method === 'POST') {
-      let body = {}; try { body = await request.json(); } catch {}
-      const agentNames = Array.isArray(body.agents) ? body.agents : [];
-      const tier       = String(body.tier || 'PROFESSIONAL');
-      const matched    = agentNames.map(n => CATALOG.find(a => a.name.toLowerCase() === n.toLowerCase())).filter(Boolean);
-      const basePrice  = TIERS[tier]?.price ?? null;
-      const agentTotal = matched.reduce((s,a) => s + (a.monthlyPrice || 0), 0);
-      return Response.json({
-        agents: matched.map(a => ({ id:a.id, name:a.name, monthlyPrice:a.monthlyPrice })),
-        tier, basePrice, agentTotal,
-        estimatedMonthly: basePrice ? Math.max(basePrice, agentTotal) : 'Contact for Enterprise',
-        note: tier === 'ENTERPRISE' ? 'Enterprise pricing is custom — contact us for a precise quote.' : undefined,
-        beat,
-      }, {headers:cors});
-    }
-
-    if (path === '/api/agent/chat' && method === 'POST') {
-      let body = {}; try { body = await request.json(); } catch {}
-      const message = String(body.message || '').trim();
-      if (!message) return Response.json({ error:'NO_MESSAGE' }, {status:400,headers:cors});
-      chatCount++;
-      const result = agensRespond(message);
-      return Response.json({ agent:'AGENS', message, ...result, beat, totalChats:chatCount }, {headers:cors});
-    }
-
-    if (path === '/api/contact' && method === 'POST') {
-      let body = {}; try { body = await request.json(); } catch {}
-      const entry = { id:`CONTACT-${contactLog.length+1}`, name:String(body.name||''),
-        email:String(body.email||''), message:String(body.message||'').slice(0,500), ts:Date.now() };
-      contactLog.push(entry);
-      return Response.json({ received:true, id:entry.id, message:'We will respond within 24 hours.' }, {headers:cors});
-    }
-
-    return Response.json({ error:'NOT_FOUND', path,
-      available:['/', '/api/status', '/api/catalog', '/api/agents/deploy', '/api/quote', '/api/agent/chat', '/api/contact']
-    }, {status:404, headers:cors});
   },
 };
