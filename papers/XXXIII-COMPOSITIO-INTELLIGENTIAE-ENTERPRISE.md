@@ -53,7 +53,7 @@ This principle reduces divergence risk between roadmap, implementation, and oper
 - Production app: `production-apps/composition-enterprise-intelligence.js`
 - SDK: `sdk/compositex-agi/`
 - Platform module: `platforms/composition-ai/composition-ai-platform.js`
-- Gateway composition routes: `/composition/status`, `/composition/register`
+- Gateway composition routes: `/composition/register`, `/composition/link`, `/composition/diffuse`, `/composition/status`
 
 ---
 
@@ -63,4 +63,3 @@ This principle reduces divergence risk between roadmap, implementation, and oper
 2. `sdk/compositex-agi/compositex-agi.js`
 3. `platforms/composition-ai/composition-ai-platform.js`
 4. `go/organism-gateway/main.go`
-

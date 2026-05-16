@@ -11,8 +11,10 @@
 //   POST /syn/revoke          — revoke a binding
 //   POST /syn/revoke-all      — nuclear revoke all
 //   GET  /syn/status          — list all binding metadata
-//   GET  /composition/status  — gateway composition status
 //   POST /composition/register — register a composition component
+//   POST /composition/link     — link registered composition components
+//   POST /composition/diffuse  — diffuse composition signals
+//   GET  /composition/status   — gateway composition status
 //   POST /route               — phi-weighted model routing
 //   POST /route/fallback      — cascade fallback routing
 //   POST /route/outcome       — record routing outcome
@@ -31,6 +33,7 @@ import (
 	"os"
 	"time"
 
+	"organism-gateway/internal/composition"
 	orgcrypto "organism-gateway/internal/crypto"
 	"organism-gateway/internal/routing"
 	"organism-gateway/internal/syn"
@@ -41,6 +44,7 @@ import (
 type Server struct {
 	router   *routing.ModelRouter
 	synProxy *syn.SynProxy
+	composer *composition.Manager
 	aesKey   [32]byte
 	startAt  time.Time
 }
@@ -57,6 +61,7 @@ func NewServer() (*Server, error) {
 	return &Server{
 		router:   routing.NewModelRouter(),
 		synProxy: syn.NewSynProxy(aesKey),
+		composer: composition.NewManager(),
 		aesKey:   aesKey,
 		startAt:  time.Now(),
 	}, nil
@@ -161,13 +166,13 @@ func (s *Server) handleSynStatus(w http.ResponseWriter, r *http.Request) {
 
 // GET /composition/status
 func (s *Server) handleCompositionStatus(w http.ResponseWriter, r *http.Request) {
-	writeJSON(w, 200, map[string]interface{}{
-		"state":     "composed",
-		"uptime_ms": time.Since(s.startAt).Milliseconds(),
-		"models":    s.router.ModelCount(),
-		"bindings":  s.synProxy.BindingCount(),
-		"timestamp": time.Now().UnixMilli(),
-	})
+	status := s.composer.Status()
+	status["state"] = "composed"
+	status["uptime_ms"] = time.Since(s.startAt).Milliseconds()
+	status["models"] = s.router.ModelCount()
+	status["bindings"] = s.synProxy.BindingCount()
+	status["timestamp"] = time.Now().UnixMilli()
+	writeJSON(w, 200, status)
 }
 
 // POST /composition/register {"component_id":"...", "role":"...", "metadata":{...}}
@@ -181,19 +186,79 @@ func (s *Server) handleCompositionRegister(w http.ResponseWriter, r *http.Reques
 		writeErr(w, 400, "invalid JSON: "+err.Error())
 		return
 	}
-	if req.ComponentID == "" || req.Role == "" {
-		writeErr(w, 400, "component_id and role are required")
+
+	component, err := s.composer.Register(req.ComponentID, req.Role, req.Metadata)
+	if err != nil {
+		writeErr(w, 400, err.Error())
 		return
 	}
 
-	compositionKey := fmt.Sprintf("%s:%s", req.Role, req.ComponentID)
 	writeJSON(w, 200, map[string]interface{}{
 		"ok":              true,
-		"component_id":    req.ComponentID,
-		"role":            req.Role,
-		"composition_key": compositionKey,
-		"metadata":        req.Metadata,
-		"registered_at":   time.Now().UnixMilli(),
+		"component_id":    component.ComponentID,
+		"role":            component.Role,
+		"composition_key": fmt.Sprintf("%s:%s", component.Role, component.ComponentID),
+		"metadata":        component.Metadata,
+		"registered_at":   component.RegisteredAt,
+	})
+}
+
+// POST /composition/link {"from_component_id":"...","to_component_id":"...","relation":"...","weight":1}
+func (s *Server) handleCompositionLink(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		FromComponentID string  `json:"from_component_id"`
+		ToComponentID   string  `json:"to_component_id"`
+		Relation        string  `json:"relation"`
+		Weight          float64 `json:"weight"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeErr(w, 400, "invalid JSON: "+err.Error())
+		return
+	}
+
+	link, err := s.composer.LinkComponents(req.FromComponentID, req.ToComponentID, req.Relation, req.Weight)
+	if err != nil {
+		writeErr(w, 400, err.Error())
+		return
+	}
+
+	writeJSON(w, 200, map[string]interface{}{
+		"ok":               true,
+		"from_component_id": link.FromComponentID,
+		"to_component_id":   link.ToComponentID,
+		"relation":          link.Relation,
+		"weight":            link.Weight,
+		"linked_at":         link.LinkedAt,
+	})
+}
+
+// POST /composition/diffuse {"signal":"...","scope":"all|role","target_role":"...","intensity":1.0}
+func (s *Server) handleCompositionDiffuse(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Signal     string  `json:"signal"`
+		Scope      string  `json:"scope"`
+		TargetRole string  `json:"target_role"`
+		Intensity  float64 `json:"intensity"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeErr(w, 400, "invalid JSON: "+err.Error())
+		return
+	}
+
+	event, err := s.composer.Diffuse(req.Signal, req.Scope, req.TargetRole, req.Intensity)
+	if err != nil {
+		writeErr(w, 400, err.Error())
+		return
+	}
+
+	writeJSON(w, 200, map[string]interface{}{
+		"ok":          true,
+		"signal":      event.Signal,
+		"scope":       event.Scope,
+		"target_role": event.TargetRole,
+		"intensity":   event.Intensity,
+		"impacted":    event.Impacted,
+		"diffused_at": event.DiffusedAt,
 	})
 }
 
@@ -283,8 +348,10 @@ func (s *Server) routes() *http.ServeMux {
 	mux.HandleFunc("POST /syn/revoke", s.handleSynRevoke)
 	mux.HandleFunc("POST /syn/revoke-all", s.handleSynRevokeAll)
 	mux.HandleFunc("GET /syn/status", s.handleSynStatus)
-	mux.HandleFunc("GET /composition/status", s.handleCompositionStatus)
 	mux.HandleFunc("POST /composition/register", s.handleCompositionRegister)
+	mux.HandleFunc("POST /composition/link", s.handleCompositionLink)
+	mux.HandleFunc("POST /composition/diffuse", s.handleCompositionDiffuse)
+	mux.HandleFunc("GET /composition/status", s.handleCompositionStatus)
 	mux.HandleFunc("POST /route", s.handleRoute)
 	mux.HandleFunc("POST /route/fallback", s.handleRouteFallback)
 	mux.HandleFunc("POST /route/outcome", s.handleRouteOutcome)
