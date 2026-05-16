@@ -23,6 +23,9 @@
  *   POST /api/error-division/agents/:id/escalate
  *   POST /api/error-division/agents/:id/resolve
  *   GET  /api/error-division/composition
+ *   GET  /api/internal/overview
+ *   GET  /api/internal/showcase/production
+ *   POST /api/internal/drills/error-injection
  *   POST /api/agents/deploy     → Deploy an agent (returns deployment spec)
  *   POST /api/quote             → Get a pricing quote
  *   POST /api/agent/chat        → Talk to AGENS — the master agent
@@ -368,6 +371,53 @@ function listFilteredAgents(url) {
     if (activeOnly && a.state === 'resolved') return false;
     return true;
   });
+}
+
+function buildProductionShowcase(beatValue) {
+  return {
+    designation: 'RSHIP-AIS-SHOWCASE-001',
+    mode: 'production',
+    generatedAt: Date.now(),
+    beat: beatValue,
+    bundles: [
+      {
+        id: 'SHOWCASE-OPS-CORE',
+        name: 'Operations Core',
+        summary: 'Live operations + defense/offense error containment visibility.',
+        endpoints: [
+          { method: 'GET', path: '/api/status', purpose: 'Worker and fleet health snapshot' },
+          { method: 'GET', path: '/api/error-division/status', purpose: 'Specialist zone load + escalations' },
+          { method: 'GET', path: '/api/error-division/composition', purpose: 'Composition/routing signals' },
+          { method: 'GET', path: '/api/error-division/agents?activeOnly=true', purpose: 'Active specialist roster' },
+        ],
+      },
+      {
+        id: 'SHOWCASE-DEPLOYMENT',
+        name: 'Deployment + Commercial',
+        summary: 'Provisioning and quote flow for customer demonstrations.',
+        endpoints: [
+          { method: 'GET', path: '/api/catalog', purpose: 'Agent portfolio listing' },
+          { method: 'POST', path: '/api/agents/deploy', purpose: 'Provision deployment spec' },
+          { method: 'POST', path: '/api/quote', purpose: 'Estimate monthly pricing' },
+          { method: 'POST', path: '/api/agent/chat', purpose: 'Interactive enterprise advisor' },
+        ],
+      },
+      {
+        id: 'SHOWCASE-DRILLS',
+        name: 'Resilience Drills',
+        summary: 'Controlled error injection and containment timeline replay.',
+        endpoints: [
+          { method: 'POST', path: '/api/internal/drills/error-injection', purpose: 'Inject zone-specific drill event' },
+          { method: 'GET', path: '/api/error-division/history', purpose: 'Review containment history' },
+        ],
+      },
+    ],
+    quickstart: [
+      'curl -s https://agens.rship.workers.dev/api/status',
+      'curl -s https://agens.rship.workers.dev/api/error-division/status',
+      'curl -s -X POST https://agens.rship.workers.dev/api/internal/drills/error-injection -H "content-type: application/json" -d \'{"zone":"AUTH","errorCode":"AUTH_DRILL"}\'',
+    ],
+  };
 }
 
 // ── AGENS Master Agent Brain ───────────────────────────────────────────────────
@@ -922,6 +972,72 @@ export default {
           },
         }, { headers:cors });
 
+      if (path === '/api/internal/overview')
+        return Response.json({
+          beat,
+          internal: {
+            environment: 'production',
+            worker: { designation: 'RSHIP-AIS-AG-001', uptimeSec: parseFloat(((Date.now()-startTime)/1000).toFixed(2)) },
+            counts: {
+              deployments: deployments.length,
+              chats: chatCount,
+              totalErrorAgents: errorAgents.length,
+              activeErrorAgents: errorAgents.filter(a => a.state !== 'resolved').length,
+              escalatedErrorAgents: errorAgents.filter(a => a.state === 'escalated').length,
+            },
+            division: getDivisionStatus(),
+            tiers: Object.entries(TIERS).map(([k,v]) => ({ tier: k, price: v.price, sla: v.sla })),
+          },
+        }, { headers:cors });
+
+      if (path === '/api/internal/showcase/production')
+        return Response.json(buildProductionShowcase(beat), { headers:cors });
+
+      if (path === '/api/internal/drills/error-injection' && method === 'POST') {
+        let body = {}; try { body = await request.json(); } catch {}
+        const zone = String(body.zone || 'RUNTIME').toUpperCase();
+        const drillCodeMap = {
+          AUTH: 'AUTH_DRILL',
+          API_WRITE: 'API_WRITE_DRILL',
+          ADMIN_INTERNAL: 'ADMIN_DRILL',
+          RECON: 'RECON_DRILL',
+          UPSTREAM_DEPENDENCY: 'UPSTREAM_DRILL',
+          RUNTIME: 'RUNTIME_DRILL',
+        };
+        const forcedCode = String(body.errorCode || drillCodeMap[zone] || 'RUNTIME_DRILL');
+        const status = Number(body.status || (zone === 'AUTH' || zone === 'ADMIN_INTERNAL' ? 401 : 500));
+        const pathHint = String(body.path || (
+          zone === 'AUTH' ? '/auth/login'
+            : zone === 'API_WRITE' ? '/api/agents/deploy'
+            : zone === 'ADMIN_INTERNAL' ? '/internal/ops'
+            : zone === 'RECON' ? '/unknown/probe'
+            : zone === 'UPSTREAM_DEPENDENCY' ? '/api/dependency/upstream'
+            : '/api/runtime/sim'
+        ));
+        const methodHint = String(body.method || (zone === 'API_WRITE' ? 'POST' : 'GET')).toUpperCase();
+        const drillAgent = createErrorAI(forcedCode, {
+          path: pathHint,
+          method: methodHint,
+          status,
+          beat,
+          source: 'internal-drill',
+        });
+        addHistoryEvent('drill', drillAgent, { requestedZone: zone, forcedCode });
+        return Response.json({
+          success: true,
+          drill: {
+            requestedZone: zone,
+            code: forcedCode,
+            status,
+            path: pathHint,
+            method: methodHint,
+          },
+          agent: drillAgent,
+          division: getDivisionStatus(),
+          beat,
+        }, { headers:cors });
+      }
+
       const assignMatch = path.match(/^\/api\/error-division\/agents\/([^/]+)\/assign$/);
       if (assignMatch && method === 'POST') {
         const agent = findErrorAgentById(assignMatch[1]);
@@ -1021,6 +1137,8 @@ export default {
           '/', '/api/status', '/api/catalog', '/api/error-agents',
           '/api/error-division/status', '/api/error-division/agents',
           '/api/error-division/history', '/api/error-division/composition',
+          '/api/internal/overview', '/api/internal/showcase/production',
+          '/api/internal/drills/error-injection',
           '/api/agents/deploy', '/api/quote', '/api/agent/chat', '/api/contact',
         ],
       });
