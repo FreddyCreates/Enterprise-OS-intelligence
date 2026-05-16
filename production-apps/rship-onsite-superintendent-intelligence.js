@@ -23,6 +23,8 @@ class RshipOnsiteSuperintendentIntelligence {
     this.siteOffices = new Map();
     this.dailyLogs = new Map();
     this.deliveryLedger = new Map();
+    this.toolSuites = new Map();
+    this.toolRooms = new Map();
   }
 
   registerProjectSiteOffice(projectId, profile = {}) {
@@ -42,6 +44,8 @@ class RshipOnsiteSuperintendentIntelligence {
     this.siteOffices.set(projectId, office);
     this.dailyLogs.set(projectId, []);
     this.deliveryLedger.set(projectId, []);
+    this.toolSuites.set(projectId, []);
+    this.toolRooms.set(projectId, []);
     return { ok: true, office };
   }
 
@@ -95,6 +99,90 @@ class RshipOnsiteSuperintendentIntelligence {
     return { ok: true, ticket };
   }
 
+  createToolSuite(projectId, suiteName, tools = []) {
+    if (!this.siteOffices.has(projectId)) return { ok: false, error: `site office not found: ${projectId}` };
+
+    const suite = {
+      suiteId: `SUITE-${projectId}-${Date.now().toString(36)}`,
+      suiteName: suiteName || 'general-foreman-suite',
+      tools: tools.map((tool, i) => ({
+        toolId: tool.toolId || `TOOL-${i + 1}`,
+        name: tool.name || 'unspecified-tool',
+        status: tool.status || 'ready',
+        calibrated: tool.calibrated ?? true,
+      })),
+      createdAt: new Date().toISOString(),
+    };
+
+    this.toolSuites.get(projectId).push(suite);
+    return { ok: true, suite };
+  }
+
+  registerToolRoom(projectId, roomConfig = {}) {
+    if (!this.siteOffices.has(projectId)) return { ok: false, error: `site office not found: ${projectId}` };
+
+    const room = {
+      roomId: roomConfig.roomId || `ROOM-${projectId}-${Date.now().toString(36)}`,
+      name: roomConfig.name || 'onsite-tool-room',
+      location: roomConfig.location || 'office-trailer-rear',
+      capacity: roomConfig.capacity ?? 12,
+      climateControlled: roomConfig.climateControlled ?? true,
+      suiteIds: [],
+      createdAt: new Date().toISOString(),
+    };
+
+    this.toolRooms.get(projectId).push(room);
+    return { ok: true, room };
+  }
+
+  storeSuiteInRoom(projectId, suiteId, roomId) {
+    if (!this.siteOffices.has(projectId)) return { ok: false, error: `site office not found: ${projectId}` };
+
+    const suites = this.toolSuites.get(projectId);
+    const rooms = this.toolRooms.get(projectId);
+    const suite = suites.find(s => s.suiteId === suiteId);
+    const room = rooms.find(r => r.roomId === roomId);
+
+    if (!suite) return { ok: false, error: `suite not found: ${suiteId}` };
+    if (!room) return { ok: false, error: `room not found: ${roomId}` };
+    if (room.suiteIds.length >= room.capacity) return { ok: false, error: `room capacity reached: ${roomId}` };
+    if (!room.suiteIds.includes(suiteId)) room.suiteIds.push(suiteId);
+
+    return {
+      ok: true,
+      storage: {
+        roomId,
+        suiteId,
+        occupancy: room.suiteIds.length,
+        capacity: room.capacity,
+      },
+    };
+  }
+
+  toolRoomStatus(projectId) {
+    if (!this.siteOffices.has(projectId)) return { ok: false, error: `site office not found: ${projectId}` };
+    const suites = this.toolSuites.get(projectId);
+    const rooms = this.toolRooms.get(projectId);
+    const toolsTotal = suites.reduce((sum, s) => sum + s.tools.length, 0);
+    const toolsReady = suites.reduce((sum, s) => sum + s.tools.filter(t => t.status === 'ready').length, 0);
+
+    return {
+      ok: true,
+      projectId,
+      suites: suites.length,
+      rooms: rooms.length,
+      toolsTotal,
+      toolsReady,
+      readiness: toolsTotal > 0 ? Number((toolsReady / toolsTotal).toFixed(4)) : 1,
+      roomOccupancy: rooms.map(r => ({
+        roomId: r.roomId,
+        name: r.name,
+        occupancy: r.suiteIds.length,
+        capacity: r.capacity,
+      })),
+    };
+  }
+
   buildDailySuperPlan(projectId, crewPlan = {}) {
     const office = this.siteOffices.get(projectId);
     if (!office) return { ok: false, error: `site office not found: ${projectId}` };
@@ -103,11 +191,13 @@ class RshipOnsiteSuperintendentIntelligence {
     const completedTasks = crewPlan.completedTasks ?? Math.floor(plannedTasks * 0.82);
     const safetyScore = Number(this.construx.dashboard(projectId).safety.score);
     const deliveries = this.deliveryLedger.get(projectId);
+    const toolStatus = this.toolRoomStatus(projectId);
     const avgDelay = deliveries.length === 0
       ? 0
       : deliveries.reduce((sum, d) => sum + d.delayHours, 0) / deliveries.length;
     const flowScore = Math.max(0, Math.min(1, (completedTasks / Math.max(1, plannedTasks)) - avgDelay * 0.05));
-    const executionScore = Number((flowScore * 0.62 + safetyScore * 0.38).toFixed(4));
+    const toolReadiness = toolStatus.ok ? toolStatus.readiness : 1;
+    const executionScore = Number((flowScore * 0.5 + safetyScore * 0.3 + toolReadiness * 0.2).toFixed(4));
     const grade =
       executionScore >= 0.9 ? 'A+' :
       executionScore >= 0.8 ? 'A' :
@@ -128,6 +218,7 @@ class RshipOnsiteSuperintendentIntelligence {
       plannedTasks,
       completedTasks,
       safetyScore: Number(safetyScore.toFixed(4)),
+      toolReadiness,
       avgDeliveryDelayHours: Number(avgDelay.toFixed(3)),
       executionScore,
       mathGrade: grade,
@@ -172,6 +263,28 @@ function demo() {
     actualHour: 9,
     quantity: 42,
   }));
+
+  const toolSuite = superIntel.createToolSuite('GC-TOWER-001', 'concrete-and-layout-suite', [
+    { toolId: 'TL-101', name: 'laser-level', status: 'ready', calibrated: true },
+    { toolId: 'TL-102', name: 'rebar-scanner', status: 'ready', calibrated: true },
+    { toolId: 'TL-103', name: 'rotary-hammer', status: 'maintenance', calibrated: false },
+  ]);
+  console.log(toolSuite);
+
+  const toolRoom = superIntel.registerToolRoom('GC-TOWER-001', {
+    roomId: 'ROOM-HDT-01',
+    name: 'main trailer tool room',
+    location: 'office-trailer-north',
+    capacity: 24,
+  });
+  console.log(toolRoom);
+
+  console.log(superIntel.storeSuiteInRoom(
+    'GC-TOWER-001',
+    toolSuite.suite.suiteId,
+    toolRoom.room.roomId
+  ));
+  console.log(superIntel.toolRoomStatus('GC-TOWER-001'));
 
   console.log(superIntel.issueTrailerRFI(
     'GC-TOWER-001',
