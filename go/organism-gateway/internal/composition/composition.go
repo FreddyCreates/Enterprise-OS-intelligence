@@ -8,10 +8,10 @@ import (
 )
 
 type Component struct {
-	ComponentID string                 `json:"component_id"`
-	Role        string                 `json:"role"`
-	Metadata    map[string]interface{} `json:"metadata"`
-	RegisteredAt int64                 `json:"registered_at"`
+	ComponentID  string                 `json:"component_id"`
+	Role         string                 `json:"role"`
+	Metadata     map[string]interface{} `json:"metadata"`
+	RegisteredAt int64                  `json:"registered_at"`
 }
 
 type Link struct {
@@ -23,12 +23,12 @@ type Link struct {
 }
 
 type DiffusionEvent struct {
-	Signal      string  `json:"signal"`
-	Scope       string  `json:"scope"`
-	TargetRole  string  `json:"target_role,omitempty"`
-	Intensity   float64 `json:"intensity"`
-	Impacted    int     `json:"impacted"`
-	DiffusedAt  int64   `json:"diffused_at"`
+	Signal     string  `json:"signal"`
+	Scope      string  `json:"scope"`
+	TargetRole string  `json:"target_role,omitempty"`
+	Intensity  float64 `json:"intensity"`
+	Impacted   int     `json:"impacted"`
+	DiffusedAt int64   `json:"diffused_at"`
 }
 
 type Manager struct {
@@ -55,9 +55,9 @@ func (m *Manager) Register(componentID, role string, metadata map[string]interfa
 	}
 
 	c := Component{
-		ComponentID: componentID,
-		Role:        role,
-		Metadata:    metadata,
+		ComponentID:  componentID,
+		Role:         role,
+		Metadata:     metadata,
 		RegisteredAt: time.Now().UnixMilli(),
 	}
 
@@ -155,12 +155,11 @@ func (m *Manager) Status() map[string]interface{} {
 	}
 
 	return map[string]interface{}{
-		"components":         components,
-		"links":              m.links,
-		"diffusions":         m.diffusions,
-		"component_count":    len(components),
-		"link_count":         len(m.links),
-		"diffusion_count":    len(m.diffusions),
+		"components":      components,
+		"links":           m.links,
+		"diffusions":      m.diffusions,
+		"component_count": len(components),
+		"link_count":      len(m.links),
+		"diffusion_count": len(m.diffusions),
 	}
 }
-

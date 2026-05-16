@@ -106,10 +106,10 @@ func TestCompositionLinkAndDiffuseRoutes(t *testing.T) {
 	}
 
 	diffuseReq := httptest.NewRequest(http.MethodPost, "/composition/diffuse", mustJSON(t, map[string]interface{}{
-		"signal":    "policy-update",
-		"scope":     "role",
+		"signal":      "policy-update",
+		"scope":       "role",
 		"target_role": "router",
-		"intensity": 0.9,
+		"intensity":   0.9,
 	}))
 	diffuseRec := httptest.NewRecorder()
 	srv.routes().ServeHTTP(diffuseRec, diffuseReq)

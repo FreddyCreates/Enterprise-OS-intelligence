@@ -223,7 +223,7 @@ func (s *Server) handleCompositionLink(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, 200, map[string]interface{}{
-		"ok":               true,
+		"ok":                true,
 		"from_component_id": link.FromComponentID,
 		"to_component_id":   link.ToComponentID,
 		"relation":          link.Relation,
