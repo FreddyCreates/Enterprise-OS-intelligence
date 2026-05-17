@@ -291,17 +291,50 @@ footer{border-top:1px solid var(--border);padding:32px 48px;
 </footer>
 
 <script>
-let beat = ${beat};
-async function tick() {
-  try {
-    const d = await fetch('/api/status').then(r => r.json());
-    beat = d.beat;
-    document.getElementById('beat-val').textContent  = d.beat;
-    document.getElementById('em-val').textContent    = d.emergence;
-    document.getElementById('agent-count').textContent = d.agentCount;
-  } catch(e) {}
-}
-setInterval(tick, 873);
+(function() {
+  let localBeat = ${beat};
+  let retries = 0;
+  const maxRetries = 3;
+  
+  async function tick() {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000);
+      
+      const response = await fetch('/api/status', { signal: controller.signal });
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) throw new Error('Status ' + response.status);
+      
+      const d = await response.json();
+      localBeat = d.beat || localBeat + 1;
+      retries = 0;
+      
+      const beatEl = document.getElementById('beat-val');
+      const emEl = document.getElementById('em-val');
+      const agentEl = document.getElementById('agent-count');
+      
+      if (beatEl) beatEl.textContent = d.beat || localBeat;
+      if (emEl) emEl.textContent = d.emergence || '—';
+      if (agentEl) agentEl.textContent = d.agentCount || 6;
+    } catch(e) {
+      retries++;
+      localBeat++;
+      const beatEl = document.getElementById('beat-val');
+      if (beatEl) beatEl.textContent = localBeat;
+      
+      if (retries > maxRetries) {
+        console.warn('CEREBRUM: Status fetch failed, continuing offline');
+      }
+    }
+  }
+  
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => setInterval(tick, 873));
+  } else {
+    setInterval(tick, 873);
+  }
+})();
 </script>
 </body>
 </html>`;
