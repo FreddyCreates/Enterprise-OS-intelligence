@@ -1,15 +1,15 @@
 # CRYPTOGRAPHIA AUTONOMA
 ### Autonomous Cryptography: On Computational Secret Arts, Encrypted Wires, and Serverless Trust Architecture
 
-**Author:** Alfredo Medina Hernandez  
-**Affiliation:** Organism AI Research Division · Laboratorium Intelligentiae Autonomae · itsnotAilabs.com  
-**Series:** Sovereign Intelligence Research — Paper XXXV  
-**Date:** May 2026  
-**DOI:** Pending (Zenodo/Archive registration)  
+**Author:** Alfredo Medina Hernandez<br>
+**Affiliation:** Organism AI Research Division · Laboratorium Intelligentiae Autonomae · itsnotAilabs.com<br>
+**Series:** Sovereign Intelligence Research — Paper XXXV<br>
+**Date:** May 2026<br>
+**DOI:** Pending (Zenodo/Archive registration)<br>
 
-**Latin Name:** *Cryptographia Autonoma* — Autonomous Cryptography  
-**Operational Motto:** NULLA INTELLIGENTIA SINE SECRETO TRANSIT — *No intelligence passes without a secret*  
-**Trust Maxim:** FIDES NON A SERVO DATUR — AB ALGORITHMO NASCITUR — *Trust is not given by a server; it is born from an algorithm*  
+**Latin Name:** *Cryptographia Autonoma* — Autonomous Cryptography<br>
+**Operational Motto:** NULLA INTELLIGENTIA SINE SECRETO TRANSIT — *No intelligence passes without a secret*<br>
+**Trust Maxim:** FIDES NON A SERVO DATUR — AB ALGORITHMO NASCITUR — *Trust is not given by a server; it is born from an algorithm*
 
 ---
 
@@ -216,7 +216,7 @@ The core law is unchanged throughout the architecture:
 
 Or in the paper's own language:
 
-> **Claves in navigatore manent. Secretum in algorithmis vivit. Nemo alius videt. Nemo alius potest.**  
+> **Claves in navigatore manent. Secretum in algorithmis vivit. Nemo alius videt. Nemo alius potest.**<br>
 > Keys remain in the browser. The secret lives in algorithms. No one else sees. No one else can.
 
 ---
@@ -238,15 +238,15 @@ Medina Hernandez, A. (2026). *CRYPTOGRAPHIA AUTONOMA: Autonomous Cryptography, E
 
 ## Bibliographia
 
-1. McGrew, D., Viega, J. (2004). *The Galois/Counter Mode of Operation (GCM).* NIST SP 800-38D.  
-2. Kaliski, B. (2000). *PKCS #5: Password-Based Cryptography Specification Version 2.0.* RFC 2898.  
-3. NIST. (2015). *Secure Hash Standard (SHS).* FIPS PUB 180-4.  
-4. Krawczyk, H., Bellare, M., Canetti, R. (1997). *HMAC: Keyed-Hashing for Message Authentication.* RFC 2104.  
-5. W3C. (2023). *Web Cryptography API.* W3C Recommendation.  
-6. Rose, S. et al. (2020). *Zero Trust Architecture.* NIST SP 800-207.  
-7. Enterprise OS Intelligence Repository (2026). `go/organism-gateway/internal/crypto/aes_gcm.go`.  
-8. Enterprise OS Intelligence Repository (2026). `python/intelligence/encryption.py`.  
-9. Enterprise OS Intelligence Repository (2026). `native/organism-crypto/organism_crypto.hpp`.  
+1. McGrew, D., Viega, J. (2004). *The Galois/Counter Mode of Operation (GCM).* NIST SP 800-38D.
+2. Kaliski, B. (2000). *PKCS #5: Password-Based Cryptography Specification Version 2.0.* RFC 2898.
+3. NIST. (2015). *Secure Hash Standard (SHS).* FIPS PUB 180-4.
+4. Krawczyk, H., Bellare, M., Canetti, R. (1997). *HMAC: Keyed-Hashing for Message Authentication.* RFC 2104.
+5. W3C. (2023). *Web Cryptography API.* W3C Recommendation.
+6. Rose, S. et al. (2020). *Zero Trust Architecture.* NIST SP 800-207.
+7. Enterprise OS Intelligence Repository (2026). `go/organism-gateway/internal/crypto/aes_gcm.go`.
+8. Enterprise OS Intelligence Repository (2026). `python/intelligence/encryption.py`.
+9. Enterprise OS Intelligence Repository (2026). `native/organism-crypto/organism_crypto.hpp`.
 10. Medina Hernandez, A. (2026). *SYSTEMA INTEGRUM.* Paper XXXIV, Sovereign Intelligence Research Series.
 
 ---
