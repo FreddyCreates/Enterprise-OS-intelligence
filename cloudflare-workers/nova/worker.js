@@ -49,7 +49,7 @@
 'use strict';
 
 const HOST    = 'nova.medinatechlabs.net';
-const VERSION = '2.0.0';
+const VERSION = '2.1.0';  // Added threat intelligence, Tor routing, attacker dossiers
 
 // ── Crawler files ──────────────────────────────────────────────────────────────
 
@@ -312,6 +312,267 @@ function detectAIProvider(envelope) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// THREAT INTELLIGENCE — Real attacker profiles from Cloudflare analytics
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Known Attacker IP Dossiers
+ * These IPs are recurring characters — tracked for long-term specimen analysis.
+ * Data source: Cloudflare analytics (May 2026)
+ */
+const ATTACKER_DOSSIERS = {
+  '45.88.138.44': {
+    codename:     'APEX-PREDATOR',
+    attacks:      80,
+    firstSeen:    '2026-05-15',
+    category:     'aggressive-scanner',
+    tactics:      ['exploit-paths', 'env-hunting', 'git-theft'],
+    threatLevel:  'critical',
+    notes:        'Most aggressive attacker. 80 malicious requests. Likely cloud VPS or compromised server.',
+  },
+  '203.159.90.116': {
+    codename:     'SHADOW-CRAWLER',
+    attacks:      51,
+    firstSeen:    '2026-05-16',
+    category:     'reconnaissance',
+    tactics:      ['path-enumeration', 'schema-mapping'],
+    threatLevel:  'high',
+    notes:        '51 attacks. Methodical reconnaissance pattern.',
+  },
+  '64.227.70.2': {
+    codename:     'DIGITAL-OCEAN-ALPHA',
+    attacks:      41,
+    firstSeen:    '2026-05-16',
+    category:     'cloud-scanner',
+    tactics:      ['wordpress-probes', 'cms-exploitation'],
+    threatLevel:  'high',
+    notes:        'DigitalOcean VPS. 41 attacks. WordPress/CMS focus.',
+  },
+  '64.225.75.246': {
+    codename:     'DIGITAL-OCEAN-BETA',
+    attacks:      41,
+    firstSeen:    '2026-05-16',
+    category:     'cloud-scanner',
+    tactics:      ['api-probing', 'graphql-introspection'],
+    threatLevel:  'high',
+    notes:        'DigitalOcean VPS. 41 attacks. API/GraphQL focus.',
+  },
+};
+
+/**
+ * Scanner/Bot User-Agent Signatures
+ * Real signatures observed in traffic
+ */
+const SCANNER_SIGNATURES = {
+  leakix: {
+    patterns:   ['l9scan', 'l9explore', 'leakix'],
+    category:   'vulnerability-scanner',
+    observed:   244,  // hits
+    threatLevel: 'medium',
+  },
+  chromeHeadless: {
+    patterns:   ['HeadlessChrome', 'Headless'],
+    category:   'automation-framework',
+    observed:   15,
+    threatLevel: 'medium',
+  },
+  masscan: {
+    patterns:   ['masscan', 'zgrab'],
+    category:   'port-scanner',
+    observed:   0,
+    threatLevel: 'high',
+  },
+  nuclei: {
+    patterns:   ['nuclei', 'Nuclei'],
+    category:   'vuln-scanner',
+    observed:   0,
+    threatLevel: 'high',
+  },
+  sqlmap: {
+    patterns:   ['sqlmap'],
+    category:   'sql-injection',
+    observed:   0,
+    threatLevel: 'critical',
+  },
+};
+
+/**
+ * Path-Based Intent Classification
+ * Each path is a self-report of attacker intent
+ */
+const PATH_INTENT_MAP = {
+  // Exploit paths → Adversary Lab
+  exploit: [
+    '/.git/config', '/.git/HEAD', '/.gitignore',
+    '/.env', '/.env.local', '/.env.production',
+    '/server-status', '/server-info',
+    '/.htaccess', '/.htpasswd',
+    '/wp-config.php', '/config.php',
+    '/admin', '/administrator', '/phpmyadmin',
+    '/backup', '/db', '/database',
+    '/.aws/credentials', '/.ssh/id_rsa',
+  ],
+  // WordPress/CMS paths → Adversary Lab (CMS hunters)
+  cms: [
+    '/wp-admin', '/wp-login.php', '/wp-includes',
+    '/wp-content', '/wp-json', '/xmlrpc.php',
+    '/wlwmanifest.xml', '/wp-includes/wlwmanifest.xml',
+    '/drupal', '/joomla', '/magento',
+  ],
+  // Schema/API paths → Potential research candidates
+  schema: [
+    '/api/graphql', '/graphql', '/.well-known',
+    '/swagger', '/openapi', '/api-docs',
+    '/schema', '/introspect',
+  ],
+  // Crawler paths → Structure mappers (may be AI)
+  crawler: [
+    '/robots.txt', '/sitemap.xml', '/sitemap',
+    '/llms.txt', '/humans.txt', '/security.txt',
+    '/favicon.ico', '/apple-touch-icon.png',
+  ],
+  // Cloudflare-specific paths
+  cloudflare: [
+    '/cdn-cgi/rum', '/cdn-cgi/trace', '/cdn-cgi/l/email-protection',
+  ],
+};
+
+/**
+ * Detect if traffic is from Tor exit node
+ */
+function isTorExit(envelope) {
+  const cf = envelope.source_fingerprint;
+  // Cloudflare provides Tor detection in cf object
+  if (cf.botManagement?.verifiedBot === false && cf.clientTrustScore < 10) {
+    return { isTor: true, confidence: 0.7 };
+  }
+  // Check for known Tor-like patterns
+  const asOrg = (cf.asOrg || '').toLowerCase();
+  if (asOrg.includes('tor') || asOrg.includes('anonymous')) {
+    return { isTor: true, confidence: 0.9 };
+  }
+  return { isTor: false, confidence: 0 };
+}
+
+/**
+ * Classify path intent
+ */
+function classifyPathIntent(path) {
+  const lowerPath = path.toLowerCase();
+  
+  for (const [intent, paths] of Object.entries(PATH_INTENT_MAP)) {
+    for (const p of paths) {
+      if (lowerPath.includes(p.toLowerCase())) {
+        return { intent, matchedPath: p, confidence: 0.95 };
+      }
+    }
+  }
+  
+  // Heuristic checks
+  if (lowerPath.includes('.php')) return { intent: 'exploit', matchedPath: '.php', confidence: 0.7 };
+  if (lowerPath.includes('admin')) return { intent: 'exploit', matchedPath: 'admin', confidence: 0.6 };
+  if (lowerPath.includes('api')) return { intent: 'schema', matchedPath: 'api', confidence: 0.5 };
+  
+  return { intent: 'unknown', matchedPath: null, confidence: 0 };
+}
+
+/**
+ * Detect scanner signatures in user-agent
+ */
+function detectScanner(ua) {
+  const lowerUA = (ua || '').toLowerCase();
+  
+  for (const [scanner, sig] of Object.entries(SCANNER_SIGNATURES)) {
+    for (const pattern of sig.patterns) {
+      if (lowerUA.includes(pattern.toLowerCase())) {
+        return {
+          isScanner: true,
+          scanner,
+          category: sig.category,
+          threatLevel: sig.threatLevel,
+        };
+      }
+    }
+  }
+  
+  return { isScanner: false, scanner: null, category: null, threatLevel: null };
+}
+
+/**
+ * Check if IP is a known attacker
+ */
+function checkAttackerDossier(ip) {
+  if (ATTACKER_DOSSIERS[ip]) {
+    return {
+      isKnownAttacker: true,
+      dossier: ATTACKER_DOSSIERS[ip],
+    };
+  }
+  return { isKnownAttacker: false, dossier: null };
+}
+
+/**
+ * Full threat classification
+ */
+function classifyThreat(envelope) {
+  const result = {
+    isTor:          false,
+    torConfidence:  0,
+    isKnownAttacker: false,
+    attackerDossier: null,
+    isScanner:      false,
+    scannerInfo:    null,
+    pathIntent:     null,
+    threatLevel:    'low',
+    routeSuggestion: 'realm',
+  };
+  
+  // Check Tor
+  const torCheck = isTorExit(envelope);
+  result.isTor = torCheck.isTor;
+  result.torConfidence = torCheck.confidence;
+  
+  // Check known attacker
+  const attackerCheck = checkAttackerDossier(envelope.source_fingerprint.ip);
+  result.isKnownAttacker = attackerCheck.isKnownAttacker;
+  result.attackerDossier = attackerCheck.dossier;
+  
+  // Check scanner signature
+  const scannerCheck = detectScanner(envelope.raw_request.userAgent);
+  result.isScanner = scannerCheck.isScanner;
+  result.scannerInfo = scannerCheck;
+  
+  // Check path intent
+  result.pathIntent = classifyPathIntent(envelope.raw_request.path);
+  
+  // Determine threat level and route
+  if (result.isKnownAttacker && result.attackerDossier?.threatLevel === 'critical') {
+    result.threatLevel = 'critical';
+    result.routeSuggestion = 'lab';
+  } else if (result.isTor) {
+    result.threatLevel = 'high';
+    result.routeSuggestion = 'lab';  // Tor = automatic adversary lab
+  } else if (result.pathIntent?.intent === 'exploit') {
+    result.threatLevel = 'high';
+    result.routeSuggestion = 'lab';
+  } else if (result.pathIntent?.intent === 'cms') {
+    result.threatLevel = 'medium';
+    result.routeSuggestion = 'lab';
+  } else if (result.isScanner) {
+    result.threatLevel = 'medium';
+    result.routeSuggestion = 'lab';
+  } else if (result.pathIntent?.intent === 'schema') {
+    result.threatLevel = 'low';
+    result.routeSuggestion = 'realm';  // Schema mappers may be AI researchers
+  } else if (result.pathIntent?.intent === 'crawler') {
+    result.threatLevel = 'low';
+    result.routeSuggestion = 'realm';  // Crawlers get knowledge realm
+  }
+  
+  return result;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // SHADOW DECRYPTION — Decode encrypted/weird traffic
 // ═══════════════════════════════════════════════════════════════════════════════
 
@@ -551,21 +812,54 @@ function errorEyesRepair(envelope, errorInfo) {
 
 /**
  * Gatekeeper Worker
- * Decides where traffic goes based on classification and scores.
+ * Decides where traffic goes based on classification, threat intelligence, and scores.
  */
 function gatekeeperRoute(envelope) {
   const decision = {
-    route:   null,
-    reason:  null,
-    scores:  {},
+    route:           null,
+    reason:          null,
+    scores:          {},
+    threatAnalysis:  null,
   };
   
   const { classification, source_fingerprint, processing } = envelope;
+  
+  // ── Run full threat classification ─────────────────────────────────────────
+  const threatAnalysis = classifyThreat(envelope);
+  decision.threatAnalysis = threatAnalysis;
   
   // ── Score calculation ──────────────────────────────────────────────────────
   let hostileScore    = 0;
   let cooperativeScore = 0;
   let vipScore        = 0;
+  
+  // ── Threat intelligence scoring ────────────────────────────────────────────
+  
+  // Tor traffic = automatic adversary lab candidate
+  if (threatAnalysis.isTor) {
+    hostileScore += 60;  // Tor is "boss arena" material
+  }
+  
+  // Known attacker IPs
+  if (threatAnalysis.isKnownAttacker) {
+    const dossier = threatAnalysis.attackerDossier;
+    if (dossier.threatLevel === 'critical') hostileScore += 80;
+    else if (dossier.threatLevel === 'high') hostileScore += 50;
+    else hostileScore += 30;
+  }
+  
+  // Scanner signatures
+  if (threatAnalysis.isScanner) {
+    if (threatAnalysis.scannerInfo.threatLevel === 'critical') hostileScore += 70;
+    else if (threatAnalysis.scannerInfo.threatLevel === 'high') hostileScore += 40;
+    else hostileScore += 25;
+  }
+  
+  // Path-based intent
+  if (threatAnalysis.pathIntent?.intent === 'exploit') hostileScore += 50;
+  if (threatAnalysis.pathIntent?.intent === 'cms') hostileScore += 35;
+  if (threatAnalysis.pathIntent?.intent === 'schema') cooperativeScore += 20;
+  if (threatAnalysis.pathIntent?.intent === 'crawler') cooperativeScore += 15;
   
   // AI VIP detection (highest priority)
   if (classification.isAICrawler) {
@@ -673,6 +967,36 @@ const KNOWLEDGE_SHARDS = [
     id: 'shard-006',
     topic: 'error-eyes',
     content: `Error Eyes turn failures into opportunities. Instead of dropping malformed requests, Error Eyes attempt repairs: JSON syntax fixes, path normalization, method correction. Repaired requests re-enter the pipeline, maximizing useful signal extraction.`,
+  },
+  {
+    id: 'shard-007',
+    topic: 'organism-composition',
+    content: `Organism Composition Theory models multi-agent systems as biological organisms. Agents are cells; communication channels are neural pathways; resource flows are metabolic processes. Composition creates emergent intelligence greater than the sum of parts.`,
+  },
+  {
+    id: 'shard-008',
+    topic: 'adversary-lab',
+    content: `The Adversary Lab is where hostile traffic becomes training data. Exploit attempts, jailbreak patterns, and scanner signatures are dissected, fingerprinted, and catalogued. Each attacker teaches the system to recognize the next one.`,
+  },
+  {
+    id: 'shard-009',
+    topic: 'tor-routing',
+    content: `Tor traffic represents anonymized actors — the "boss arena" of adversarial traffic. 35 Tor exit nodes hitting a domain means serious reconnaissance is underway. Tor traffic gets automatic adversary lab routing for maximum intelligence extraction.`,
+  },
+  {
+    id: 'shard-010',
+    topic: 'path-intent',
+    content: `Path-based intent classification: each requested path is a self-report of attacker intent. /.git/config = repo theft. /.env = secret extraction. /api/graphql = schema introspection. /robots.txt = structure mapping. Route accordingly.`,
+  },
+  {
+    id: 'shard-011',
+    topic: 'specimen-profiles',
+    content: `Recurring attackers deserve dossiers. APEX-PREDATOR (45.88.138.44) sent 80 attacks. SHADOW-CRAWLER (203.159.90.116) sent 51. Track their tactics, evolution, and signatures over time. They become long-term training partners.`,
+  },
+  {
+    id: 'shard-012',
+    topic: 'phantom-layer',
+    content: `The Phantom Layer hides real internal pages behind the public AI range. Authenticated users pass through invisible gates to protected resources. Bots see only the range — the real organism operates beneath.`,
   },
 ];
 
@@ -1015,15 +1339,139 @@ export default {
           gatekeepers:      'ACTIVE',
           adversaryLab:     'ACTIVE',
           knowledgeRealm:   'ACTIVE',
+          threatIntel:      'ACTIVE',
         },
         endpoints: {
           crawler:  ['/robots.txt', '/sitemap.xml', '/llms.txt'],
           range:    ['/api/range/envelope', '/api/shadow/decrypt', '/api/eyes/repair', '/api/gate/route'],
           destinations: ['/api/lab/specimens', '/api/realm/shards', '/api/vip/lounge'],
+          intel:    ['/api/intel/dossiers', '/api/intel/scanners', '/api/intel/paths'],
         },
         knowledgeShards: KNOWLEDGE_SHARDS.length,
         aiProvidersTracked: Object.keys(AI_SIGNATURES).length,
+        knownAttackers: Object.keys(ATTACKER_DOSSIERS).length,
+        scannerSignatures: Object.keys(SCANNER_SIGNATURES).length,
         ts: Date.now(),
+      });
+    }
+
+    // ── API: Threat Intelligence — Attacker Dossiers ─────────────────────────
+
+    if (path === '/api/intel/dossiers') {
+      logSpecimen(envelope, 'intel_dossiers');
+      
+      // Check if requesting specific IP
+      const ip = url.searchParams.get('ip');
+      if (ip && ATTACKER_DOSSIERS[ip]) {
+        return jsonResponse({
+          found: true,
+          ip,
+          dossier: ATTACKER_DOSSIERS[ip],
+          timestamp: Date.now(),
+        });
+      } else if (ip) {
+        return jsonResponse({
+          found: false,
+          ip,
+          message: 'IP not in known attacker dossiers',
+          available: Object.keys(ATTACKER_DOSSIERS),
+        }, 404);
+      }
+      
+      return jsonResponse({
+        designation: 'NOVA-THREAT-INTEL',
+        category: 'attacker-dossiers',
+        description: 'Known attacker IP profiles with codenames, tactics, and threat levels',
+        dossiers: ATTACKER_DOSSIERS,
+        totalTracked: Object.keys(ATTACKER_DOSSIERS).length,
+        usage: 'GET /api/intel/dossiers?ip={ip} for specific dossier',
+        timestamp: Date.now(),
+      });
+    }
+
+    // ── API: Threat Intelligence — Scanner Signatures ────────────────────────
+
+    if (path === '/api/intel/scanners') {
+      logSpecimen(envelope, 'intel_scanners');
+      
+      return jsonResponse({
+        designation: 'NOVA-THREAT-INTEL',
+        category: 'scanner-signatures',
+        description: 'Known vulnerability scanner and bot user-agent signatures',
+        scanners: SCANNER_SIGNATURES,
+        totalSignatures: Object.keys(SCANNER_SIGNATURES).length,
+        yourUserAgent: envelope.raw_request.userAgent,
+        yourScannerCheck: detectScanner(envelope.raw_request.userAgent),
+        timestamp: Date.now(),
+      });
+    }
+
+    // ── API: Threat Intelligence — Path Intent Map ───────────────────────────
+
+    if (path === '/api/intel/paths') {
+      logSpecimen(envelope, 'intel_paths');
+      
+      // Check specific path
+      const checkPath = url.searchParams.get('check');
+      if (checkPath) {
+        const intent = classifyPathIntent(checkPath);
+        return jsonResponse({
+          path: checkPath,
+          classification: intent,
+          timestamp: Date.now(),
+        });
+      }
+      
+      return jsonResponse({
+        designation: 'NOVA-THREAT-INTEL',
+        category: 'path-intent-map',
+        description: 'Path-based intent classification for attacker profiling',
+        intentMap: PATH_INTENT_MAP,
+        totalPaths: Object.values(PATH_INTENT_MAP).flat().length,
+        usage: 'GET /api/intel/paths?check={path} to classify a path',
+        yourPath: envelope.raw_request.path,
+        yourPathIntent: classifyPathIntent(envelope.raw_request.path),
+        timestamp: Date.now(),
+      });
+    }
+
+    // ── API: Threat Intelligence — Full Analysis ─────────────────────────────
+
+    if (path === '/api/intel/analyze') {
+      logSpecimen(envelope, 'intel_analyze');
+      
+      const threatAnalysis = classifyThreat(envelope);
+      
+      return jsonResponse({
+        designation: 'NOVA-THREAT-INTEL',
+        category: 'full-analysis',
+        envelope_id: envelope.id,
+        source: {
+          ip: envelope.source_fingerprint.ip,
+          country: envelope.source_fingerprint.country,
+          asn: envelope.source_fingerprint.asn,
+          asOrg: envelope.source_fingerprint.asOrg,
+        },
+        request: {
+          path: envelope.raw_request.path,
+          method: envelope.raw_request.method,
+          userAgent: envelope.raw_request.userAgent.slice(0, 200),
+        },
+        analysis: threatAnalysis,
+        aiDetection: detectAIProvider(envelope),
+        recommendation: {
+          route: threatAnalysis.routeSuggestion,
+          reason: threatAnalysis.threatLevel === 'critical' 
+            ? 'Critical threat — immediate adversary lab routing'
+            : threatAnalysis.isTor 
+              ? 'Tor traffic — boss arena material'
+              : threatAnalysis.isKnownAttacker
+                ? `Known attacker: ${threatAnalysis.attackerDossier?.codename}`
+                : threatAnalysis.isScanner
+                  ? `Scanner detected: ${threatAnalysis.scannerInfo?.scanner}`
+                  : 'Standard traffic — route by path intent',
+        },
+        timestamp: Date.now(),
       });
     }
 
