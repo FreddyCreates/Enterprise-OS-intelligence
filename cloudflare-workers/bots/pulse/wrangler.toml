@@ -1,5 +1,5 @@
-name            = "rship-pulse"
-main            = "worker.js"
+name               = "rship-pulse"
+main               = "worker.js"
 compatibility_date = "2024-09-02"
 
 # Cron triggers — intelligence reports on schedule
@@ -17,8 +17,38 @@ cron = "0 0 * * *"     # Midnight UTC daily — full intelligence digest
 #   PULSE_WEBHOOK_DISCORD  — Discord webhook
 
 [vars]
-DESIGNATION     = "RSHIP-BOT-PLS-001"
-BOT_NAME        = "PULSE"
-BOT_LATIN       = "pulsus"
-BOT_MEANING     = "Heartbeat · Rhythm · Intelligence Signal"
-VERSION         = "1.0.0"
+DESIGNATION    = "RSHIP-BOT-PLS-001"
+BOT_NAME       = "PULSE"
+BOT_LATIN      = "pulsus"
+BOT_MEANING    = "Heartbeat · Rhythm · Intelligence Signal"
+VERSION        = "2.0.0"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# INTELLIGENT BINDINGS — Give PULSE data awareness
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# ── Workers AI — Report generation ────────────────────────────────────────────
+[ai]
+binding = "AI"
+
+# ── KV Namespace — Report cache ───────────────────────────────────────────────
+[[kv_namespaces]]
+binding = "REPORT_CACHE"
+id = "pulse-report-cache"
+preview_id = "pulse-report-cache-preview"
+
+# ── D1 Database — Analytics data ──────────────────────────────────────────────
+[[d1_databases]]
+binding = "CORE_DB"
+database_name = "medinatech-core"
+database_id = "medinatech-core-db"
+
+[[d1_databases]]
+binding = "HONEYPOT_DB"
+database_name = "medinatech-honeypot"
+database_id = "medinatech-honeypot-db"
+
+# ── Analytics Engine ──────────────────────────────────────────────────────────
+[[analytics_engine_datasets]]
+binding = "PULSE_ANALYTICS"
+dataset = "pulse_events"
