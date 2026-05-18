@@ -1682,6 +1682,208 @@ export default {
       }
     }
 
+    // ═══════════════════════════════════════════════════════════════════════════
+    // INTELLIGENT BINDINGS — AI, KV, Queue, D1 powered endpoints
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    // ── API: AI-Powered Threat Analysis ──────────────────────────────────────────
+
+    if (path === '/api/ai/analyze-threat') {
+      if (!env.AI) {
+        return jsonResponse({
+          error: 'AI binding not configured',
+          hint: 'Add [ai] binding to wrangler.toml',
+        }, 503);
+      }
+
+      const threatAnalysis = classifyThreat(envelope);
+      
+      // Build AI prompt with real threat context
+      const prompt = `You are NOVA, a threat intelligence analyst for a live-fire AI range.
+      
+Analyze this visitor:
+- IP: ${envelope.source_fingerprint.ip}
+- Country: ${envelope.source_fingerprint.country}
+- Path: ${envelope.raw_request.path}
+- User-Agent: ${envelope.raw_request.userAgent.slice(0, 200)}
+- Is Tor: ${threatAnalysis.isTor}
+- Is Known Attacker: ${threatAnalysis.isKnownAttacker}
+- Is Scanner: ${threatAnalysis.isScanner}
+- Path Intent: ${threatAnalysis.pathIntent?.intent || 'unknown'}
+
+Known attacker codename: ${threatAnalysis.attackerDossier?.codename || 'UNKNOWN'}
+
+Provide a brief threat assessment (2-3 sentences) and recommended action: LAB (adversary dissection), REALM (knowledge collaboration), VIP (AI crawler), or DROP.`;
+
+      try {
+        const aiResponse = await env.AI.run('@cf/meta/llama-3.1-8b-instruct', {
+          prompt,
+          max_tokens: 256,
+        });
+
+        logSpecimen(envelope, 'ai_analyze');
+
+        return jsonResponse({
+          designation: 'NOVA-AI-ANALYST',
+          envelope_id: envelope.id,
+          threatAnalysis,
+          aiAssessment: aiResponse.response || aiResponse,
+          timestamp: Date.now(),
+        });
+      } catch (err) {
+        return jsonResponse({ error: 'AI analysis failed', message: err.message }, 500);
+      }
+    }
+
+    // ── API: Store Specimen to KV ────────────────────────────────────────────────
+
+    if (path === '/api/memory/store-specimen' && request.method === 'POST') {
+      if (!env.SPECIMEN_MEMORY) {
+        return jsonResponse({
+          error: 'KV binding not configured',
+          hint: 'Add [[kv_namespaces]] binding to wrangler.toml',
+        }, 503);
+      }
+
+      const threatAnalysis = classifyThreat(envelope);
+      const specimen = {
+        id: envelope.id,
+        timestamp: envelope.timestamp,
+        source: envelope.source_fingerprint,
+        path: envelope.raw_request.path,
+        method: envelope.raw_request.method,
+        userAgent: envelope.raw_request.userAgent.slice(0, 200),
+        threatAnalysis,
+        route: threatAnalysis.routeSuggestion,
+      };
+
+      const key = `specimen:${envelope.id}`;
+      const ttl = 86400 * 7; // 7 days
+
+      try {
+        await env.SPECIMEN_MEMORY.put(key, JSON.stringify(specimen), { expirationTtl: ttl });
+
+        // Also index by IP if known attacker
+        if (threatAnalysis.isKnownAttacker) {
+          const ipKey = `attacker:${envelope.source_fingerprint.ip}:${Date.now()}`;
+          await env.SPECIMEN_MEMORY.put(ipKey, envelope.id, { expirationTtl: ttl });
+        }
+
+        logSpecimen(envelope, 'memory_store');
+
+        return jsonResponse({
+          stored: true,
+          key,
+          ttl,
+          specimen,
+          timestamp: Date.now(),
+        });
+      } catch (err) {
+        return jsonResponse({ error: 'Storage failed', message: err.message }, 500);
+      }
+    }
+
+    // ── API: Retrieve Specimen from KV ───────────────────────────────────────────
+
+    if (path === '/api/memory/get-specimen') {
+      if (!env.SPECIMEN_MEMORY) {
+        return jsonResponse({
+          error: 'KV binding not configured',
+          hint: 'Add [[kv_namespaces]] binding to wrangler.toml',
+        }, 503);
+      }
+
+      const specimenId = url.searchParams.get('id');
+      if (!specimenId) {
+        return jsonResponse({ error: 'Missing ?id parameter' }, 400);
+      }
+
+      try {
+        const data = await env.SPECIMEN_MEMORY.get(`specimen:${specimenId}`, 'json');
+        if (!data) {
+          return jsonResponse({ found: false, id: specimenId }, 404);
+        }
+
+        return jsonResponse({
+          found: true,
+          specimen: data,
+          timestamp: Date.now(),
+        });
+      } catch (err) {
+        return jsonResponse({ error: 'Retrieval failed', message: err.message }, 500);
+      }
+    }
+
+    // ── API: Queue Specimen for Async Processing ─────────────────────────────────
+
+    if (path === '/api/queue/submit-specimen' && request.method === 'POST') {
+      if (!env.SPECIMEN_QUEUE) {
+        return jsonResponse({
+          error: 'Queue binding not configured',
+          hint: 'Add [[queues.producers]] binding to wrangler.toml',
+        }, 503);
+      }
+
+      const threatAnalysis = classifyThreat(envelope);
+      const message = {
+        id: envelope.id,
+        timestamp: envelope.timestamp,
+        ip: envelope.source_fingerprint.ip,
+        path: envelope.raw_request.path,
+        threatLevel: threatAnalysis.threatLevel,
+        route: threatAnalysis.routeSuggestion,
+        isTor: threatAnalysis.isTor,
+        isKnownAttacker: threatAnalysis.isKnownAttacker,
+        attackerCodename: threatAnalysis.attackerDossier?.codename || null,
+      };
+
+      try {
+        await env.SPECIMEN_QUEUE.send(message);
+        
+        logSpecimen(envelope, 'queue_submit');
+
+        return jsonResponse({
+          queued: true,
+          queue: 'nova-specimens',
+          message,
+          timestamp: Date.now(),
+        });
+      } catch (err) {
+        return jsonResponse({ error: 'Queue submission failed', message: err.message }, 500);
+      }
+    }
+
+    // ── API: Check Binding Status ────────────────────────────────────────────────
+
+    if (path === '/api/bindings/status') {
+      return jsonResponse({
+        designation: 'NOVA-BINDINGS',
+        bindings: {
+          AI:              !!env.AI,
+          SPECIMEN_MEMORY: !!env.SPECIMEN_MEMORY,
+          KNOWLEDGE_CACHE: !!env.KNOWLEDGE_CACHE,
+          THREAT_DB:       !!env.THREAT_DB,
+          SPECIMEN_QUEUE:  !!env.SPECIMEN_QUEUE,
+          ALERT_QUEUE:     !!env.ALERT_QUEUE,
+          SPECIMEN_ARCHIVE: !!env.SPECIMEN_ARCHIVE,
+          THREAT_VECTORS:  !!env.THREAT_VECTORS,
+          THREAT_ANALYTICS: !!env.THREAT_ANALYTICS,
+        },
+        capabilities: {
+          aiAnalysis:       !!env.AI,
+          specimenMemory:   !!env.SPECIMEN_MEMORY,
+          knowledgeCache:   !!env.KNOWLEDGE_CACHE,
+          threatDatabase:   !!env.THREAT_DB,
+          asyncProcessing:  !!env.SPECIMEN_QUEUE,
+          alerting:         !!env.ALERT_QUEUE,
+          forensicArchive:  !!env.SPECIMEN_ARCHIVE,
+          semanticSearch:   !!env.THREAT_VECTORS,
+          analytics:        !!env.THREAT_ANALYTICS,
+        },
+        timestamp: Date.now(),
+      });
+    }
+
     // ── Landing page (GET / or unknown paths) ────────────────────────────────
 
     if (request.method !== 'GET') {
@@ -1718,4 +1920,68 @@ function jsonResponse(data, status = 200) {
       'access-control-allow-origin': '*',
     },
   });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// QUEUE CONSUMER — Process specimens asynchronously
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Queue consumer for processing specimens in the background.
+ * Receives messages from SPECIMEN_QUEUE and processes them.
+ */
+export async function queue(batch, env) {
+  const results = [];
+  
+  for (const message of batch.messages) {
+    const specimen = message.body;
+    
+    try {
+      // Store to KV if binding available
+      if (env.SPECIMEN_MEMORY) {
+        await env.SPECIMEN_MEMORY.put(
+          `processed:${specimen.id}`,
+          JSON.stringify({
+            ...specimen,
+            processedAt: Date.now(),
+            status: 'analyzed',
+          }),
+          { expirationTtl: 86400 * 30 } // 30 days
+        );
+      }
+      
+      // Send alert if critical threat
+      if (specimen.threatLevel === 'critical' && env.ALERT_QUEUE) {
+        await env.ALERT_QUEUE.send({
+          type: 'critical_threat',
+          specimen,
+          timestamp: Date.now(),
+        });
+      }
+      
+      // Store to R2 archive if available
+      if (env.SPECIMEN_ARCHIVE && specimen.threatLevel !== 'low') {
+        const key = `specimens/${new Date().toISOString().slice(0, 10)}/${specimen.id}.json`;
+        await env.SPECIMEN_ARCHIVE.put(key, JSON.stringify(specimen, null, 2));
+      }
+      
+      // Log to analytics if available
+      if (env.THREAT_ANALYTICS) {
+        env.THREAT_ANALYTICS.writeDataPoint({
+          blobs: [specimen.path, specimen.ip, specimen.attackerCodename || 'unknown'],
+          doubles: [specimen.isTor ? 1 : 0, specimen.isKnownAttacker ? 1 : 0],
+          indexes: [specimen.threatLevel],
+        });
+      }
+      
+      results.push({ id: specimen.id, status: 'processed' });
+      message.ack();
+      
+    } catch (err) {
+      results.push({ id: specimen.id, status: 'failed', error: err.message });
+      message.retry();
+    }
+  }
+  
+  return results;
 }
