@@ -1,0 +1,10 @@
+{
+  "name": "@rship/quantex-agi",
+  "version": "1.0.0",
+  "description": "QUANTEX AGI — Quantum Intelligence Orchestration (RSHIP-2026-QUANTEX-001)",
+  "main": "quantex-agi.js",
+  "type": "module",
+  "author": "Alfredo Medina Hernandez <medina@medinatech.io>",
+  "license": "UNLICENSED",
+  "keywords": ["quantum", "agi", "rship", "intelligence", "superposition", "grover"]
+}

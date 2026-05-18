@@ -1,80 +1,55 @@
-name            = "agens"
-main            = "worker.js"
+name               = "agens"
+main               = "worker.js"
 compatibility_date = "2024-09-02"
 
 [vars]
-DESIGNATION     = "RSHIP-AIS-AG-001"
-WORKER_NAME     = "AGENS"
-WORKER_LATIN    = "agens"
-WORKER_MEANING  = "The One Who Acts — Agent AI Services"
-VERSION         = "2.0.0"
+DESIGNATION    = "RSHIP-AIS-AG-001"
+WORKER_NAME    = "AGENS"
+WORKER_LATIN   = "agens"
+WORKER_MEANING = "The One Who Acts — Agent AI Services"
+VERSION        = "2.0.0"
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# INTELLIGENT BINDINGS — "Brains and Hearts"
+# INTELLIGENT BINDINGS — Give AGENS brains, memory, and coordination
 # ═══════════════════════════════════════════════════════════════════════════════
 
-# Workers AI — LLM reasoning, image generation, embeddings
+# ── Workers AI — LLM-powered agent reasoning ──────────────────────────────────
 [ai]
 binding = "AI"
 
-# KV Namespaces — Fast key-value storage for sessions, cache, blocklists
+# ── KV Namespace — Session and config storage ─────────────────────────────────
 [[kv_namespaces]]
 binding = "SESSION_STORE"
-id = "PLACEHOLDER_SESSION_STORE_ID"
-# Create with: wrangler kv namespace create SESSION_STORE
+id = "agens-session-store"
+preview_id = "agens-session-store-preview"
 
 [[kv_namespaces]]
-binding = "KNOWLEDGE_CACHE"
-id = "PLACEHOLDER_KNOWLEDGE_CACHE_ID"
-# Create with: wrangler kv namespace create KNOWLEDGE_CACHE
+binding = "CONFIG_CACHE"
+id = "agens-config-cache"
+preview_id = "agens-config-cache-preview"
 
-[[kv_namespaces]]
-binding = "IP_BLOCKLIST"
-id = "PLACEHOLDER_IP_BLOCKLIST_ID"
-# Create with: wrangler kv namespace create IP_BLOCKLIST
-
-# D1 Database — Structured intelligence storage
+# ── D1 Database — Core data ───────────────────────────────────────────────────
 [[d1_databases]]
-binding = "INTELLIGENCE_DB"
-database_name = "medinatech-intelligence"
-database_id = "PLACEHOLDER_D1_DATABASE_ID"
-# Create with: wrangler d1 create medinatech-intelligence
+binding = "CORE_DB"
+database_name = "medinatech-core"
+database_id = "medinatech-core-db"
 
-# Queues — Async message passing between Workers
+# ── Queue — Async task processing ─────────────────────────────────────────────
 [[queues.producers]]
-binding = "EVENT_QUEUE"
-queue = "intelligence-events"
-
-[[queues.producers]]
-binding = "ANALYSIS_QUEUE"
+binding = "TASK_QUEUE"
 queue = "ai-analysis"
 
-# R2 Bucket — Object storage for files, archives, large data
+# ── R2 Bucket — Asset storage ─────────────────────────────────────────────────
 [[r2_buckets]]
-binding = "ASSET_STORE"
+binding = "ASSETS"
 bucket_name = "medinatech-assets"
-# Create with: wrangler r2 bucket create medinatech-assets
 
-# Vectorize — Vector search for semantic/RAG capabilities
+# ── Vectorize — Knowledge retrieval ───────────────────────────────────────────
 [[vectorize]]
-binding = "KNOWLEDGE_VECTORS"
-index_name = "medinatech-knowledge-index"
-# Create with: wrangler vectorize create medinatech-knowledge-index --dimensions=768 --metric=cosine
+binding = "KNOWLEDGE_INDEX"
+index_name = "medinatech-knowledge"
 
-# Analytics Engine — Metrics and telemetry
+# ── Analytics Engine ──────────────────────────────────────────────────────────
 [[analytics_engine_datasets]]
-binding = "AGENS_ANALYTICS"
-dataset = "agens_telemetry"
-
-# Service Bindings — Direct Worker-to-Worker calls
-[[services]]
-binding = "CEREBRUM"
-service = "cerebrum"
-
-[[services]]
-binding = "NEXUS"
-service = "nexus"
-
-[[services]]
-binding = "VIGIL"
-service = "vigil"
+binding = "ANALYTICS"
+dataset = "agens_events"

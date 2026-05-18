@@ -1,0 +1,10 @@
+{
+  "name": "@rship/construx-agi",
+  "version": "1.0.0",
+  "description": "CONSTRUX AGI — Construction & Project Intelligence (RSHIP-2026-CONSTRUX-001)",
+  "main": "construx-agi.js",
+  "type": "module",
+  "author": "Alfredo Medina Hernandez <medina@medinatech.io>",
+  "license": "UNLICENSED",
+  "keywords": ["construction", "project-management", "cpm", "evm", "agi", "rship", "bim"]
+}

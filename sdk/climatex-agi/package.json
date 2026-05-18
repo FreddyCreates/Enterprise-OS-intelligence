@@ -1,0 +1,10 @@
+{
+  "name": "@rship/climatex-agi",
+  "version": "1.0.0",
+  "description": "CLIMATEX AGI — Climate Intelligence & ESG Analytics (RSHIP-2026-CLIMATEX-001)",
+  "main": "climatex-agi.js",
+  "type": "module",
+  "author": "Alfredo Medina Hernandez <medina@medinatech.io>",
+  "license": "UNLICENSED",
+  "keywords": ["climate", "esg", "carbon", "tcfd", "csrd", "agi", "rship", "sustainability"]
+}

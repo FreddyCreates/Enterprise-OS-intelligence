@@ -1,0 +1,10 @@
+{
+  "name": "@rship/finotex-agi",
+  "version": "1.0.0",
+  "description": "FINOTEX AGI — Financial Intelligence & Market Analysis (RSHIP-2026-FINOTEX-001)",
+  "main": "finotex-agi.js",
+  "type": "module",
+  "author": "Alfredo Medina Hernandez <medina@medinatech.io>",
+  "license": "UNLICENSED",
+  "keywords": ["finance", "markets", "portfolio", "agi", "rship", "fibonacci", "quantitative"]
+}

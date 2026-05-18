@@ -1,5 +1,5 @@
-name            = "rship-herald"
-main            = "worker.js"
+name               = "rship-herald"
+main               = "worker.js"
 compatibility_date = "2024-09-02"
 
 # Set these as Worker Secrets (wrangler secret put SLACK_SIGNING_SECRET):
@@ -8,63 +8,33 @@ compatibility_date = "2024-09-02"
 #   RSHIP_NETWORK_URL      — base URL of your CEREBRUM instance
 
 [vars]
-DESIGNATION     = "RSHIP-BOT-HLD-001"
-BOT_NAME        = "HERALD"
-BOT_LATIN       = "heraldus"
-BOT_MEANING     = "Messenger · Herald · Announcer"
-VERSION         = "2.0.0"
+DESIGNATION    = "RSHIP-BOT-HLD-001"
+BOT_NAME       = "HERALD"
+BOT_LATIN      = "heraldus"
+BOT_MEANING    = "Messenger · Herald · Announcer"
+VERSION        = "2.0.0"
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# INTELLIGENT BINDINGS — "Brains and Hearts"
-# HERALD is the Announcer — optimized for notifications and messaging
+# INTELLIGENT BINDINGS — Give HERALD communication intelligence
 # ═══════════════════════════════════════════════════════════════════════════════
 
-# Workers AI — LLM reasoning for message composition
+# ── Workers AI — Smart message formatting ─────────────────────────────────────
 [ai]
 binding = "AI"
 
-# KV Namespaces — Fast key-value storage for message state
+# ── KV Namespace — Message history ────────────────────────────────────────────
 [[kv_namespaces]]
 binding = "MESSAGE_HISTORY"
-id = "PLACEHOLDER_MESSAGE_HISTORY_ID"
-# Create with: wrangler kv namespace create MESSAGE_HISTORY
+id = "herald-message-history"
+preview_id = "herald-message-history-preview"
 
-[[kv_namespaces]]
-binding = "NOTIFICATION_STATE"
-id = "PLACEHOLDER_NOTIFICATION_STATE_ID"
-# Create with: wrangler kv namespace create NOTIFICATION_STATE
-
-[[kv_namespaces]]
-binding = "SESSION_STORE"
-id = "PLACEHOLDER_SESSION_STORE_ID"
-
-# D1 Database — Structured notification storage
+# ── D1 Database — Core data ───────────────────────────────────────────────────
 [[d1_databases]]
-binding = "NOTIFICATION_DB"
-database_name = "medinatech-intelligence"
-database_id = "PLACEHOLDER_D1_DATABASE_ID"
+binding = "CORE_DB"
+database_name = "medinatech-core"
+database_id = "medinatech-core-db"
 
-# Queues — Async notification distribution
+# ── Queue — Message dispatch ──────────────────────────────────────────────────
 [[queues.producers]]
-binding = "NOTIFICATION_QUEUE"
-queue = "notifications"
-# Create with: wrangler queues create notifications
-
-[[queues.consumers]]
-queue = "notifications"
-max_batch_size = 50
-max_retries = 5
-
-# Analytics Engine — Notification metrics
-[[analytics_engine_datasets]]
-binding = "HERALD_ANALYTICS"
-dataset = "herald_notification_telemetry"
-
-# Service Bindings
-[[services]]
-binding = "CEREBRUM"
-service = "cerebrum"
-
-[[services]]
-binding = "CURSOR"
-service = "cursor"
+binding = "MESSAGE_QUEUE"
+queue = "ai-analysis"
