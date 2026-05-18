@@ -187,10 +187,9 @@ writeErr(w, 500, err.Error())
 return
 }
 writeJSON(w, 200, map[string]interface{}{
-"ok":      true,
-"label":   binding.Label,
-"hash":    binding.Hash,
-"created": binding.CreatedAt.UnixMilli(),
+"ok":        true,
+"label":     binding.Label,
+"imprinted": binding.Imprinted,
 })
 }
 
@@ -210,9 +209,9 @@ writeJSON(w, 200, map[string]interface{}{
 "label":       binding.Label,
 "canister_id": binding.CanisterID,
 "data_key":    binding.DataKey,
-"hash":        binding.Hash,
-"created":     binding.CreatedAt.UnixMilli(),
-"snapshot":    string(binding.Snapshot),
+"imprinted":   binding.Imprinted,
+"refreshed":   binding.Refreshed,
+"snapshot":    binding.RawSnapshot,
 })
 }
 
@@ -229,8 +228,12 @@ if req.Label == "" {
 writeErr(w, 400, "label is required")
 return
 }
-ok := s.synProxy.SynRevoke(req.Label)
-writeJSON(w, 200, map[string]interface{}{"ok": ok, "label": req.Label})
+err := s.synProxy.SynRevoke(req.Label)
+if err != nil {
+writeErr(w, 404, err.Error())
+return
+}
+writeJSON(w, 200, map[string]interface{}{"ok": true, "label": req.Label})
 }
 
 // POST /syn/revoke-all
@@ -244,55 +247,59 @@ func (s *Server) handleSynStatus(w http.ResponseWriter, r *http.Request) {
 writeJSON(w, 200, s.synProxy.Status())
 }
 
-// POST /route  {"prompt":"...","models":["gpt-4","claude-3"],"phi_weight":0.7}
+// POST /route  {"id":"task-1","type":"REASONING","priority":1}
 func (s *Server) handleRoute(w http.ResponseWriter, r *http.Request) {
 var req struct {
-Prompt    string   `json:"prompt"`
-Models    []string `json:"models"`
-PhiWeight float64  `json:"phi_weight"`
+ID       string `json:"id"`
+Type     string `json:"type"`
+Priority int    `json:"priority"`
 }
 if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 writeErr(w, 400, err.Error())
 return
 }
-if len(req.Models) == 0 {
-writeErr(w, 400, "models array is required")
-return
+task := routing.Task{
+ID:       req.ID,
+Type:     routing.TaskType(req.Type),
+Priority: routing.Priority(req.Priority),
 }
-result := s.router.Route(req.Prompt, req.Models, req.PhiWeight)
+result := s.router.Route(task)
 writeJSON(w, 200, result)
 }
 
-// POST /route/fallback  {"prompt":"...","cascade":["gpt-4","claude-3","llama-3"]}
+// POST /route/fallback  {"id":"task-1","type":"REASONING","priority":1,"failed":{"gpt-4":true}}
 func (s *Server) handleRouteFallback(w http.ResponseWriter, r *http.Request) {
 var req struct {
-Prompt  string   `json:"prompt"`
-Cascade []string `json:"cascade"`
+ID       string          `json:"id"`
+Type     string          `json:"type"`
+Priority int             `json:"priority"`
+Failed   map[string]bool `json:"failed"`
 }
 if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 writeErr(w, 400, err.Error())
 return
 }
-if len(req.Cascade) == 0 {
-writeErr(w, 400, "cascade array is required")
-return
+task := routing.Task{
+ID:       req.ID,
+Type:     routing.TaskType(req.Type),
+Priority: routing.Priority(req.Priority),
 }
-result := s.router.RouteFallback(req.Prompt, req.Cascade)
+result := s.router.CascadeFallback(task, req.Failed)
 writeJSON(w, 200, result)
 }
 
-// POST /route/outcome  {"model":"gpt-4","latency_ms":123,"success":true}
+// POST /route/outcome  {"model":"gpt-4","success":true,"latency_ms":123}
 func (s *Server) handleRouteOutcome(w http.ResponseWriter, r *http.Request) {
 var req struct {
 Model     string  `json:"model"`
-LatencyMs float64 `json:"latency_ms"`
 Success   bool    `json:"success"`
+LatencyMs float64 `json:"latency_ms"`
 }
 if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 writeErr(w, 400, err.Error())
 return
 }
-s.router.RecordOutcome(req.Model, req.LatencyMs, req.Success)
+s.router.RecordOutcome(req.Model, req.Success, req.LatencyMs)
 writeJSON(w, 200, map[string]interface{}{"ok": true})
 }
 
@@ -420,65 +427,75 @@ writeJSON(w, 200, s.memStore.Metrics())
 
 // POST /division/boot
 func (s *Server) handleDivisionBoot(w http.ResponseWriter, r *http.Request) {
-if err := s.divMgr.Boot(); err != nil {
-writeErr(w, 500, err.Error())
-return
-}
-writeJSON(w, 200, map[string]interface{}{"ok": true, "status": s.divMgr.Status()})
+s.divMgr.Boot()
+writeJSON(w, 200, map[string]interface{}{
+"ok":           true,
+"booted":       s.divMgr.Booted,
+"teams":        len(s.divMgr.Teams),
+"total_tokens": s.divMgr.TotalTokens(),
+})
 }
 
 // POST /division/tick
 func (s *Server) handleDivisionTick(w http.ResponseWriter, r *http.Request) {
-if err := s.divMgr.Tick(); err != nil {
-writeErr(w, 500, err.Error())
-return
-}
-writeJSON(w, 200, map[string]interface{}{"ok": true, "status": s.divMgr.Status()})
+beat := s.divMgr.TickAll()
+writeJSON(w, 200, map[string]interface{}{
+"ok":           true,
+"global_beat":  beat,
+"total_tokens": s.divMgr.TotalTokens(),
+"total_boxes":  s.divMgr.TotalBoxes(),
+"total_fcpr":   s.divMgr.TotalFCPR(),
+})
 }
 
 // GET /division/status
 func (s *Server) handleDivisionStatus(w http.ResponseWriter, r *http.Request) {
-writeJSON(w, 200, s.divMgr.Status())
+writeJSON(w, 200, map[string]interface{}{
+"booted":       s.divMgr.Booted,
+"global_beat":  s.divMgr.GlobalBeat,
+"teams":        len(s.divMgr.Teams),
+"total_tokens": s.divMgr.TotalTokens(),
+"total_boxes":  s.divMgr.TotalBoxes(),
+"total_fcpr":   s.divMgr.TotalFCPR(),
+})
 }
 
 // ── Composition handlers ──────────────────────────────────────────────────────
 
-// POST /composition/register  {"id":"node-1","type":"processor","metadata":{...}}
+// POST /composition/register  {"id":"node-1","kind":"processor","weight":1.0}
 func (s *Server) handleCompositionRegister(w http.ResponseWriter, r *http.Request) {
 var req struct {
-ID       string                 `json:"id"`
-Type     string                 `json:"type"`
-Metadata map[string]interface{} `json:"metadata"`
-}
-if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-writeErr(w, 400, err.Error())
-return
-}
-node, err := s.compEng.Register(req.ID, req.Type, req.Metadata)
-if err != nil {
-writeErr(w, 400, err.Error())
-return
-}
-writeJSON(w, 200, node)
-}
-
-// POST /composition/link  {"from":"node-1","to":"node-2","weight":0.8}
-func (s *Server) handleCompositionLink(w http.ResponseWriter, r *http.Request) {
-var req struct {
-From   string  `json:"from"`
-To     string  `json:"to"`
+ID     string  `json:"id"`
+Kind   string  `json:"kind"`
 Weight float64 `json:"weight"`
 }
 if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 writeErr(w, 400, err.Error())
 return
 }
-edge, err := s.compEng.Link(req.From, req.To, req.Weight)
-if err != nil {
+if err := s.compEng.RegisterProgram(req.ID, req.Kind, req.Weight); err != nil {
 writeErr(w, 400, err.Error())
 return
 }
-writeJSON(w, 200, edge)
+writeJSON(w, 200, map[string]interface{}{"ok": true, "id": req.ID, "kind": req.Kind})
+}
+
+// POST /composition/link  {"from":"node-1","to":"node-2","coupling_fib":3}
+func (s *Server) handleCompositionLink(w http.ResponseWriter, r *http.Request) {
+var req struct {
+From        string `json:"from"`
+To          string `json:"to"`
+CouplingFib int    `json:"coupling_fib"`
+}
+if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+writeErr(w, 400, err.Error())
+return
+}
+if err := s.compEng.LinkPrograms(req.From, req.To, req.CouplingFib); err != nil {
+writeErr(w, 400, err.Error())
+return
+}
+writeJSON(w, 200, map[string]interface{}{"ok": true, "from": req.From, "to": req.To})
 }
 
 // POST /composition/diffuse  {"source":"node-1","signal":1.0,"steps":3}
