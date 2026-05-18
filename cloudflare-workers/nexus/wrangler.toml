@@ -7,4 +7,70 @@ DESIGNATION     = "RSHIP-AIS-NX-001"
 WORKER_NAME     = "NEXUS"
 WORKER_LATIN    = "nexus"
 WORKER_MEANING  = "Bond — Connection — Network"
-VERSION         = "1.0.0"
+VERSION         = "2.0.0"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# INTELLIGENT BINDINGS — "Brains and Hearts"
+# NEXUS is the Network Hub — optimized for routing and interconnection
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# Workers AI — LLM reasoning for intelligent routing
+[ai]
+binding = "AI"
+
+# KV Namespaces — Fast key-value storage for routing tables
+[[kv_namespaces]]
+binding = "ROUTING_TABLE"
+id = "PLACEHOLDER_ROUTING_TABLE_ID"
+# Create with: wrangler kv namespace create ROUTING_TABLE
+
+[[kv_namespaces]]
+binding = "SESSION_STORE"
+id = "PLACEHOLDER_SESSION_STORE_ID"
+
+[[kv_namespaces]]
+binding = "SERVICE_REGISTRY"
+id = "PLACEHOLDER_SERVICE_REGISTRY_ID"
+# Create with: wrangler kv namespace create SERVICE_REGISTRY
+
+# D1 Database — Structured network topology storage
+[[d1_databases]]
+binding = "NETWORK_DB"
+database_name = "medinatech-intelligence"
+database_id = "PLACEHOLDER_D1_DATABASE_ID"
+
+# Queues — Async message passing for routing
+[[queues.producers]]
+binding = "ROUTING_QUEUE"
+queue = "routing-events"
+# Create with: wrangler queues create routing-events
+
+[[queues.producers]]
+binding = "EVENT_QUEUE"
+queue = "intelligence-events"
+
+# Analytics Engine — Network metrics
+[[analytics_engine_datasets]]
+binding = "NEXUS_ANALYTICS"
+dataset = "nexus_network_telemetry"
+
+# Service Bindings — NEXUS connects to all Workers
+[[services]]
+binding = "CEREBRUM"
+service = "cerebrum"
+
+[[services]]
+binding = "AGENS"
+service = "agens"
+
+[[services]]
+binding = "VIGIL"
+service = "vigil"
+
+[[services]]
+binding = "ANIMUS"
+service = "animus"
+
+[[services]]
+binding = "CURSOR"
+service = "cursor"

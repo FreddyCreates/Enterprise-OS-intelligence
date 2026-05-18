@@ -6,12 +6,14 @@ on:
       - 'sdk/**'
       - 'production-apps/**'
       - 'protocols/**'
+      - 'cloudflare-workers/**'
       - '.github/workflows/**'
   pull_request:
     paths:
       - 'sdk/**'
       - 'production-apps/**'
       - 'protocols/**'
+      - 'cloudflare-workers/**'
       - '.github/workflows/**'
   workflow_dispatch:
 
@@ -42,10 +44,20 @@ jobs:
           fi
           echo "No blocked high-risk patterns found."
 
+      - name: Scan for Cloudflare/Slack secret leaks
+        run: |
+          set -euo pipefail
+          SECRET_PATTERN='(CLOUDFLARE_API_TOKEN\s*[:=]\s*["'\''][^"'\'']{10,}["'\'']|SLACK_(BOT_TOKEN|SIGNING_SECRET)\s*[:=]\s*["'\''][^"'\'']{10,}["'\''])'
+          if grep -RInE --exclude-dir=node_modules --exclude-dir=.git --exclude='*.md' "$SECRET_PATTERN" cloudflare-workers .github/workflows; then
+            echo "::error::Potential Cloudflare/Slack secret exposure detected."
+            exit 1
+          fi
+          echo "No Cloudflare/Slack secret literals detected."
+
       - name: Validate JavaScript syntax (changed surfaces)
         run: |
           set -euo pipefail
-          FILES=$(find sdk production-apps protocols -type f -name '*.js')
+          FILES=$(find sdk production-apps protocols cloudflare-workers -type f -name '*.js')
           for file in $FILES; do
             node --check "$file"
           done
@@ -59,4 +71,4 @@ jobs:
           echo "| High-risk pattern scan | ✅ |" >> "$GITHUB_STEP_SUMMARY"
           echo "| JavaScript syntax validation | ✅ |" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "Scope: sdk/, production-apps/, protocols/, workflows." >> "$GITHUB_STEP_SUMMARY"
+          echo "Scope: sdk/, production-apps/, protocols/, cloudflare-workers/, workflows." >> "$GITHUB_STEP_SUMMARY"

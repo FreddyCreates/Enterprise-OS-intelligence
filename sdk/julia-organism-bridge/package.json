@@ -1,0 +1,28 @@
+{
+  "name": "@rship/julia-organism-bridge",
+  "version": "1.0.0",
+  "description": "JavaScript ↔ Julia Organism Integration Bridge",
+  "main": "julia-organism-bridge.js",
+  "author": "Alfredo Medina Hernandez",
+  "license": "RSHIP-SOVEREIGN",
+  "keywords": [
+    "rship",
+    "julia",
+    "organism",
+    "agi",
+    "intelligence",
+    "phi",
+    "golden-ratio"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/FreddyCreates/Enterprise-OS-intelligence"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {},
+  "peerDependencies": {
+    "events": "^3.3.0"
+  }
+}

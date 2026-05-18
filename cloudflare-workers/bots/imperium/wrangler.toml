@@ -14,4 +14,63 @@ DESIGNATION     = "RSHIP-BOT-IMP-001"
 BOT_NAME        = "IMPERIUM"
 BOT_LATIN       = "imperium"
 BOT_MEANING     = "Command · Authority · Empire"
-VERSION         = "1.0.0"
+VERSION         = "2.0.0"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# INTELLIGENT BINDINGS — "Brains and Hearts"
+# IMPERIUM is the Command Center — optimized for authority and control
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# Workers AI — LLM reasoning for command interpretation
+[ai]
+binding = "AI"
+
+# KV Namespaces — Fast key-value storage for command state
+[[kv_namespaces]]
+binding = "COMMAND_STATE"
+id = "PLACEHOLDER_COMMAND_STATE_ID"
+# Create with: wrangler kv namespace create COMMAND_STATE
+
+[[kv_namespaces]]
+binding = "AUTHORITY_MATRIX"
+id = "PLACEHOLDER_AUTHORITY_MATRIX_ID"
+# Create with: wrangler kv namespace create AUTHORITY_MATRIX
+
+[[kv_namespaces]]
+binding = "SESSION_STORE"
+id = "PLACEHOLDER_SESSION_STORE_ID"
+
+# D1 Database — Structured command history
+[[d1_databases]]
+binding = "COMMAND_DB"
+database_name = "medinatech-intelligence"
+database_id = "PLACEHOLDER_D1_DATABASE_ID"
+
+# Queues — Async command distribution
+[[queues.producers]]
+binding = "COMMAND_QUEUE"
+queue = "command-distribution"
+# Create with: wrangler queues create command-distribution
+
+[[queues.consumers]]
+queue = "command-distribution"
+max_batch_size = 10
+max_retries = 3
+
+# Analytics Engine — Command metrics
+[[analytics_engine_datasets]]
+binding = "IMPERIUM_ANALYTICS"
+dataset = "imperium_command_telemetry"
+
+# Service Bindings — IMPERIUM commands all Workers
+[[services]]
+binding = "CEREBRUM"
+service = "cerebrum"
+
+[[services]]
+binding = "ARBITER"
+service = "rship-arbiter"
+
+[[services]]
+binding = "NEXUS"
+service = "nexus"

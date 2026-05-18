@@ -7,4 +7,59 @@ DESIGNATION     = "RSHIP-AIS-CS-001"
 WORKER_NAME     = "CURSOR"
 WORKER_LATIN    = "cursor"
 WORKER_MEANING  = "Runner — Messenger"
-VERSION         = "1.0.0"
+VERSION         = "2.0.0"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# INTELLIGENT BINDINGS — "Brains and Hearts"
+# CURSOR is the Messenger — optimized for fast delivery and routing
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# Workers AI — LLM reasoning for message transformation
+[ai]
+binding = "AI"
+
+# KV Namespaces — Fast key-value storage for message queues
+[[kv_namespaces]]
+binding = "MESSAGE_QUEUE"
+id = "PLACEHOLDER_MESSAGE_QUEUE_ID"
+# Create with: wrangler kv namespace create MESSAGE_QUEUE
+
+[[kv_namespaces]]
+binding = "DELIVERY_STATUS"
+id = "PLACEHOLDER_DELIVERY_STATUS_ID"
+# Create with: wrangler kv namespace create DELIVERY_STATUS
+
+[[kv_namespaces]]
+binding = "SESSION_STORE"
+id = "PLACEHOLDER_SESSION_STORE_ID"
+
+# D1 Database — Structured message history
+[[d1_databases]]
+binding = "MESSAGE_DB"
+database_name = "medinatech-intelligence"
+database_id = "PLACEHOLDER_D1_DATABASE_ID"
+
+# Queues — Async message passing
+[[queues.producers]]
+binding = "OUTBOUND_QUEUE"
+queue = "outbound-messages"
+# Create with: wrangler queues create outbound-messages
+
+[[queues.consumers]]
+queue = "outbound-messages"
+max_batch_size = 100
+max_retries = 5
+
+# Analytics Engine — Delivery metrics
+[[analytics_engine_datasets]]
+binding = "CURSOR_ANALYTICS"
+dataset = "cursor_delivery_telemetry"
+
+# Service Bindings
+[[services]]
+binding = "CEREBRUM"
+service = "cerebrum"
+
+[[services]]
+binding = "NEXUS"
+service = "nexus"
