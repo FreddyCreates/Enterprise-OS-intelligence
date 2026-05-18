@@ -16,4 +16,57 @@ DESIGNATION     = "RSHIP-BOT-SNT-001"
 BOT_NAME        = "SENTINEL"
 BOT_LATIN       = "sentinel"
 BOT_MEANING     = "Watchman · Guardian · Alert Monitor"
-VERSION         = "1.0.0"
+VERSION         = "2.0.0"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# INTELLIGENT BINDINGS — "Brains and Hearts"
+# SENTINEL is the Alert Monitor — optimized for threat detection
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# Workers AI — LLM reasoning for threat analysis
+[ai]
+binding = "AI"
+
+# KV Namespaces — Fast key-value storage for alert state
+[[kv_namespaces]]
+binding = "ALERT_STATE"
+id = "PLACEHOLDER_ALERT_STATE_ID"
+# Create with: wrangler kv namespace create ALERT_STATE
+
+[[kv_namespaces]]
+binding = "THREAT_CACHE"
+id = "PLACEHOLDER_THREAT_CACHE_ID"
+
+[[kv_namespaces]]
+binding = "IP_BLOCKLIST"
+id = "PLACEHOLDER_IP_BLOCKLIST_ID"
+
+# D1 Database — Structured alert storage
+[[d1_databases]]
+binding = "ALERT_DB"
+database_name = "medinatech-intelligence"
+database_id = "PLACEHOLDER_D1_DATABASE_ID"
+
+# Queues — Async alert distribution
+[[queues.producers]]
+binding = "ALERT_QUEUE"
+queue = "security-alerts"
+
+[[queues.consumers]]
+queue = "security-alerts"
+max_batch_size = 50
+max_retries = 3
+
+# Analytics Engine — Alert metrics
+[[analytics_engine_datasets]]
+binding = "SENTINEL_ANALYTICS"
+dataset = "sentinel_alert_telemetry"
+
+# Service Bindings
+[[services]]
+binding = "CEREBRUM"
+service = "cerebrum"
+
+[[services]]
+binding = "VIGIL"
+service = "vigil"

@@ -12,4 +12,59 @@ DESIGNATION     = "RSHIP-BOT-HLD-001"
 BOT_NAME        = "HERALD"
 BOT_LATIN       = "heraldus"
 BOT_MEANING     = "Messenger · Herald · Announcer"
-VERSION         = "1.0.0"
+VERSION         = "2.0.0"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# INTELLIGENT BINDINGS — "Brains and Hearts"
+# HERALD is the Announcer — optimized for notifications and messaging
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# Workers AI — LLM reasoning for message composition
+[ai]
+binding = "AI"
+
+# KV Namespaces — Fast key-value storage for message state
+[[kv_namespaces]]
+binding = "MESSAGE_HISTORY"
+id = "PLACEHOLDER_MESSAGE_HISTORY_ID"
+# Create with: wrangler kv namespace create MESSAGE_HISTORY
+
+[[kv_namespaces]]
+binding = "NOTIFICATION_STATE"
+id = "PLACEHOLDER_NOTIFICATION_STATE_ID"
+# Create with: wrangler kv namespace create NOTIFICATION_STATE
+
+[[kv_namespaces]]
+binding = "SESSION_STORE"
+id = "PLACEHOLDER_SESSION_STORE_ID"
+
+# D1 Database — Structured notification storage
+[[d1_databases]]
+binding = "NOTIFICATION_DB"
+database_name = "medinatech-intelligence"
+database_id = "PLACEHOLDER_D1_DATABASE_ID"
+
+# Queues — Async notification distribution
+[[queues.producers]]
+binding = "NOTIFICATION_QUEUE"
+queue = "notifications"
+# Create with: wrangler queues create notifications
+
+[[queues.consumers]]
+queue = "notifications"
+max_batch_size = 50
+max_retries = 5
+
+# Analytics Engine — Notification metrics
+[[analytics_engine_datasets]]
+binding = "HERALD_ANALYTICS"
+dataset = "herald_notification_telemetry"
+
+# Service Bindings
+[[services]]
+binding = "CEREBRUM"
+service = "cerebrum"
+
+[[services]]
+binding = "CURSOR"
+service = "cursor"

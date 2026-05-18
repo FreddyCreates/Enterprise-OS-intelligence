@@ -21,4 +21,70 @@ DESIGNATION     = "RSHIP-BOT-PLS-001"
 BOT_NAME        = "PULSE"
 BOT_LATIN       = "pulsus"
 BOT_MEANING     = "Heartbeat · Rhythm · Intelligence Signal"
-VERSION         = "1.0.0"
+VERSION         = "2.0.0"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# INTELLIGENT BINDINGS — "Brains and Hearts"
+# PULSE is the Heartbeat — optimized for scheduled intelligence gathering
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# Workers AI — LLM reasoning for intelligence synthesis
+[ai]
+binding = "AI"
+
+# KV Namespaces — Fast key-value storage for pulse state
+[[kv_namespaces]]
+binding = "PULSE_STATE"
+id = "PLACEHOLDER_PULSE_STATE_ID"
+# Create with: wrangler kv namespace create PULSE_STATE
+
+[[kv_namespaces]]
+binding = "INTEL_CACHE"
+id = "PLACEHOLDER_INTEL_CACHE_ID"
+# Create with: wrangler kv namespace create INTEL_CACHE
+
+[[kv_namespaces]]
+binding = "MARKET_DATA"
+id = "PLACEHOLDER_MARKET_DATA_ID"
+# Create with: wrangler kv namespace create MARKET_DATA
+
+# D1 Database — Structured pulse history
+[[d1_databases]]
+binding = "PULSE_DB"
+database_name = "medinatech-intelligence"
+database_id = "PLACEHOLDER_D1_DATABASE_ID"
+
+# Queues — Async pulse distribution
+[[queues.producers]]
+binding = "PULSE_QUEUE"
+queue = "pulse-signals"
+# Create with: wrangler queues create pulse-signals
+
+# R2 Bucket — Archive historical pulse data
+[[r2_buckets]]
+binding = "PULSE_ARCHIVE"
+bucket_name = "pulse-archive"
+# Create with: wrangler r2 bucket create pulse-archive
+
+# Vectorize — Vector search for intelligence synthesis
+[[vectorize]]
+binding = "INTEL_VECTORS"
+index_name = "intel-synthesis-index"
+
+# Analytics Engine — Pulse metrics
+[[analytics_engine_datasets]]
+binding = "PULSE_ANALYTICS"
+dataset = "pulse_signal_telemetry"
+
+# Service Bindings
+[[services]]
+binding = "CEREBRUM"
+service = "cerebrum"
+
+[[services]]
+binding = "NUNTIUS"
+service = "rship-nuntius"
+
+[[services]]
+binding = "VIGIL"
+service = "vigil"

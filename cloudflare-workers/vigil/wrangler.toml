@@ -7,4 +7,80 @@ DESIGNATION     = "RSHIP-AIS-VG-001"
 WORKER_NAME     = "VIGIL"
 WORKER_LATIN    = "vigil"
 WORKER_MEANING  = "Watchman — Sentinel — Guardian"
-VERSION         = "1.0.0"
+VERSION         = "2.0.0"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# INTELLIGENT BINDINGS — "Brains and Hearts"
+# VIGIL is the Guardian — optimized for threat detection and monitoring
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# Workers AI — LLM reasoning for threat analysis
+[ai]
+binding = "AI"
+
+# KV Namespaces — Fast key-value storage for threat data
+[[kv_namespaces]]
+binding = "THREAT_CACHE"
+id = "PLACEHOLDER_THREAT_CACHE_ID"
+# Create with: wrangler kv namespace create THREAT_CACHE
+
+[[kv_namespaces]]
+binding = "IP_BLOCKLIST"
+id = "PLACEHOLDER_IP_BLOCKLIST_ID"
+
+[[kv_namespaces]]
+binding = "ATTACKER_DOSSIERS"
+id = "PLACEHOLDER_ATTACKER_DOSSIERS_ID"
+# Create with: wrangler kv namespace create ATTACKER_DOSSIERS
+
+# D1 Database — Structured threat intelligence storage
+[[d1_databases]]
+binding = "THREAT_DB"
+database_name = "medinatech-intelligence"
+database_id = "PLACEHOLDER_D1_DATABASE_ID"
+
+# Queues — Async message passing for alerts
+[[queues.producers]]
+binding = "ALERT_QUEUE"
+queue = "security-alerts"
+# Create with: wrangler queues create security-alerts
+
+[[queues.producers]]
+binding = "SPECIMEN_QUEUE"
+queue = "threat-specimens"
+# Create with: wrangler queues create threat-specimens
+
+[[queues.consumers]]
+queue = "threat-specimens"
+max_batch_size = 50
+max_retries = 3
+
+# R2 Bucket — Archive threat specimens and logs
+[[r2_buckets]]
+binding = "SPECIMEN_ARCHIVE"
+bucket_name = "threat-specimens"
+# Create with: wrangler r2 bucket create threat-specimens
+
+# Vectorize — Vector search for threat pattern matching
+[[vectorize]]
+binding = "THREAT_VECTORS"
+index_name = "threat-patterns-index"
+# Create with: wrangler vectorize create threat-patterns-index --dimensions=768 --metric=cosine
+
+# Analytics Engine — Security metrics
+[[analytics_engine_datasets]]
+binding = "VIGIL_ANALYTICS"
+dataset = "vigil_security_telemetry"
+
+# Cron Triggers — Scheduled threat scans
+[[triggers.crons]]
+cron = "*/5 * * * *"  # Every 5 minutes
+
+# Service Bindings
+[[services]]
+binding = "CEREBRUM"
+service = "cerebrum"
+
+[[services]]
+binding = "NEXUS"
+service = "nexus"
