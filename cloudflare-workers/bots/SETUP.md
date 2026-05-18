@@ -20,6 +20,13 @@ The only one-time setup: wiring the worker URLs in the Slack app settings (Steps
 
 ## Option A — Auto-Deploy via GitHub Actions (Recommended — No manual deploy ever again)
 
+### Security first (mandatory)
+
+- Never post Cloudflare or Slack tokens in chat, PRs, issues, or logs.
+- If any token is exposed, rotate immediately before continuing deployment.
+- Use separate least-privilege Cloudflare tokens per environment (`prod`, `stage`, `dev`).
+- Keep deploy token scope limited to required Workers permissions for the target environment.
+
 Set these 4 secrets in your GitHub repo (**Settings → Secrets and variables → Actions → New repository secret**):
 
 | Secret | How to get it |

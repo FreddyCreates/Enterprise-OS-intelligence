@@ -15,6 +15,17 @@
  *   GET  /                      → B2B product portal + interactive AGENS agent
  *   GET  /api/status            → Worker health
  *   GET  /api/catalog           → Full agent catalog with deployment info
+ *   GET  /api/error-agents      → Error-created AI agents (defense/offense telemetry)
+ *   GET  /api/error-division/status
+ *   GET  /api/error-division/agents?zone=&severity=&state=&activeOnly=
+ *   GET  /api/error-division/history
+ *   POST /api/error-division/agents/:id/assign
+ *   POST /api/error-division/agents/:id/escalate
+ *   POST /api/error-division/agents/:id/resolve
+ *   GET  /api/error-division/composition
+ *   GET  /api/internal/overview
+ *   GET  /api/internal/showcase/production
+ *   POST /api/internal/drills/error-injection
  *   POST /api/agents/deploy     → Deploy an agent (returns deployment spec)
  *   POST /api/quote             → Get a pricing quote
  *   POST /api/agent/chat        → Talk to AGENS — the master agent
@@ -114,7 +125,300 @@ const TIERS = {
 // ── Deployments Log (ephemeral) ───────────────────────────────────────────────
 const deployments = [];
 const contactLog  = [];
+const errorAgents = [];
+const errorEventHistory = [];
 let   chatCount   = 0;
+let   errorAgentCounter = 0;
+const ERROR_ZONES = ['AUTH', 'API_WRITE', 'ADMIN_INTERNAL', 'RECON', 'UPSTREAM_DEPENDENCY', 'RUNTIME'];
+const ERROR_STATES = ['spawned', 'active', 'containing', 'resolved', 'escalated'];
+const MAX_ERROR_HISTORY = 1200;
+const ESCALATION_THRESHOLD = 3;
+const errorDivision = {
+  designation: 'RSHIP-AIS-ED-001',
+  name: 'ERROR_DIVISION',
+  zones: Object.fromEntries(ERROR_ZONES.map(z => [z, {
+    zone: z,
+    activeAgentIds: [],
+    escalatedAgentIds: [],
+    totalEvents: 0,
+    lastEventAt: null,
+  }])),
+};
+
+function classifyErrorZone(errorCode, context = {}) {
+  const code = String(errorCode || '').toUpperCase();
+  const path = String(context.path || '').toLowerCase();
+  const method = String(context.method || 'GET').toUpperCase();
+
+  if (path.startsWith('/admin') || path.startsWith('/internal')) return 'ADMIN_INTERNAL';
+  if (path === '/login' || path.startsWith('/auth/') || path.startsWith('/oauth/')) return 'AUTH';
+  if (path.startsWith('/api/') && ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) return 'API_WRITE';
+  if (code === 'NOT_FOUND' || code === 'AGENT_NOT_FOUND') return 'RECON';
+  if (code.includes('UPSTREAM') || code.includes('DEPENDENCY') || code.includes('TIMEOUT') || code.includes('GATEWAY')) return 'UPSTREAM_DEPENDENCY';
+  return 'RUNTIME';
+}
+
+function classifySeverity(errorCode, context = {}) {
+  const code = String(errorCode || '').toUpperCase();
+  const status = Number(context.status || 500);
+  const zone = classifyErrorZone(code, context);
+  if (zone === 'ADMIN_INTERNAL' || zone === 'AUTH') return 'CRITICAL';
+  if (status >= 500) return 'HIGH';
+  if (zone === 'API_WRITE') return 'HIGH';
+  if (code === 'NO_MESSAGE' || code === 'INVALID_JSON') return 'MEDIUM';
+  if (code === 'NOT_FOUND') return 'LOW';
+  return 'MEDIUM';
+}
+
+function zoneBoundary(zone) {
+  if (zone === 'AUTH') return '/login,/auth/*,/oauth/*';
+  if (zone === 'API_WRITE') return '/api/* with POST|PUT|PATCH|DELETE';
+  if (zone === 'ADMIN_INTERNAL') return '/admin/*,/internal/*';
+  if (zone === 'RECON') return '404/403 discovery and probe patterns';
+  if (zone === 'UPSTREAM_DEPENDENCY') return 'upstream APIs and dependency graph';
+  return 'worker runtime, JSON parse, uncaught failures';
+}
+
+function buildDefenseOffense(zone, severity, context = {}) {
+  const baseDefense = [
+    'Capture telemetry + trace context.',
+    'Apply zone-specific controls and monitor false-positive impact.',
+  ];
+  const baseOffense = [
+    'Store adversary/failure signature for replay.',
+    'Queue deterministic simulation for this class.',
+  ];
+  const mitigations = zone === 'AUTH'
+    ? ['managed_challenge on /login,/auth/*,/oauth/*', 'tighten credential abuse rate limits']
+    : zone === 'API_WRITE'
+      ? ['harden POST/PUT/PATCH/DELETE rules', 'promote schema validation to blocking after monitor window']
+      : zone === 'ADMIN_INTERNAL'
+        ? ['enforce mTLS for /admin/*,/internal/*', 'block non-trusted source paths']
+        : zone === 'RECON'
+          ? ['escalate 404/403 burst protection', 'bot challenge for discovery fingerprints']
+          : zone === 'UPSTREAM_DEPENDENCY'
+            ? ['circuit-breaker profile and fail-safe fallback', 'dependency timeout + retry tuning']
+            : ['runtime guardrails and parse validation', 'error budget alerts for 5xx bursts'];
+
+  const replay = {
+    schedule: severity === 'CRITICAL' ? 'immediate+daily' : severity === 'HIGH' ? 'daily' : 'weekly',
+    scenario: `${zone}_FAILURE_CLASS_REPLAY`,
+    signature: `${zone}:${String(context.path || '')}:${String(context.method || 'GET').toUpperCase()}`,
+  };
+
+  return {
+    defense: { controls: [...baseDefense, ...mitigations] },
+    offense: { experiments: baseOffense, replay },
+  };
+}
+
+function transitionAgentState(agent, to, note = '') {
+  if (!ERROR_STATES.includes(to)) return;
+  agent.state = to;
+  agent.stateHistory.push({ state: to, at: Date.now(), note });
+  if (to === 'resolved') agent.resolvedAt = Date.now();
+}
+
+function updateZoneRegistry(agent) {
+  const z = errorDivision.zones[agent.zone];
+  if (!z) return;
+  z.totalEvents += 1;
+  z.lastEventAt = Date.now();
+  if (!z.activeAgentIds.includes(agent.id) && agent.state !== 'resolved') z.activeAgentIds.push(agent.id);
+  if (agent.state === 'resolved') z.activeAgentIds = z.activeAgentIds.filter(id => id !== agent.id);
+  if (agent.state === 'escalated' && !z.escalatedAgentIds.includes(agent.id)) z.escalatedAgentIds.push(agent.id);
+}
+
+function activeZonePeers(zone, omitId = '') {
+  return errorAgents.filter(a => a.zone === zone && a.state !== 'resolved' && a.id !== omitId).map(a => a.id);
+}
+
+function addHistoryEvent(type, agent, detail = {}) {
+  errorEventHistory.push({
+    type,
+    agentId: agent.id,
+    zone: agent.zone,
+    severity: agent.severity,
+    state: agent.state,
+    at: Date.now(),
+    detail,
+  });
+  if (errorEventHistory.length > MAX_ERROR_HISTORY) errorEventHistory.shift();
+}
+
+function buildErrorFingerprint(errorCode, context = {}) {
+  return `${String(errorCode || 'UNKNOWN_ERROR').toUpperCase()}|${classifyErrorZone(errorCode, context)}|${String(context.path || '')}|${String(context.method || 'GET').toUpperCase()}|${Number(context.status || 500)}`;
+}
+
+function createErrorAI(errorCode, context = {}) {
+  const ts = Date.now();
+  const code = String(errorCode || 'UNKNOWN_ERROR');
+  const zone = classifyErrorZone(code, context);
+  const severity = classifySeverity(code, context);
+  const fingerprint = buildErrorFingerprint(code, context);
+  const existing = errorAgents.find(a => a.fingerprint === fingerprint && a.state !== 'resolved');
+  if (existing) {
+    existing.occurrenceCount += 1;
+    existing.lastSeenAt = ts;
+    existing.parallelEvents += 1;
+    existing.relatedAgentIds = activeZonePeers(existing.zone, existing.id);
+    existing.context = {
+      path: context.path || existing.context.path,
+      method: context.method || existing.context.method,
+      status: context.status || existing.context.status,
+      beat: context.beat || existing.context.beat,
+    };
+    transitionAgentState(existing, 'containing', 'Merged duplicate/parallel error event');
+    if (existing.occurrenceCount >= ESCALATION_THRESHOLD) transitionAgentState(existing, 'escalated', 'Escalation threshold reached');
+    updateZoneRegistry(existing);
+    addHistoryEvent('merge', existing, { occurrenceCount: existing.occurrenceCount });
+    return existing;
+  }
+  errorAgentCounter++;
+  const hash = phiHash(`${code}:${ts}:${errorAgentCounter}`);
+  const automation = buildDefenseOffense(zone, severity, context);
+  const agent = {
+    id: `EAI-${hash.slice(0, 10).toUpperCase()}`,
+    designation: `RSHIP-AIS-EAI-${String(errorAgentCounter).padStart(3, '0')}`,
+    type: 'ERROR_RESPONSE_AGENT',
+    specialistClass: `${zone}_SPECIALIST`,
+    zone,
+    errorCode: code,
+    severity,
+    role: 'Contain zone failures, preserve control boundaries, and turn chaos into intelligence.',
+    ownerDivision: errorDivision.designation,
+    assignment: {
+      assignedTo: null,
+      claimedAt: null,
+      boundary: zoneBoundary(zone),
+      containmentObjective: `Contain ${zone} error class and prevent cross-zone cascade.`,
+    },
+    lifecycle: 'PERSISTENT',
+    state: 'spawned',
+    stateHistory: [{ state: 'spawned', at: ts, note: 'Agent minted from error event' }],
+    fingerprint,
+    occurrenceCount: 1,
+    parallelEvents: 0,
+    linkedAgentIds: [],
+    relatedAgentIds: activeZonePeers(zone),
+    context: {
+      path: context.path || '',
+      method: context.method || '',
+      status: context.status || 500,
+      beat: context.beat || beat,
+    },
+    containmentActions: [
+      'Capture event telemetry and preserve trace context.',
+      'Classify specialist zone and severity.',
+      'Enforce containment before propagation.',
+    ],
+    defense: automation.defense,
+    offense: automation.offense,
+    createdAt: ts,
+    lastSeenAt: ts,
+  };
+  transitionAgentState(agent, 'active', 'Activated in specialist zone');
+  transitionAgentState(agent, 'containing', 'Containment procedure started');
+  const peers = activeZonePeers(zone, agent.id);
+  if (peers.length > 0) {
+    agent.linkedAgentIds = peers;
+    peers.forEach(id => {
+      const peer = errorAgents.find(a => a.id === id);
+      if (peer && !peer.linkedAgentIds.includes(agent.id)) peer.linkedAgentIds.push(agent.id);
+    });
+  }
+  errorAgents.push(agent);
+  if (errorAgents.length > 250) errorAgents.shift();
+  updateZoneRegistry(agent);
+  addHistoryEvent('spawn', agent, { fingerprint });
+  return agent;
+}
+
+function jsonError(errorCode, status, cors, context = {}, extra = {}) {
+  const errorAI = createErrorAI(errorCode, { ...context, status });
+  return Response.json({ error: errorCode, errorAI, ...extra }, { status, headers: cors });
+}
+
+function getDivisionStatus() {
+  const zoneStats = Object.values(errorDivision.zones).map(z => ({
+    zone: z.zone,
+    activeAgents: z.activeAgentIds.length,
+    escalatedAgents: z.escalatedAgentIds.length,
+    totalEvents: z.totalEvents,
+    lastEventAt: z.lastEventAt,
+  }));
+  return {
+    division: errorDivision.designation,
+    activeSpecialists: errorAgents.filter(a => a.state !== 'resolved').length,
+    escalated: errorAgents.filter(a => a.state === 'escalated').length,
+    zones: zoneStats,
+  };
+}
+
+function findErrorAgentById(id = '') {
+  return errorAgents.find(a => a.id === id || a.designation === id);
+}
+
+function listFilteredAgents(url) {
+  const zone = String(url.searchParams.get('zone') || '').toUpperCase();
+  const severity = String(url.searchParams.get('severity') || '').toUpperCase();
+  const state = String(url.searchParams.get('state') || '').toLowerCase();
+  const activeOnly = String(url.searchParams.get('activeOnly') || '').toLowerCase() === 'true';
+  return errorAgents.filter(a => {
+    if (zone && a.zone !== zone) return false;
+    if (severity && a.severity !== severity) return false;
+    if (state && a.state !== state) return false;
+    if (activeOnly && a.state === 'resolved') return false;
+    return true;
+  });
+}
+
+function buildProductionShowcase(beatValue) {
+  return {
+    designation: 'RSHIP-AIS-SHOWCASE-001',
+    mode: 'production',
+    generatedAt: Date.now(),
+    beat: beatValue,
+    bundles: [
+      {
+        id: 'SHOWCASE-OPS-CORE',
+        name: 'Operations Core',
+        summary: 'Live operations + defense/offense error containment visibility.',
+        endpoints: [
+          { method: 'GET', path: '/api/status', purpose: 'Worker and fleet health snapshot' },
+          { method: 'GET', path: '/api/error-division/status', purpose: 'Specialist zone load + escalations' },
+          { method: 'GET', path: '/api/error-division/composition', purpose: 'Composition/routing signals' },
+          { method: 'GET', path: '/api/error-division/agents?activeOnly=true', purpose: 'Active specialist roster' },
+        ],
+      },
+      {
+        id: 'SHOWCASE-DEPLOYMENT',
+        name: 'Deployment + Commercial',
+        summary: 'Provisioning and quote flow for customer demonstrations.',
+        endpoints: [
+          { method: 'GET', path: '/api/catalog', purpose: 'Agent portfolio listing' },
+          { method: 'POST', path: '/api/agents/deploy', purpose: 'Provision deployment spec' },
+          { method: 'POST', path: '/api/quote', purpose: 'Estimate monthly pricing' },
+          { method: 'POST', path: '/api/agent/chat', purpose: 'Interactive enterprise advisor' },
+        ],
+      },
+      {
+        id: 'SHOWCASE-DRILLS',
+        name: 'Resilience Drills',
+        summary: 'Controlled error injection and containment timeline replay.',
+        endpoints: [
+          { method: 'POST', path: '/api/internal/drills/error-injection', purpose: 'Inject zone-specific drill event' },
+          { method: 'GET', path: '/api/error-division/history', purpose: 'Review containment history' },
+        ],
+      },
+    ],
+    quickstart: [
+      'curl -s https://agens.rship.workers.dev/api/status',
+      'curl -s https://agens.rship.workers.dev/api/error-division/status',
+      'curl -s -X POST https://agens.rship.workers.dev/api/internal/drills/error-injection -H "content-type: application/json" -d \'{"zone":"AUTH","errorCode":"AUTH_DRILL"}\'',
+    ],
+  };
+}
 
 // ── AGENS Master Agent Brain ───────────────────────────────────────────────────
 function agensRespond(message) {
@@ -614,81 +918,232 @@ export default {
     const seal = phiHash(`agens:${beat}:${startTime}`);
     const cors = { 'Access-Control-Allow-Origin':'*','Access-Control-Allow-Methods':'GET,POST,OPTIONS','Access-Control-Allow-Headers':'Content-Type' };
 
-    if (method === 'OPTIONS') return new Response(null, { status:204, headers:cors });
+    try {
+      if (method === 'OPTIONS') return new Response(null, { status:204, headers:cors });
 
-    if (path === '/' && method === 'GET')
-      return new Response(buildHTML(), { headers:{'Content-Type':'text/html;charset=UTF-8',...cors} });
+      if (path === '/' && method === 'GET')
+        return new Response(buildHTML(), { headers:{'Content-Type':'text/html;charset=UTF-8',...cors} });
 
-    if (path === '/api/status')
-      return Response.json({
-        designation:'RSHIP-AIS-AG-001', name:'AGENS', latin:'agens', meaning:'the one who acts',
-        beat, seal:seal.slice(0,16)+'…', agentsAvailable:CATALOG.length,
-        deployments:deployments.length, chatCount, phi:PHI,
-        uptimeSec:parseFloat(((Date.now()-startTime)/1000).toFixed(2)), alive:true
-      }, {headers:cors});
+      if (path === '/api/status')
+        return Response.json({
+          designation:'RSHIP-AIS-AG-001', name:'AGENS', latin:'agens', meaning:'the one who acts',
+          beat, seal:seal.slice(0,16)+'…', agentsAvailable:CATALOG.length,
+          deployments:deployments.length, chatCount, errorAgents:errorAgents.length, errorDivision:getDivisionStatus(), phi:PHI,
+          uptimeSec:parseFloat(((Date.now()-startTime)/1000).toFixed(2)), alive:true
+        }, {headers:cors});
 
-    if (path === '/api/catalog')
-      return Response.json({ agents:CATALOG, count:CATALOG.length, beat }, {headers:cors});
+      if (path === '/api/catalog')
+        return Response.json({ agents:CATALOG, count:CATALOG.length, beat }, {headers:cors});
 
-    if (path === '/api/agents/deploy' && method === 'POST') {
-      let body = {}; try { body = await request.json(); } catch {}
-      const agentId = String(body.agentId || '');
-      const agent   = CATALOG.find(a => a.id === agentId || a.name.toLowerCase() === agentId.toLowerCase());
-      if (!agent) return Response.json({ error:'AGENT_NOT_FOUND', available:CATALOG.map(a=>a.id) }, {status:404,headers:cors});
-      const deploymentId = `DEPLOY-${phiHash(agentId+Date.now()).slice(0,8).toUpperCase()}`;
-      const dep = {
-        deploymentId,
-        agentId: agent.id,
-        agentName: agent.name,
-        industry: String(body.industry || 'general'),
-        scale: String(body.scale || 'production'),
-        tier: String(body.tier || 'PROFESSIONAL'),
-        endpoint: agent.url,
-        wranglerToml: `name = "${agent.name.toLowerCase()}"\nmain = "worker.js"\ncompatibility_date = "2024-09-02"`,
-        estimatedMonthlyCost: TIERS[body.tier || 'PROFESSIONAL']?.price ?? 'Custom',
-        apiEndpoints: agent.apiEndpoints,
-        deployedAt: Date.now(),
-        status: 'PROVISIONED',
-      };
-      deployments.push(dep);
-      return Response.json({ success:true, deployment:dep, message:`${agent.name} deployment provisioned. Endpoint: ${agent.url}` }, {headers:cors});
+      if (path === '/api/error-agents')
+        return Response.json({ count:errorAgents.length, active:errorAgents.filter(a=>a.state!=='resolved').length, agents:errorAgents, beat }, {headers:cors});
+
+      if (path === '/api/error-division/status')
+        return Response.json({ beat, ...getDivisionStatus() }, { headers:cors });
+
+      if (path === '/api/error-division/agents')
+        return Response.json({ beat, count:errorAgents.length, filtered:listFilteredAgents(url).length, agents:listFilteredAgents(url) }, { headers:cors });
+
+      if (path === '/api/error-division/history')
+        return Response.json({ beat, count:errorEventHistory.length, history:errorEventHistory }, { headers:cors });
+
+      if (path === '/api/error-division/composition')
+        return Response.json({
+          beat,
+          composition: {
+            register: {
+              id: errorDivision.designation,
+              class: 'ERROR_DIVISION',
+              activeSpecialists: errorAgents.filter(a => a.state !== 'resolved').length,
+            },
+            diffuse: {
+              zones: getDivisionStatus().zones,
+              escalated: errorAgents.filter(a => a.state === 'escalated').map(a => a.id),
+            },
+            routing: {
+              primaryZone: getDivisionStatus().zones.sort((a,b)=>b.activeAgents-a.activeAgents)[0]?.zone || 'RUNTIME',
+              activeBySeverity: {
+                CRITICAL: errorAgents.filter(a => a.state !== 'resolved' && a.severity === 'CRITICAL').length,
+                HIGH: errorAgents.filter(a => a.state !== 'resolved' && a.severity === 'HIGH').length,
+                MEDIUM: errorAgents.filter(a => a.state !== 'resolved' && a.severity === 'MEDIUM').length,
+                LOW: errorAgents.filter(a => a.state !== 'resolved' && a.severity === 'LOW').length,
+              },
+            },
+          },
+        }, { headers:cors });
+
+      if (path === '/api/internal/overview')
+        return Response.json({
+          beat,
+          internal: {
+            environment: 'production',
+            worker: { designation: 'RSHIP-AIS-AG-001', uptimeSec: parseFloat(((Date.now()-startTime)/1000).toFixed(2)) },
+            counts: {
+              deployments: deployments.length,
+              chats: chatCount,
+              totalErrorAgents: errorAgents.length,
+              activeErrorAgents: errorAgents.filter(a => a.state !== 'resolved').length,
+              escalatedErrorAgents: errorAgents.filter(a => a.state === 'escalated').length,
+            },
+            division: getDivisionStatus(),
+            tiers: Object.entries(TIERS).map(([k,v]) => ({ tier: k, price: v.price, sla: v.sla })),
+          },
+        }, { headers:cors });
+
+      if (path === '/api/internal/showcase/production')
+        return Response.json(buildProductionShowcase(beat), { headers:cors });
+
+      if (path === '/api/internal/drills/error-injection' && method === 'POST') {
+        let body = {}; try { body = await request.json(); } catch {}
+        const zone = String(body.zone || 'RUNTIME').toUpperCase();
+        const drillCodeMap = {
+          AUTH: 'AUTH_DRILL',
+          API_WRITE: 'API_WRITE_DRILL',
+          ADMIN_INTERNAL: 'ADMIN_DRILL',
+          RECON: 'RECON_DRILL',
+          UPSTREAM_DEPENDENCY: 'UPSTREAM_DRILL',
+          RUNTIME: 'RUNTIME_DRILL',
+        };
+        const forcedCode = String(body.errorCode || drillCodeMap[zone] || 'RUNTIME_DRILL');
+        const status = Number(body.status || (zone === 'AUTH' || zone === 'ADMIN_INTERNAL' ? 401 : 500));
+        const pathHint = String(body.path || (
+          zone === 'AUTH' ? '/auth/login'
+            : zone === 'API_WRITE' ? '/api/agents/deploy'
+            : zone === 'ADMIN_INTERNAL' ? '/internal/ops'
+            : zone === 'RECON' ? '/unknown/probe'
+            : zone === 'UPSTREAM_DEPENDENCY' ? '/api/dependency/upstream'
+            : '/api/runtime/sim'
+        ));
+        const methodHint = String(body.method || (zone === 'API_WRITE' ? 'POST' : 'GET')).toUpperCase();
+        const drillAgent = createErrorAI(forcedCode, {
+          path: pathHint,
+          method: methodHint,
+          status,
+          beat,
+          source: 'internal-drill',
+        });
+        addHistoryEvent('drill', drillAgent, { requestedZone: zone, forcedCode });
+        return Response.json({
+          success: true,
+          drill: {
+            requestedZone: zone,
+            code: forcedCode,
+            status,
+            path: pathHint,
+            method: methodHint,
+          },
+          agent: drillAgent,
+          division: getDivisionStatus(),
+          beat,
+        }, { headers:cors });
+      }
+
+      const assignMatch = path.match(/^\/api\/error-division\/agents\/([^/]+)\/assign$/);
+      if (assignMatch && method === 'POST') {
+        const agent = findErrorAgentById(assignMatch[1]);
+        if (!agent) return jsonError('AGENT_NOT_FOUND', 404, cors, { path, method, beat });
+        let body = {}; try { body = await request.json(); } catch {}
+        const assignee = String(body.assignedTo || body.owner || 'UNASSIGNED').slice(0, 80);
+        const objective = String(body.containmentObjective || agent.assignment.containmentObjective).slice(0, 200);
+        const boundary = String(body.boundary || agent.assignment.boundary).slice(0, 120);
+        agent.assignment = { assignedTo: assignee, claimedAt: Date.now(), containmentObjective: objective, boundary };
+        if (agent.state === 'resolved') transitionAgentState(agent, 'active', 'Reopened via reassignment');
+        transitionAgentState(agent, 'containing', `Assigned to ${assignee}`);
+        updateZoneRegistry(agent);
+        addHistoryEvent('assign', agent, { assignedTo: assignee });
+        return Response.json({ success:true, agent, beat }, { headers:cors });
+      }
+
+      const escalateMatch = path.match(/^\/api\/error-division\/agents\/([^/]+)\/escalate$/);
+      if (escalateMatch && method === 'POST') {
+        const agent = findErrorAgentById(escalateMatch[1]);
+        if (!agent) return jsonError('AGENT_NOT_FOUND', 404, cors, { path, method, beat });
+        transitionAgentState(agent, 'escalated', 'Manual escalation');
+        updateZoneRegistry(agent);
+        addHistoryEvent('escalate', agent, { mode: 'manual' });
+        return Response.json({ success:true, escalated:true, agent, beat }, { headers:cors });
+      }
+
+      const resolveMatch = path.match(/^\/api\/error-division\/agents\/([^/]+)\/resolve$/);
+      if (resolveMatch && method === 'POST') {
+        const agent = findErrorAgentById(resolveMatch[1]);
+        if (!agent) return jsonError('AGENT_NOT_FOUND', 404, cors, { path, method, beat });
+        transitionAgentState(agent, 'resolved', 'Containment completed');
+        updateZoneRegistry(agent);
+        addHistoryEvent('resolve', agent);
+        return Response.json({ success:true, resolved:true, agent, beat }, { headers:cors });
+      }
+
+      if (path === '/api/agents/deploy' && method === 'POST') {
+        let body = {}; try { body = await request.json(); } catch {}
+        const agentId = String(body.agentId || '');
+        const agent   = CATALOG.find(a => a.id === agentId || a.name.toLowerCase() === agentId.toLowerCase());
+        if (!agent) return jsonError('AGENT_NOT_FOUND', 404, cors, { path, method, beat }, { available: CATALOG.map(a => a.id) });
+        const deploymentId = `DEPLOY-${phiHash(agentId+Date.now()).slice(0,8).toUpperCase()}`;
+        const dep = {
+          deploymentId,
+          agentId: agent.id,
+          agentName: agent.name,
+          industry: String(body.industry || 'general'),
+          scale: String(body.scale || 'production'),
+          tier: String(body.tier || 'PROFESSIONAL'),
+          endpoint: agent.url,
+          wranglerToml: `name = "${agent.name.toLowerCase()}"\nmain = "worker.js"\ncompatibility_date = "2024-09-02"`,
+          estimatedMonthlyCost: TIERS[body.tier || 'PROFESSIONAL']?.price ?? 'Custom',
+          apiEndpoints: agent.apiEndpoints,
+          deployedAt: Date.now(),
+          status: 'PROVISIONED',
+        };
+        deployments.push(dep);
+        return Response.json({ success:true, deployment:dep, message:`${agent.name} deployment provisioned. Endpoint: ${agent.url}` }, {headers:cors});
+      }
+
+      if (path === '/api/quote' && method === 'POST') {
+        let body = {}; try { body = await request.json(); } catch {}
+        const agentNames = Array.isArray(body.agents) ? body.agents : [];
+        const tier       = String(body.tier || 'PROFESSIONAL');
+        const matched    = agentNames.map(n => CATALOG.find(a => a.name.toLowerCase() === n.toLowerCase())).filter(Boolean);
+        const basePrice  = TIERS[tier]?.price ?? null;
+        const agentTotal = matched.reduce((s,a) => s + (a.monthlyPrice || 0), 0);
+        return Response.json({
+          agents: matched.map(a => ({ id:a.id, name:a.name, monthlyPrice:a.monthlyPrice })),
+          tier, basePrice, agentTotal,
+          estimatedMonthly: basePrice ? Math.max(basePrice, agentTotal) : 'Contact for Enterprise',
+          note: tier === 'ENTERPRISE' ? 'Enterprise pricing is custom — contact us for a precise quote.' : undefined,
+          beat,
+        }, {headers:cors});
+      }
+
+      if (path === '/api/agent/chat' && method === 'POST') {
+        let body = {}; try { body = await request.json(); } catch {}
+        const message = String(body.message || '').trim();
+        if (!message) return jsonError('NO_MESSAGE', 400, cors, { path, method, beat });
+        chatCount++;
+        const result = agensRespond(message);
+        return Response.json({ agent:'AGENS', message, ...result, beat, totalChats:chatCount }, {headers:cors});
+      }
+
+      if (path === '/api/contact' && method === 'POST') {
+        let body = {}; try { body = await request.json(); } catch {}
+        const entry = { id:`CONTACT-${contactLog.length+1}`, name:String(body.name||''),
+          email:String(body.email||''), message:String(body.message||'').slice(0,500), ts:Date.now() };
+        contactLog.push(entry);
+        return Response.json({ received:true, id:entry.id, message:'We will respond within 24 hours.' }, {headers:cors});
+      }
+
+      return jsonError('NOT_FOUND', 404, cors, { path, method, beat }, {
+        path,
+        available:[
+          '/', '/api/status', '/api/catalog', '/api/error-agents',
+          '/api/error-division/status', '/api/error-division/agents',
+          '/api/error-division/history', '/api/error-division/composition',
+          '/api/internal/overview', '/api/internal/showcase/production',
+          '/api/internal/drills/error-injection',
+          '/api/agents/deploy', '/api/quote', '/api/agent/chat', '/api/contact',
+        ],
+      });
+    } catch (err) {
+      return jsonError('UNHANDLED_EXCEPTION', 500, cors, { path, method, beat });
     }
-
-    if (path === '/api/quote' && method === 'POST') {
-      let body = {}; try { body = await request.json(); } catch {}
-      const agentNames = Array.isArray(body.agents) ? body.agents : [];
-      const tier       = String(body.tier || 'PROFESSIONAL');
-      const matched    = agentNames.map(n => CATALOG.find(a => a.name.toLowerCase() === n.toLowerCase())).filter(Boolean);
-      const basePrice  = TIERS[tier]?.price ?? null;
-      const agentTotal = matched.reduce((s,a) => s + (a.monthlyPrice || 0), 0);
-      return Response.json({
-        agents: matched.map(a => ({ id:a.id, name:a.name, monthlyPrice:a.monthlyPrice })),
-        tier, basePrice, agentTotal,
-        estimatedMonthly: basePrice ? Math.max(basePrice, agentTotal) : 'Contact for Enterprise',
-        note: tier === 'ENTERPRISE' ? 'Enterprise pricing is custom — contact us for a precise quote.' : undefined,
-        beat,
-      }, {headers:cors});
-    }
-
-    if (path === '/api/agent/chat' && method === 'POST') {
-      let body = {}; try { body = await request.json(); } catch {}
-      const message = String(body.message || '').trim();
-      if (!message) return Response.json({ error:'NO_MESSAGE' }, {status:400,headers:cors});
-      chatCount++;
-      const result = agensRespond(message);
-      return Response.json({ agent:'AGENS', message, ...result, beat, totalChats:chatCount }, {headers:cors});
-    }
-
-    if (path === '/api/contact' && method === 'POST') {
-      let body = {}; try { body = await request.json(); } catch {}
-      const entry = { id:`CONTACT-${contactLog.length+1}`, name:String(body.name||''),
-        email:String(body.email||''), message:String(body.message||'').slice(0,500), ts:Date.now() };
-      contactLog.push(entry);
-      return Response.json({ received:true, id:entry.id, message:'We will respond within 24 hours.' }, {headers:cors});
-    }
-
-    return Response.json({ error:'NOT_FOUND', path,
-      available:['/', '/api/status', '/api/catalog', '/api/agents/deploy', '/api/quote', '/api/agent/chat', '/api/contact']
-    }, {status:404, headers:cors});
   },
 };

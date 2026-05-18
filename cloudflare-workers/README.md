@@ -57,6 +57,12 @@ npm run dev:vigil      # http://localhost:8790
 npm run dev:cursor     # http://localhost:8791
 ```
 
+## Security Operations (Defense + Offense)
+
+- Edge hardening blueprint: `docs/CLOUDFLARE_EDGE_HARDENING_BLUEPRINT.md`
+- DDoS mode runbook: `docs/CLOUDFLARE_DDOS_RUNBOOK.md`
+- Threat operations model: `docs/THREAT_OPERATIONS_DEFENSE_OFFENSE_PLAYBOOK.md`
+
 ---
 
 ## Worker Registry

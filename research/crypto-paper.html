@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cryptographia Autonoma — Autonomous Cryptography</title>
+  <style>
+    :root {
+      --bg: #0a0d14;
+      --fg: #eef2ff;
+      --muted: #a8b3cf;
+      --line: #24304f;
+      --accent: #7dd3fc;
+      --accent2: #c084fc;
+      --card: #121826;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: linear-gradient(180deg, #090c12, #0f172a);
+      color: var(--fg);
+      line-height: 1.7;
+    }
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 56px 24px 80px;
+    }
+    .eyebrow {
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      font-size: 0.78rem;
+      margin-bottom: 18px;
+    }
+    h1 { font-size: clamp(2.4rem, 6vw, 4.3rem); line-height: 1.05; margin: 0 0 10px; }
+    h2 { margin-top: 42px; font-size: 1.6rem; color: var(--accent); }
+    h3 { margin-top: 28px; font-size: 1.15rem; color: var(--accent2); }
+    p, li { color: var(--fg); }
+    .lede, .meta, .quote, pre, table {
+      background: rgba(18, 24, 38, 0.78);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+    }
+    .meta, .lede, .quote { padding: 18px 20px; }
+    .meta { color: var(--muted); margin: 22px 0 28px; }
+    .lede { font-size: 1.04rem; }
+    .quote { font-style: italic; margin-top: 22px; }
+    code, pre { font-family: "SFMono-Regular", ui-monospace, SFMono-Regular, Menlo, monospace; }
+    pre { padding: 16px; overflow-x: auto; color: #dbeafe; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      overflow: hidden;
+      margin: 18px 0;
+    }
+    th, td {
+      border-bottom: 1px solid var(--line);
+      padding: 12px 14px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { color: var(--accent); }
+    a { color: var(--accent); }
+    .footer { margin-top: 56px; color: var(--muted); font-size: 0.95rem; }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="eyebrow">Sovereign Intelligence Research · Paper XXXV</div>
+    <h1>Cryptographia Autonoma</h1>
+    <p style="font-size:1.2rem;color:var(--muted);margin-top:0;">Autonomous Cryptography: On Computational Secret Arts, Encrypted Wires, and Serverless Trust Architecture</p>
+
+    <div class="meta">
+      <strong>Author:</strong> Alfredo Medina Hernandez<br />
+      <strong>Affiliation:</strong> Organism AI Research Division · Laboratorium Intelligentiae Autonomae · itsnotAilabs.com<br />
+      <strong>Date:</strong> May 2026<br />
+      <strong>DOI:</strong> Pending (Zenodo/Archive registration)
+    </div>
+
+    <div class="quote">
+      “Nulla intelligentia sine secreto transit. Fides non a servo datur — ab algorithmo nascitur.”<br />
+      No intelligence passes without a secret. Trust is not given by a server — it is born from an algorithm.
+    </div>
+
+    <h2>Abstract</h2>
+    <div class="lede">
+      We present a sovereign cryptographic architecture for Enterprise OS Intelligence that combines AES-256-GCM encryption, PBKDF2 key derivation, SHA hashing, HMAC authentication, and encrypted machine-to-machine wires under a browser-first, worker-isolated trust model. The central claim is that trust should be minimized at the server boundary and maximized at the mathematical boundary.
+    </div>
+
+    <h2>I. Introductio</h2>
+    <p>Traditional web trust terminates at the server. Sovereign cryptography reverses that assumption: local runtimes derive keys, isolate cryptographic execution, and expose secrets only to the endpoint that must know them. The browser or local agent becomes the trust anchor.</p>
+
+    <h2>II. Primitiva Cryptographica</h2>
+    <h3>AES-256-GCM</h3>
+    <pre>(ciphertext, tag) = AES-256-GCM(key, IV, plaintext, AAD)</pre>
+    <p>AES-256-GCM provides confidentiality and integrity in a single authenticated-encryption primitive.</p>
+
+    <h3>PBKDF2</h3>
+    <pre>key = PBKDF2(password, salt, iterations=100000, keyLength=256, hash=SHA-256)</pre>
+    <p>Local key derivation keeps server authority from becoming key authority.</p>
+
+    <h3>Hashes and HMAC</h3>
+    <pre>hash = SHA-256(data)
+hash = SHA-512(data)
+mac  = HMAC-SHA-256(key, message)</pre>
+    <p>These primitives provide integrity, identity binding, and tamper detection throughout the wire mesh.</p>
+
+    <h2>III. Fila Encryptum</h2>
+    <p>ModelWire is the encrypted intelligence channel between engine instances. Each wire is independently authenticated, encrypted, and isolated.</p>
+    <pre>wireToken = SHA-256(wireId + ':' + engineId + ':' + timestamp)</pre>
+    <pre>Engine A ──── Wire(A↔B) ──── Engine B
+    │                            │
+Wire(A↔C)                   Wire(B↔D)
+    │                            │
+Engine C ──── Wire(C↔D) ──── Engine D</pre>
+
+    <h2>IV. Securitas Operarii</h2>
+    <p>No cryptographic operation should execute on the main UI thread when an isolated worker context is available. Isolation narrows memory exposure, improves operational discipline, and protects interaction continuity.</p>
+    <p>In browser runtimes, <code>crypto.subtle</code> is preferred over handwritten JavaScript cryptography because vetted native primitives are the correct trust substrate.</p>
+
+    <h2>V. Fides Algorithmica</h2>
+    <p>Zero trust means every wire authenticates, every request proves itself, and no decryption occurs by assumption. End-to-end encryption between engines extends the logic of secure messaging into machine intelligence.</p>
+
+    <h2>VI. Telemetria</h2>
+    <table>
+      <thead>
+        <tr><th>Metric</th><th>Nomen Latinum</th><th>Description</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Total Encryptions</td><td>Summa Encryptionum</td><td>Cumulative authenticated encryptions</td></tr>
+        <tr><td>Total Decryptions</td><td>Summa Decryptionum</td><td>Cumulative decryptions</td></tr>
+        <tr><td>Total Hashes</td><td>Summa Hashium</td><td>SHA-256 / SHA-512 operations</td></tr>
+        <tr><td>Total Tokens</td><td>Summa Tokenorum</td><td>Secure random tokens generated</td></tr>
+        <tr><td>Total Key Derivations</td><td>Summa Derivationum</td><td>PBKDF2 derivations completed</td></tr>
+        <tr><td>Total Errors</td><td>Summa Errorum</td><td>Failed cryptographic operations</td></tr>
+        <tr><td>Average Latency</td><td>Latentia Media</td><td>Average processing time per operation</td></tr>
+      </tbody>
+    </table>
+
+    <h2>VII. Conclusio</h2>
+    <p>Trust is not delegated to infrastructure first. It is derived from mathematics first. AES-256-GCM, PBKDF2, SHA, HMAC, isolated workers, and encrypted wires together form a viable sovereign cryptographic substrate for autonomous intelligence systems.</p>
+
+    <div class="quote">
+      “Claves in navigatore manent. Secretum in algorithmis vivit. Nemo alius videt. Nemo alius potest.”<br />
+      Keys remain in the browser. The secret lives in algorithms. No one else sees. No one else can.
+    </div>
+
+    <div class="footer">
+      Public record mirror for <code>papers/XXXV-CRYPTOGRAPHIA-AUTONOMA.md</code>.<br />
+      Repository: <a href="../">Enterprise OS Intelligence</a>
+    </div>
+  </main>
+</body>
+</html>

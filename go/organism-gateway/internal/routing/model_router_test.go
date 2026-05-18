@@ -70,3 +70,15 @@ func Test40ModelsSeed(t *testing.T) {
 		t.Fatalf("expected 40 models, got %d", r.ModelCount())
 	}
 }
+
+func TestProtocolMetrics_AppearInMetrics(t *testing.T) {
+	r := routing.NewModelRouter()
+	r.UpdateProtocolMetrics(0.91, 5.5)
+	m := r.Metrics()
+	if m["protocol_clean_score"] != 0.91 {
+		t.Fatalf("expected protocol_clean_score=0.91, got %v", m["protocol_clean_score"])
+	}
+	if m["protocol_phi_accumulated"] != 5.5 {
+		t.Fatalf("expected protocol_phi_accumulated=5.5, got %v", m["protocol_phi_accumulated"])
+	}
+}
