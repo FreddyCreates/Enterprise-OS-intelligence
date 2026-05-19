@@ -1,0 +1,47 @@
+name               = "gate-node"
+main               = "worker.js"
+compatibility_date = "2024-09-02"
+
+[vars]
+DESIGNATION    = "RSHIP-MEM-GN-001"
+WORKER_NAME    = "GATE_NODE"
+WORKER_LATIN   = "ianua"
+WORKER_MEANING = "Gate — Outer Membrane Router"
+VERSION        = "5.0.0"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# GATE-NODE — Outer Membrane (Thin Router + Guardian)
+# Cost-optimized routing layer that protects Cache-Organisms
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# ── KV Namespace — Route cache and session state ────────────────────────────────
+[[kv_namespaces]]
+binding = "ROUTE_CACHE"
+id = "gate-route-cache"
+preview_id = "gate-route-cache-preview"
+
+[[kv_namespaces]]
+binding = "SESSION_STATE"
+id = "gate-session-state"
+preview_id = "gate-session-state-preview"
+
+# ── D1 Database — Request patterns and threat intelligence ─────────────────────
+[[d1_databases]]
+binding = "PATTERN_DB"
+database_name = "medinatech-patterns"
+database_id = "medinatech-patterns-db"
+
+# ── Queue — Route to Cache-Organisms ───────────────────────────────────────────
+[[queues.producers]]
+binding = "ORGANISM_QUEUE"
+queue = "cache-organism-requests"
+
+# ── Service Bindings — Connect to Cache-Organisms ──────────────────────────────
+[[services]]
+binding = "CACHE_ORGANISM"
+service = "cache-organism"
+
+# ── Analytics Engine — Track membrane health ───────────────────────────────────
+[[analytics_engine_datasets]]
+binding = "GATE_ANALYTICS"
+dataset = "gate_node_events"

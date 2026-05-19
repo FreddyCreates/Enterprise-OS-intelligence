@@ -1,0 +1,71 @@
+name               = "cache-organism"
+main               = "worker.js"
+compatibility_date = "2024-09-02"
+
+[vars]
+DESIGNATION    = "RSHIP-MEM-CO-001"
+WORKER_NAME    = "CACHE_ORGANISM"
+WORKER_LATIN   = "organismus"
+WORKER_MEANING = "Organism — Inner AI Intelligence"
+VERSION        = "5.0.0"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# CACHE-ORGANISM — Inner Intelligence Layer
+# Semi-autonomous AI cache agents that learn and adapt
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# ── Workers AI — The cognition engine ──────────────────────────────────────────
+[ai]
+binding = "AI"
+
+# ── KV Namespaces — Distributed memory (organism's permanence) ─────────────────
+[[kv_namespaces]]
+binding = "LEARNED_PATTERNS"
+id = "organism-learned-patterns"
+preview_id = "organism-learned-patterns-preview"
+
+[[kv_namespaces]]
+binding = "SEMANTIC_CACHE"
+id = "organism-semantic-cache"
+preview_id = "organism-semantic-cache-preview"
+
+[[kv_namespaces]]
+binding = "RESPONSE_MEMORY"
+id = "organism-response-memory"
+preview_id = "organism-response-memory-preview"
+
+# ── D1 Database — Knowledge persistence ────────────────────────────────────────
+[[d1_databases]]
+binding = "ORGANISM_DB"
+database_name = "medinatech-organisms"
+database_id = "medinatech-organisms-db"
+
+[[d1_databases]]
+binding = "KNOWLEDGE_DB"
+database_name = "medinatech-knowledge"
+database_id = "medinatech-knowledge-db"
+
+# ── Queue — Learning feedback loop ─────────────────────────────────────────────
+[[queues.producers]]
+binding = "LEARNING_QUEUE"
+queue = "organism-learning"
+
+[[queues.consumers]]
+queue = "cache-organism-requests"
+max_batch_size = 10
+max_batch_timeout = 30
+
+# ── R2 Bucket — Long-term memory storage ───────────────────────────────────────
+[[r2_buckets]]
+binding = "MEMORY_ARCHIVE"
+bucket_name = "organism-memory"
+
+# ── Vectorize — Semantic understanding ─────────────────────────────────────────
+[[vectorize]]
+binding = "SEMANTIC_VECTORS"
+index_name = "organism-semantics"
+
+# ── Analytics Engine — Track organism health and learning ──────────────────────
+[[analytics_engine_datasets]]
+binding = "ORGANISM_ANALYTICS"
+dataset = "cache_organism_events"

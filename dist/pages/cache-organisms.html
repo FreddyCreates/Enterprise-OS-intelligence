@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cache-Organisms — RSHIP Intelligent Cache AI</title>
+<meta name="description" content="Semi-autonomous AI cache agents. Move cognition into the cache layer. Distributed memory, learned patterns, local agents at the edge.">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#02050f;
+  --fg:#c8d8f8;
+  --dim:#445566;
+  --card:#060d1a;
+  --border:#0d2030;
+  --accent-outer:#00ff88;
+  --accent-inner:#ff6b35;
+  --glow-outer:#00ff8833;
+  --glow-inner:#ff6b3533;
+}
+body{background:var(--bg);color:var(--fg);font-family:'Courier New',monospace;min-height:100vh;overflow-x:hidden}
+
+/* Navigation */
+nav{display:flex;align-items:center;justify-content:space-between;padding:18px 48px;border-bottom:1px solid var(--border);backdrop-filter:blur(10px);position:sticky;top:0;z-index:100;background:rgba(2,5,15,.85)}
+.nav-logo{font-size:1.1rem;font-weight:bold;letter-spacing:.15em;background:linear-gradient(135deg,var(--accent-outer),var(--accent-inner));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.nav-links{display:flex;gap:28px;font-size:.8rem}
+.nav-links a{color:var(--dim);transition:color .2s;text-decoration:none}
+.nav-links a:hover{color:var(--accent-outer)}
+
+/* Hero */
+.hero{text-align:center;padding:80px 48px 60px}
+.hero-title{font-size:3.5rem;letter-spacing:.3em;margin-bottom:16px;background:linear-gradient(135deg,var(--accent-outer),var(--accent-inner));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hero-subtitle{color:var(--dim);font-size:1.1rem;max-width:700px;margin:0 auto 32px;line-height:1.6}
+.hero-latin{color:var(--accent-inner);font-style:italic;font-size:.9rem;margin-bottom:48px}
+
+/* Architecture Visualization */
+.architecture{max-width:1000px;margin:0 auto 80px;padding:0 48px}
+.arch-container{position:relative;display:flex;flex-direction:column;gap:24px}
+
+.layer{border-radius:16px;padding:32px;position:relative;overflow:hidden}
+.layer::before{content:'';position:absolute;inset:0;border-radius:16px;padding:2px;background:linear-gradient(135deg,var(--accent-outer),var(--accent-inner));-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude}
+
+.outer-membrane{background:linear-gradient(180deg,rgba(0,255,136,.05),transparent)}
+.inner-intelligence{background:linear-gradient(180deg,rgba(255,107,53,.05),transparent)}
+
+.layer-header{display:flex;align-items:center;gap:16px;margin-bottom:16px}
+.layer-icon{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.5rem}
+.outer-membrane .layer-icon{background:var(--accent-outer);color:#000}
+.inner-intelligence .layer-icon{background:var(--accent-inner);color:#000}
+
+.layer-title{font-size:1.3rem;letter-spacing:.1em}
+.outer-membrane .layer-title{color:var(--accent-outer)}
+.inner-intelligence .layer-title{color:var(--accent-inner)}
+
+.layer-desc{color:var(--dim);font-size:.85rem;line-height:1.8;margin-bottom:24px}
+
+.layer-features{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+.feature{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:6px;padding:12px;font-size:.75rem}
+.feature-name{color:var(--fg);margin-bottom:4px}
+.feature-desc{color:var(--dim)}
+
+.flow-arrow{text-align:center;font-size:2rem;color:var(--accent-outer);animation:flow 2s ease-in-out infinite}
+@keyframes flow{0%,100%{transform:translateY(0);opacity:1}50%{transform:translateY(10px);opacity:.5}}
+
+/* Stats */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:24px;max-width:1000px;margin:0 auto 80px;padding:0 48px}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;text-align:center}
+.stat-value{font-size:2.5rem;margin-bottom:8px}
+.stat-value.outer{color:var(--accent-outer)}
+.stat-value.inner{color:var(--accent-inner)}
+.stat-label{color:var(--dim);font-size:.75rem;text-transform:uppercase;letter-spacing:.1em}
+
+/* Benefits */
+.benefits{max-width:1000px;margin:0 auto 80px;padding:0 48px}
+.benefits-title{text-align:center;font-size:1.5rem;color:var(--fg);margin-bottom:48px;letter-spacing:.15em}
+.benefits-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px}
+.benefit{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px}
+.benefit-icon{font-size:2rem;margin-bottom:16px}
+.benefit-title{color:var(--accent-outer);font-size:1rem;margin-bottom:8px}
+.benefit-desc{color:var(--dim);font-size:.8rem;line-height:1.6}
+
+/* CTA */
+.cta{text-align:center;padding:80px 48px;background:linear-gradient(180deg,transparent,rgba(0,255,136,.02))}
+.cta-title{font-size:1.8rem;margin-bottom:16px;color:var(--fg)}
+.cta-desc{color:var(--dim);max-width:600px;margin:0 auto 32px;line-height:1.6}
+.cta-buttons{display:flex;gap:16px;justify-content:center;flex-wrap:wrap}
+.cta-btn{padding:14px 32px;border-radius:6px;text-decoration:none;font-size:.85rem;font-weight:bold;letter-spacing:.1em;transition:all .2s}
+.cta-btn.primary{background:var(--accent-outer);color:#000}
+.cta-btn.primary:hover{box-shadow:0 0 30px var(--glow-outer)}
+.cta-btn.secondary{border:1px solid var(--accent-inner);color:var(--accent-inner)}
+.cta-btn.secondary:hover{background:var(--accent-inner);color:#000}
+
+/* Footer */
+footer{text-align:center;padding:48px;color:var(--dim);font-size:.75rem;border-top:1px solid var(--border)}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">RSHIP</div>
+  <div class="nav-links">
+    <a href="/">Home</a>
+    <a href="/pages/nova.html">NOVA</a>
+    <a href="/pages/cache-organisms.html">Cache-Organisms</a>
+    <a href="/pages/api.html">API</a>
+  </div>
+</nav>
+
+<section class="hero">
+  <h1 class="hero-title">CACHE-ORGANISMS</h1>
+  <p class="hero-subtitle">
+    Move cognition into the cache layer. Use Workers as thin routers + guardians.
+    Let the organism's "permanence" live in distributed memory, learned patterns,
+    and local agents at the edge.
+  </p>
+  <p class="hero-latin">organismus — living system · ianua — gate</p>
+</section>
+
+<section class="architecture">
+  <div class="arch-container">
+    <div class="layer outer-membrane">
+      <div class="layer-header">
+        <div class="layer-icon">◎</div>
+        <h2 class="layer-title">GATE-NODE · Outer Membrane</h2>
+      </div>
+      <p class="layer-desc">
+        Fast, cheap routing layer that protects the inner intelligence. No AI compute here — 
+        just pattern matching from KV, threat filtering, and request classification.
+        Every request passes through; this is the guardian.
+      </p>
+      <div class="layer-features">
+        <div class="feature">
+          <div class="feature-name">Pattern Matching</div>
+          <div class="feature-desc">Fast KV-based routing</div>
+        </div>
+        <div class="feature">
+          <div class="feature-name">Threat Filtering</div>
+          <div class="feature-desc">Block malicious requests</div>
+        </div>
+        <div class="feature">
+          <div class="feature-name">Classification</div>
+          <div class="feature-desc">Route to right organism</div>
+        </div>
+        <div class="feature">
+          <div class="feature-name">Session State</div>
+          <div class="feature-desc">Track visitor patterns</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flow-arrow">↓</div>
+
+    <div class="layer inner-intelligence">
+      <div class="layer-header">
+        <div class="layer-icon">🧠</div>
+        <h2 class="layer-title">CACHE-ORGANISM · Inner Intelligence</h2>
+      </div>
+      <p class="layer-desc">
+        Semi-autonomous AI cache agents that learn and adapt. This is where cognition happens.
+        AI-powered semantic understanding, response generation, pattern learning, and distributed memory.
+        The organism's permanence lives here.
+      </p>
+      <div class="layer-features">
+        <div class="feature">
+          <div class="feature-name">Semantic Understanding</div>
+          <div class="feature-desc">AI understands intent</div>
+        </div>
+        <div class="feature">
+          <div class="feature-name">Response Generation</div>
+          <div class="feature-desc">AI-crafted responses</div>
+        </div>
+        <div class="feature">
+          <div class="feature-name">Pattern Learning</div>
+          <div class="feature-desc">Adapts from feedback</div>
+        </div>
+        <div class="feature">
+          <div class="feature-name">Distributed Memory</div>
+          <div class="feature-desc">KV + Vectorize + R2</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="stats">
+  <div class="stat">
+    <div class="stat-value outer">1.618</div>
+    <div class="stat-label">Golden Ratio (φ)</div>
+  </div>
+  <div class="stat">
+    <div class="stat-value inner">0ms</div>
+    <div class="stat-label">Gate-Node AI Compute</div>
+  </div>
+  <div class="stat">
+    <div class="stat-value outer">70%</div>
+    <div class="stat-label">Confidence Threshold</div>
+  </div>
+  <div class="stat">
+    <div class="stat-value inner">61.8%</div>
+    <div class="stat-label">Adaptation Rate (φ⁻¹)</div>
+  </div>
+</section>
+
+<section class="benefits">
+  <h2 class="benefits-title">WHY INTELLIGENT CACHES?</h2>
+  <div class="benefits-grid">
+    <div class="benefit">
+      <div class="benefit-icon">💸</div>
+      <h3 class="benefit-title">Cost Optimization</h3>
+      <p class="benefit-desc">
+        Gate-Node handles cheap routing decisions without AI compute.
+        AI is only invoked when necessary in the Cache-Organism layer.
+      </p>
+    </div>
+    <div class="benefit">
+      <div class="benefit-icon">🧠</div>
+      <h3 class="benefit-title">Semantic Caching</h3>
+      <p class="benefit-desc">
+        Cache by meaning, not just URL. Semantically similar requests
+        can share cached responses, improving hit rates dramatically.
+      </p>
+    </div>
+    <div class="benefit">
+      <div class="benefit-icon">📈</div>
+      <h3 class="benefit-title">Continuous Learning</h3>
+      <p class="benefit-desc">
+        The organism learns from every request. Patterns emerge.
+        Responses improve. The cache becomes smarter over time.
+      </p>
+    </div>
+    <div class="benefit">
+      <div class="benefit-icon">🌍</div>
+      <h3 class="benefit-title">Edge Intelligence</h3>
+      <p class="benefit-desc">
+        Local agents at every edge location. Distributed memory across
+        the global network. True edge AI, not just edge caching.
+      </p>
+    </div>
+    <div class="benefit">
+      <div class="benefit-icon">🛡️</div>
+      <h3 class="benefit-title">Threat Protection</h3>
+      <p class="benefit-desc">
+        The outer membrane filters threats before they reach the intelligence.
+        Pattern-based blocking at the edge, before any compute is spent.
+      </p>
+    </div>
+    <div class="benefit">
+      <div class="benefit-icon">⚡</div>
+      <h3 class="benefit-title">Adaptive TTL</h3>
+      <p class="benefit-desc">
+        Cache duration based on content volatility and access patterns.
+        The organism decides how long to remember each response.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section class="cta">
+  <h2 class="cta-title">Deploy the Intelligent Cache Membrane</h2>
+  <p class="cta-desc">
+    Two layers. One purpose. Move your cognition into the cache layer
+    and let the organism handle the rest.
+  </p>
+  <div class="cta-buttons">
+    <a href="https://gate-node.rship.workers.dev" class="cta-btn primary">Gate-Node Dashboard</a>
+    <a href="https://cache-organism.rship.workers.dev" class="cta-btn secondary">Cache-Organism Portal</a>
+  </div>
+</section>
+
+<footer>
+  <p>RSHIP-MEM-GN-001 · RSHIP-MEM-CO-001 · v5.0.0</p>
+  <p style="margin-top:8px">© 2026 Alfredo Medina Hernandez · RSHIP AGI Systems · All Rights Reserved</p>
+</footer>
+
+</body>
+</html>
