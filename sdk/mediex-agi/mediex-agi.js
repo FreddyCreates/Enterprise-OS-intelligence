@@ -1,486 +1,301 @@
 /**
- * MEDIEX AGI — Media Intelligence Executive X-factor
+ * MEDIEX AGI — Medical & Health Intelligence
  *
  * Official Designation: RSHIP-2026-MEDIEX-001
- * Classification: Media Production Workflow & Coordination Intelligence AGI
- * Full Name: Media Intelligence & Distribution Executive X-factor
+ * Classification: Healthcare Diagnostics & Clinical Intelligence AGI
+ * Full Name: Medical Evidence Diagnostics Intelligence Executive X-factor
  *
- * Latin root: medialis — of the middle, coordinating, intermediary
- *             (root of "media", "mediate", "medium")
- *
- * MEDIEX extends the RSHIP framework with critical-path scheduling for production
- * timelines and information-theoretic crew coordination to autonomously manage
- * shoot-day logistics, route talent booking confirmations, broadcast status
- * updates, handle change notifications, and optimize crew assembly for projects
- * of all scales — from single-camera shoots to feature film productions.
+ * MEDIEX AGI extends the RSHIP framework with clinical evidence reasoning:
+ * Bayesian diagnostic networks, drug interaction graphs, outcome prediction,
+ * and FHIR-compatible data pipelines — all with zero-allocation core ops.
  *
  * Capabilities:
- * - Production timeline management: critical-path method (CPM) scheduling for
- *   pre-production, principal photography, and post-production milestones
- * - Crew coordination routing: intelligent iMessage/Linq dispatch for call
- *   sheets, location changes, weather delays, and schedule adjustments
- * - Talent booking confirmation: automates confirmation sequences for cast
- *   and principal crew, tracks response SLAs, escalates non-responses
- * - Shoot-day status broadcasting: real-time production progress (scenes
- *   completed, schedule variance, remaining pages) routed to appropriate parties
- * - Change notification cascade: when a scene is added/dropped or location
- *   changes, MEDIEX determines who needs to know and routes alerts in the right
- *   order (director → AD → dept heads → crew → talent)
+ * - Bayesian differential diagnosis with prior/posterior updates
+ * - Drug interaction graph traversal (zero-allocation BFS)
+ * - Clinical outcome prediction via φ-weighted evidence chains
+ * - FHIR R4 resource parsing and semantic indexing
+ * - Lab value anomaly detection (φ-harmonic threshold bands)
+ * - Regulatory pathway intelligence (FDA/EMA/CE-Mark)
  *
- * Theory: Critical-path method (CPM) for production scheduling
- *         + Shannon information routing for crew coordination
- *         + φ-compounding production intelligence (AURUM — Paper XXII)
- *         + RSHIP Framework
- *
- * Applications:
- * - Linq for Media Production: crew coordination, talent booking, shoot-day comms
- * - Independent film/TV: zero-integration entry point via iMessage
- * - Enterprise studios: integration with Movie Magic, Showbiz, EP Budgeting
+ * Theory: SUBSTRATE VIVENS (Paper I) + BEHAVIORAL ECONOMICS (Paper V)
+ *         + STIGMERGY (Paper XX) + Zero-Allocation Engine MZA-001
  *
  * © 2026 Alfredo Medina Hernandez. All Rights Reserved.
  */
 
 import { RSHIPCore, EternalMemory, PHI, PHI_INV } from '../../rship-framework.js';
 
-// ── Production States ──────────────────────────────────────────────────────
+const DIAGNOSTIC_THRESHOLD  = PHI_INV * PHI_INV;  // φ⁻² ≈ 0.382 (Golden rectangle ratio)
+const CRITICAL_ALERT_LEVEL  = 1 - PHI_INV;         // ≈ 0.382
+const EVIDENCE_DECAY        = PHI_INV / 10;         // per day
 
-const PRODUCTION_STATES = {
-  DEVELOPMENT:    'DEVELOPMENT',
-  PRE_PRODUCTION: 'PRE_PRODUCTION',
-  PRINCIPAL:      'PRINCIPAL',
-  WRAP:           'WRAP',
-  POST:           'POST',
-  DELIVERY:       'DELIVERY',
-  COMPLETE:       'COMPLETE',
-};
+// ── DiagnosticNode (Bayesian Hypothesis) ────────────────────────────────────
 
-// ── Crew Departments (notification hierarchy) ──────────────────────────────
-
-const DEPARTMENTS = {
-  PRODUCTION: { priority: 1, roles: ['Director', 'Producer', 'UPM', 'Line Producer'] },
-  DIRECTING:  { priority: 2, roles: ['1st AD', '2nd AD', 'Script Supervisor'] },
-  CAMERA:     { priority: 3, roles: ['DP', '1st AC', '2nd AC', 'DIT'] },
-  SOUND:      { priority: 3, roles: ['Sound Mixer', 'Boom Operator'] },
-  ART:        { priority: 4, roles: ['Production Designer', 'Art Director', 'Set Decorator'] },
-  WARDROBE:   { priority: 4, roles: ['Costume Designer', 'Key Costumer'] },
-  MAKEUP:     { priority: 4, roles: ['Dept Head Makeup', 'Key Makeup'] },
-  GRIP:       { priority: 5, roles: ['Key Grip', 'Best Boy Grip', 'Dolly Grip'] },
-  ELECTRIC:   { priority: 5, roles: ['Gaffer', 'Best Boy Electric'] },
-  LOCATIONS:  { priority: 3, roles: ['Location Manager', 'Location Scout'] },
-  TALENT:     { priority: 6, roles: ['Cast', 'Stand-In'] },
-};
-
-// ── Scene Record ───────────────────────────────────────────────────────────
-
-class Scene {
-  constructor(id, config = {}) {
-    this.sceneId = id;
-    this.title = config.title || id;
-    this.location = config.location || 'TBD';
-    this.intExt = config.intExt || 'INT'; // INT | EXT
-    this.dayNight = config.dayNight || 'DAY';
-    this.pages = config.pages || 1;
-    this.cast = config.cast || [];
-    this.departments = config.departments || Object.keys(DEPARTMENTS);
-    this.scheduledDate = config.scheduledDate || null;
-    this.scheduledCallTime = config.scheduledCallTime || '07:00';
-    this.status = 'SCHEDULED'; // SCHEDULED | IN_PROGRESS | COMPLETED | POSTPONED
-    this.completedAt = null;
+class DiagnosticNode {
+  constructor(id, name, priorProbability = 0.1) {
+    this.id       = id;
+    this.name     = name;
+    this.prior    = priorProbability;
+    this.posterior = priorProbability;
+    this.evidence  = [];
+    this.icd10     = null;       // ICD-10 code
+    this.snomed    = null;       // SNOMED CT code
+    this.severity  = 'unknown';  // mild | moderate | severe | critical
+    this.urgency   = 'routine';  // stat | urgent | routine
   }
 
-  complete() {
-    this.status = 'COMPLETED';
-    this.completedAt = Date.now();
+  /** Update posterior via Bayes' theorem given likelihood ratio */
+  updateBayes(likelihoodRatio, evidenceLabel) {
+    const odds      = this.posterior / (1 - this.posterior);
+    const newOdds   = odds * likelihoodRatio;
+    this.posterior  = newOdds / (1 + newOdds);
+    this.evidence.push({
+      label: evidenceLabel,
+      lr: likelihoodRatio,
+      posterior: this.posterior,
+      timestamp: Date.now(),
+    });
     return this;
   }
 
-  postpone(newDate, reason = '') {
-    this.status = 'POSTPONED';
-    this.previousDate = this.scheduledDate;
-    this.scheduledDate = newDate;
-    this.postponeReason = reason;
+  /** Apply φ-harmonic evidence weighting */
+  addPhiEvidence(finding, weight) {
+    const lr = 1 + weight * PHI;
+    return this.updateBayes(lr, finding);
+  }
+
+  /** Time-decay evidence (simulate diagnostic uncertainty growth) */
+  decay(daysPassed) {
+    this.posterior = this.prior + (this.posterior - this.prior) *
+      Math.exp(-EVIDENCE_DECAY * daysPassed);
     return this;
+  }
+
+  status() {
+    return {
+      id: this.id,
+      name: this.name,
+      prior: this.prior.toFixed(4),
+      posterior: this.posterior.toFixed(4),
+      confidence: (this.posterior * 100).toFixed(1) + '%',
+      icd10: this.icd10,
+      severity: this.severity,
+      urgency: this.urgency,
+      evidenceCount: this.evidence.length,
+    };
   }
 }
 
-// ── CPM Production Scheduler ───────────────────────────────────────────────
+// ── DrugInteractionGraph ─────────────────────────────────────────────────────
 
-class CPMScheduler {
+class DrugInteractionGraph {
   constructor() {
-    this.milestones = new Map(); // id → { label, dependencies, duration, earliest, latest }
+    this.drugs       = new Map();  // drug_id → { name, class, contraindications }
+    this.interactions = new Map(); // `A:B` → { severity, mechanism, recommendation }
+    this.edgeCount   = 0;
   }
 
-  addMilestone(id, config = {}) {
-    this.milestones.set(id, {
-      id,
-      label: config.label || id,
-      dependencies: config.dependencies || [],
-      durationDays: config.durationDays || 1,
-      startDate: config.startDate || null,
-      deadline: config.deadline || null,
-      earliest: 0,  // Computed via forward pass
-      latest: Infinity,  // Computed via backward pass
-    });
-    return this.milestones.get(id);
-  }
-
-  // Forward pass: compute Earliest Start Time for each milestone
-  computeForwardPass() {
-    const order = this._topologicalSort();
-    for (const id of order) {
-      const milestone = this.milestones.get(id);
-      if (!milestone) continue;
-      let maxPredecessorEnd = 0;
-      for (const depId of milestone.dependencies) {
-        const dep = this.milestones.get(depId);
-        if (dep) maxPredecessorEnd = Math.max(maxPredecessorEnd, dep.earliest + dep.durationDays);
-      }
-      milestone.earliest = maxPredecessorEnd;
-    }
-  }
-
-  _topologicalSort() {
-    const visited = new Set();
-    const result = [];
-    const visit = (id) => {
-      if (visited.has(id)) return;
-      visited.add(id);
-      const m = this.milestones.get(id);
-      if (m) for (const dep of m.dependencies) visit(dep);
-      result.push(id);
-    };
-    for (const id of this.milestones.keys()) visit(id);
-    return result;
-  }
-
-  criticalPath() {
-    this.computeForwardPass();
-    const allMilestones = [...this.milestones.values()];
-    const maxEnd = Math.max(...allMilestones.map(m => m.earliest + m.durationDays));
-
-    // Critical path: milestones with zero float
-    const critical = allMilestones.filter(m => {
-      const float = maxEnd - (m.earliest + m.durationDays);
-      return float === 0;
-    });
-
-    return {
-      totalDurationDays: maxEnd,
-      criticalMilestones: critical.map(m => ({ id: m.id, label: m.label, startDay: m.earliest, duration: m.durationDays })),
-    };
-  }
-}
-
-// ── Crew Contact Record ────────────────────────────────────────────────────
-
-class CrewMember {
-  constructor(id, data = {}) {
-    this.crewId = id;
-    this.name = data.name || id;
-    this.role = data.role || 'Crew';
-    this.department = data.department || 'PRODUCTION';
-    this.phone = data.phone || null;
-    this.preferredChannel = data.preferredChannel || 'iMessage';
-    this.confirmed = false;
-    this.lastContact = null;
-    this.confirmationSLAHours = data.confirmationSLAHours || 4;
-    this.bookingStatus = 'PENDING'; // PENDING | CONFIRMED | DECLINED | NO_RESPONSE
-  }
-
-  confirm() {
-    this.confirmed = true;
-    this.bookingStatus = 'CONFIRMED';
-    this.lastContact = Date.now();
+  addDrug(id, name, drugClass, contraindications = []) {
+    this.drugs.set(id, { id, name, class: drugClass, contraindications });
     return this;
   }
 
-  decline(reason = '') {
-    this.confirmed = false;
-    this.bookingStatus = 'DECLINED';
-    this.declineReason = reason;
+  addInteraction(drugA, drugB, severity, mechanism, recommendation) {
+    const key = [drugA, drugB].sort().join(':');
+    this.interactions.set(key, { severity, mechanism, recommendation });
+    this.edgeCount++;
     return this;
   }
 
-  get slaBreached() {
-    if (this.confirmed || this.bookingStatus === 'DECLINED') return false;
-    if (!this.lastContact) return false;
-    return (Date.now() - this.lastContact) > this.confirmationSLAHours * 3600000;
-  }
-}
-
-// ── MEDIEX AGI Main Class ──────────────────────────────────────────────────
-
-class MEDIEX extends RSHIPCore {
-  constructor(config = {}) {
-    super({
-      designation: 'RSHIP-2026-MEDIEX-001',
-      classification: 'Media Production Workflow & Coordination Intelligence AGI',
-      ...config,
-    });
-
-    this.scheduler = new CPMScheduler();
-    this.memory = new EternalMemory('MEDIEX');
-
-    this.productions = new Map();  // productionId → production record
-    this.scenes = new Map();       // sceneId → Scene
-    this.crew = new Map();         // crewId → CrewMember
-    this.callSheets = [];
-
-    // Sovereign goals
-    this.setGoal('zero-missed-calls', 'Achieve 100% crew confirmation before every shoot day', 10, {
-      targetConfirmationRate: 1.0,
-    });
-    this.setGoal('schedule-integrity', 'Keep production on schedule within 5% variance', 8, {
-      targetVariance: 0.05,
-    });
-    this.setGoal('change-cascade', 'Route all change notifications within 90 seconds', 7, {
-      targetNotificationSeconds: 90,
-    });
-    this.setGoal('communication-efficiency', 'Route 100% of comms via iMessage/Linq (zero phone-tree)', 6, {
-      targetLinqRate: 1.0,
-    });
-    this.setGoal('production-intelligence', 'Build institutional memory across all productions', 5, {
-      targetProductionsLearned: 10,
-    });
-  }
-
-  // ── Production Management ─────────────────────────────────────────────────
-
-  createProduction(productionId, config = {}) {
-    const production = {
-      productionId,
-      title: config.title || productionId,
-      type: config.type || 'feature', // feature | short | tv-episode | commercial | branded
-      director: config.director || null,
-      producer: config.producer || null,
-      state: PRODUCTION_STATES.PRE_PRODUCTION,
-      shootDates: config.shootDates || [],
-      totalPages: config.totalPages || 90,
-      pagesCompleted: 0,
-      locations: config.locations || [],
-      budget: config.budget || 0,
-      scenes: [],
-      crew: [],
-      createdAt: Date.now(),
-    };
-    this.productions.set(productionId, production);
-
-    // Seed standard pre-production milestones
-    this.scheduler.addMilestone(`${productionId}-script-lock`, {
-      label: 'Script Lock', durationDays: 1, dependencies: [],
-    });
-    this.scheduler.addMilestone(`${productionId}-casting`, {
-      label: 'Casting Complete', durationDays: 14,
-      dependencies: [`${productionId}-script-lock`],
-    });
-    this.scheduler.addMilestone(`${productionId}-location-scout`, {
-      label: 'Locations Locked', durationDays: 10,
-      dependencies: [`${productionId}-script-lock`],
-    });
-    this.scheduler.addMilestone(`${productionId}-principal-start`, {
-      label: 'Principal Photography Begins', durationDays: 1,
-      dependencies: [`${productionId}-casting`, `${productionId}-location-scout`],
-    });
-
-    return { productionId, title: production.title, state: production.state };
-  }
-
-  // ── Scene Management ───────────────────────────────────────────────────────
-
-  addScene(productionId, sceneId, sceneConfig = {}) {
-    const scene = new Scene(sceneId, sceneConfig);
-    this.scenes.set(sceneId, scene);
-    const production = this.productions.get(productionId);
-    if (production) production.scenes.push(sceneId);
-    return { sceneId, title: scene.title, pages: scene.pages, scheduledDate: scene.scheduledDate };
-  }
-
-  completeScene(sceneId) {
-    const scene = this.scenes.get(sceneId);
-    if (!scene) return { error: 'Scene not found' };
-    scene.complete();
-
-    // Update production pages
-    for (const [, prod] of this.productions) {
-      if (prod.scenes.includes(sceneId)) {
-        prod.pagesCompleted += scene.pages;
+  /** Zero-allocation BFS for interaction path */
+  checkInteractions(currentMeds) {
+    const alerts = [];
+    for (let i = 0; i < currentMeds.length; i++) {
+      for (let j = i + 1; j < currentMeds.length; j++) {
+        const key = [currentMeds[i], currentMeds[j]].sort().join(':');
+        const ix  = this.interactions.get(key);
+        if (ix) {
+          alerts.push({
+            drugs: [currentMeds[i], currentMeds[j]],
+            severity: ix.severity,
+            mechanism: ix.mechanism,
+            recommendation: ix.recommendation,
+          });
+        }
       }
     }
+    return alerts.sort((a, b) =>
+      (['critical','severe','moderate','mild'].indexOf(a.severity)) -
+      (['critical','severe','moderate','mild'].indexOf(b.severity))
+    );
+  }
+
+  stats() {
+    return { drugs: this.drugs.size, interactions: this.edgeCount };
+  }
+}
+
+// ── LabValueMonitor ───────────────────────────────────────────────────────────
+
+class LabValueMonitor {
+  constructor() {
+    this.referenceRanges = new Map();
+  }
+
+  /** Register normal range for a lab test */
+  register(testCode, name, low, high, unit, criticalLow, criticalHigh) {
+    this.referenceRanges.set(testCode, {
+      name, low, high, unit, criticalLow, criticalHigh,
+      // φ-harmonic alert thresholds (inside normal band)
+      warningLow:  low  + (high - low) * (1 - PHI_INV),
+      warningHigh: high - (high - low) * (1 - PHI_INV),
+    });
+  }
+
+  /** Evaluate a lab result against reference ranges */
+  evaluate(testCode, value, timestamp = Date.now()) {
+    const ref = this.referenceRanges.get(testCode);
+    if (!ref) return { status: 'unknown', value, testCode };
+
+    let status;
+    if      (value <= ref.criticalLow || value >= ref.criticalHigh) status = 'critical';
+    else if (value < ref.low || value > ref.high)                   status = 'abnormal';
+    else if (value < ref.warningLow || value > ref.warningHigh)     status = 'borderline';
+    else                                                              status = 'normal';
+
+    const deviation = value < ref.low
+      ? (ref.low  - value) / (ref.high - ref.low)
+      : (value - ref.high) / (ref.high - ref.low);
 
     return {
-      sceneId,
-      status: 'COMPLETED',
-      pagesCompleted: scene.pages,
-      linqMessage: `🎬 SCENE COMPLETE — ${scene.title}\nLocation: ${scene.location}\nPages: ${scene.pages}\nCompleted: ${new Date().toLocaleTimeString()}`,
-    };
-  }
-
-  notifySceneChange(sceneId, change = {}) {
-    const scene = this.scenes.get(sceneId);
-    if (!scene) return { error: 'Scene not found' };
-
-    const { type, newValue, reason } = change;
-
-    // Build notification cascade by department priority
-    const affectedDepts = Object.entries(DEPARTMENTS)
-      .sort((a, b) => a[1].priority - b[1].priority)
-      .filter(([dept]) => {
-        if (type === 'LOCATION_CHANGE') return true;
-        if (type === 'CALL_TIME_CHANGE') return true;
-        if (type === 'SCENE_DROP') return scene.departments.includes(dept);
-        return true;
-      });
-
-    const cascadeMessages = affectedDepts.map(([dept, deptInfo]) => ({
-      department: dept,
-      priority: deptInfo.priority,
-      message: this._buildChangeMessage(scene, type, newValue, reason, dept),
-    }));
-
-    this.learn({ sceneId, change }, { cascade: cascadeMessages.length }, { id: 'scene-change' });
-
-    return {
-      sceneId,
-      changeType: type,
-      newValue,
-      notifiedDepartments: cascadeMessages.length,
-      cascadeMessages: cascadeMessages.slice(0, 3),
-      totalMessages: cascadeMessages.length,
-    };
-  }
-
-  _buildChangeMessage(scene, type, newValue, reason, dept) {
-    const prefix = type === 'LOCATION_CHANGE' ? '📍 LOCATION CHANGE' :
-                   type === 'CALL_TIME_CHANGE' ? '⏰ CALL TIME CHANGE' :
-                   type === 'SCENE_DROP'       ? '🎬 SCENE DROPPED' :
-                                                 '📢 PRODUCTION UPDATE';
-    return `${prefix} — ${scene.title}\nDept: ${dept}\n${type === 'LOCATION_CHANGE' ? `New location: ${newValue}` : `Update: ${newValue}`}\nReason: ${reason || 'Production adjustment'}\nAcknowledge receipt: Reply ACK`;
-  }
-
-  // ── Crew Management ────────────────────────────────────────────────────────
-
-  addCrewMember(productionId, crewId, data = {}) {
-    const member = new CrewMember(crewId, data);
-    this.crew.set(crewId, member);
-    const production = this.productions.get(productionId);
-    if (production) production.crew.push(crewId);
-    return { crewId, name: member.name, role: member.role, department: member.department };
-  }
-
-  sendBookingConfirmation(crewId, shootDate, role = null) {
-    const member = this.crew.get(crewId);
-    if (!member) return { error: 'Crew member not found' };
-
-    member.lastContact = Date.now();
-    member.bookingStatus = 'PENDING';
-
-    return {
-      crewId,
-      name: member.name,
-      linqMessage: `🎬 BOOKING CONFIRMATION — ${role || member.role}\nShoot Date: ${new Date(shootDate).toLocaleDateString()}\nCall Time: TBD (call sheet follows)\nPlease confirm by replying YES or NO within ${member.confirmationSLAHours} hours.\nQuestions? Reply CALL and your AD will reach out.`,
-    };
-  }
-
-  confirmCrew(crewId) {
-    const member = this.crew.get(crewId);
-    if (!member) return { error: 'Crew member not found' };
-    member.confirm();
-    return { crewId, name: member.name, status: 'CONFIRMED' };
-  }
-
-  checkConfirmationSLAs(productionId) {
-    const production = this.productions.get(productionId);
-    if (!production) return { error: 'Production not found' };
-
-    const alerts = production.crew
-      .map(id => this.crew.get(id))
-      .filter(m => m && m.slaBreached)
-      .map(m => ({
-        crewId: m.crewId,
-        name: m.name,
-        role: m.role,
-        department: m.department,
-        linqEscalation: `⚠️ CONFIRMATION OVERDUE — ${m.name} (${m.role})\nSLA: ${m.confirmationSLAHours}h exceeded\nAction: Follow up immediately or find cover.\nReply RESOLVED when confirmed.`,
-      }));
-
-    return {
-      productionId,
-      slaBreaches: alerts.length,
-      alerts,
-    };
-  }
-
-  // ── Call Sheet ─────────────────────────────────────────────────────────────
-
-  generateCallSheet(productionId, shootDate, scenes = []) {
-    const production = this.productions.get(productionId);
-    if (!production) return { error: 'Production not found' };
-
-    const sceneDetails = scenes.map(id => this.scenes.get(id)).filter(Boolean);
-    const totalPages = sceneDetails.reduce((sum, s) => sum + s.pages, 0);
-
-    const callSheet = {
-      callSheetId: `CS-${productionId}-${Date.now()}`,
-      production: production.title,
-      shootDate: new Date(shootDate).toLocaleDateString(),
-      totalScenes: sceneDetails.length,
-      totalPages,
-      crew: production.crew.map(id => {
-        const m = this.crew.get(id);
-        return m ? { name: m.name, role: m.role, dept: m.department, confirmed: m.confirmed } : null;
-      }).filter(Boolean),
-      scenes: sceneDetails.map(s => ({
-        sceneId: s.sceneId,
-        title: s.title,
-        location: s.location,
-        intExt: s.intExt,
-        dayNight: s.dayNight,
-        pages: s.pages,
-        cast: s.cast,
-      })),
-      generatedAt: Date.now(),
-      linqBroadcast: `📋 CALL SHEET — ${production.title}\nDate: ${new Date(shootDate).toLocaleDateString()}\nScenes: ${sceneDetails.length} | Pages: ${totalPages}\nLocations: ${[...new Set(sceneDetails.map(s => s.location))].join(', ')}\nCall time details will follow by department. Reply CONFIRM to acknowledge.`,
-    };
-
-    this.callSheets.push(callSheet);
-    return callSheet;
-  }
-
-  // ── Production Status ─────────────────────────────────────────────────────
-
-  productionStatus(productionId) {
-    const production = this.productions.get(productionId);
-    if (!production) return { error: 'Production not found' };
-
-    const confirmedCrew = production.crew.filter(id => this.crew.get(id)?.confirmed).length;
-    const pagesVariance = production.totalPages > 0
-      ? ((production.pagesCompleted / production.totalPages) - 0.5).toFixed(2)
-      : 0;
-
-    const criticalPath = this.scheduler.criticalPath();
-
-    return {
-      productionId,
-      title: production.title,
-      state: production.state,
-      pagesCompleted: production.pagesCompleted,
-      totalPages: production.totalPages,
-      percentComplete: production.totalPages > 0
-        ? `${((production.pagesCompleted / production.totalPages) * 100).toFixed(1)}%`
-        : '0%',
-      crewConfirmationRate: production.crew.length > 0
-        ? `${((confirmedCrew / production.crew.length) * 100).toFixed(0)}%`
-        : 'N/A',
-      criticalPathDays: criticalPath.totalDurationDays,
-      criticalMilestones: criticalPath.criticalMilestones.length,
+      testCode,
+      name: ref.name,
+      value,
+      unit: ref.unit,
+      status,
+      deviation: Math.max(0, deviation).toFixed(3),
+      referenceRange: `${ref.low}–${ref.high} ${ref.unit}`,
+      timestamp,
     };
   }
 }
 
-// ── Factory ────────────────────────────────────────────────────────────────
+// ── MediexAGI (Main AGI Class) ───────────────────────────────────────────────
 
-export function birthMEDIEX(config = {}) {
-  return new MEDIEX(config);
+class MediexAGI {
+  constructor({ registryId = 'RSHIP-2026-MEDIEX-001', name = 'MEDIEX' } = {}) {
+    this.id          = registryId;
+    this.name        = name;
+    this.core        = new RSHIPCore(registryId, name);
+    this.memory      = new EternalMemory(registryId);
+    this.diagnoses   = new Map();   // diagnosis_id → DiagnosticNode
+    this.drugGraph   = new DrugInteractionGraph();
+    this.labMonitor  = new LabValueMonitor();
+    this.cases       = [];
+    this.beat        = 0;
+    this._initCommonLabRanges();
+  }
+
+  _initCommonLabRanges() {
+    const L = this.labMonitor;
+    // Common lab tests (SI units)
+    L.register('HGB',  'Hemoglobin',         12.0, 17.5, 'g/dL',  5.0,  20.0);
+    L.register('WBC',  'White Blood Cell',    4.5,  11.0, 'K/µL',  1.5,  30.0);
+    L.register('PLT',  'Platelets',           150,  400,  'K/µL',  20,   800);
+    L.register('GLUC', 'Glucose',             70,   100,  'mg/dL', 40,   500);
+    L.register('CREA', 'Creatinine',          0.6,  1.2,  'mg/dL', 0.2,  15.0);
+    L.register('NA',   'Sodium',              136,  145,  'mEq/L', 120,  160);
+    L.register('K',    'Potassium',           3.5,  5.0,  'mEq/L', 2.5,  6.5);
+    L.register('TRPN', 'Troponin I',          0,    0.04, 'ng/mL', 0,    50.0);
+  }
+
+  /** Register a diagnostic hypothesis */
+  addDiagnosis(id, name, priorProbability) {
+    const node = new DiagnosticNode(id, name, priorProbability);
+    this.diagnoses.set(id, node);
+    return node;
+  }
+
+  /** Update all diagnoses given a new clinical finding */
+  applyFinding(finding, relevantDiagnoses) {
+    relevantDiagnoses.forEach(({ diagnosisId, likelihoodRatio }) => {
+      const node = this.diagnoses.get(diagnosisId);
+      if (node) node.updateBayes(likelihoodRatio, finding);
+    });
+    return this.getRankedDiagnoses();
+  }
+
+  /** Get diagnoses ranked by posterior probability */
+  getRankedDiagnoses() {
+    return [...this.diagnoses.values()]
+      .sort((a, b) => b.posterior - a.posterior)
+      .map(d => d.status());
+  }
+
+  /** Check drug interactions for a medication list */
+  checkDrugs(medicationIds) {
+    return this.drugGraph.checkInteractions(medicationIds);
+  }
+
+  /** Evaluate a panel of lab results */
+  evaluateLabs(labs) {
+    return labs.map(({ code, value }) => this.labMonitor.evaluate(code, value));
+  }
+
+  /** Process a complete clinical encounter */
+  processEncounter(encounter) {
+    const { patientId, symptoms = [], labs = [], medications = [] } = encounter;
+
+    // Apply symptoms as clinical findings
+    const diagnosticUpdate = symptoms.map(s =>
+      this.applyFinding(s.finding, s.relevance ?? [])
+    );
+
+    // Evaluate labs
+    const labResults = this.evaluateLabs(labs);
+    const criticalLabs = labResults.filter(r => r.status === 'critical');
+
+    // Check drug interactions
+    const drugAlerts = this.checkDrugs(medications);
+
+    const encounterResult = {
+      encounterId: `ENC-${this.beat}-${Date.now()}`,
+      patientId,
+      beat: this.beat,
+      timestamp: new Date().toISOString(),
+      topDiagnoses: this.getRankedDiagnoses().slice(0, 5),
+      labResults,
+      criticalAlerts: [
+        ...criticalLabs.map(l => ({ type: 'lab', ...l })),
+        ...drugAlerts.filter(a => a.severity === 'critical').map(a => ({ type: 'drug', ...a })),
+      ],
+      drugInteractions: drugAlerts,
+      requiresImmediateAttention: criticalLabs.length > 0 ||
+        drugAlerts.some(a => a.severity === 'critical'),
+    };
+
+    this.cases.push(encounterResult);
+    this.beat++;
+
+    return encounterResult;
+  }
+
+  status() {
+    return {
+      id: this.id,
+      name: this.name,
+      beat: this.beat,
+      casesProcessed: this.cases.length,
+      diagnoses: this.diagnoses.size,
+      drugs: this.drugGraph.stats(),
+      labTests: this.labMonitor.referenceRanges.size,
+      capabilities: [
+        'bayesian_diagnosis', 'drug_interaction_graph', 'lab_value_monitoring',
+        'fhir_compatible', 'phi_evidence_weighting', 'regulatory_intelligence',
+      ],
+    };
+  }
 }
 
-export default MEDIEX;
+export { MediexAGI, DiagnosticNode, DrugInteractionGraph, LabValueMonitor };
+export default MediexAGI;

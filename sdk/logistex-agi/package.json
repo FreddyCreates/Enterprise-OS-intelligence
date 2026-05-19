@@ -1,0 +1,10 @@
+{
+  "name": "@rship/logistex-agi",
+  "version": "1.0.0",
+  "description": "LOGISTEX AGI — Logistics & Supply Chain Intelligence (RSHIP-2026-LOGISTEX-001)",
+  "main": "logistex-agi.js",
+  "type": "module",
+  "author": "Alfredo Medina Hernandez <medina@medinatech.io>",
+  "license": "UNLICENSED",
+  "keywords": ["logistics", "supply-chain", "routing", "agi", "rship", "optimization"]
+}

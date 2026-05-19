@@ -1,481 +1,485 @@
 /**
- * VISITEX AGI — Visitor Experience & Tourism Executive X-factor
+ * VISITEX AGI — Visitor & Booking Platform Intelligence
  *
  * Official Designation: RSHIP-2026-VISITEX-001
- * Classification: Visitor & Tourist Experience Intelligence AGI
- * Full Name: Visitor Experience & Tourism Executive X-factor
+ * Classification: Visitor Demand & Booking Platform Intelligence AGI
+ * Full Name: Visitor Intelligence & Seamless Integration Travel EXpert
  *
- * Latin root: visito — "to visit, to travel, to go and see"
- *   From Latin visitare: frequentative of visere (to go to see), from videre (to see)
- *   Root family: visit, visitor, visitation, visita (Spanish: visit)
- *   VISITEX brings the intelligence of anticipation — knowing who the visitor is,
- *   where they need to go, what they want to experience, and how to make each
- *   touchpoint feel effortless.
- *
- * DFW serves 73 million passengers per year — but most navigate terminals with no
- * personalized guidance, miss the concessions that match their preferences, face
- * avoidable wayfinding delays, and leave their loyalty value on the table.
- * VISITEX turns every passenger touchpoint into an intelligent interaction.
+ * VISITEX AGI extends the RSHIP framework with multi-channel booking
+ * intelligence — OTA demand modeling, route yield optimization, multi-tenant
+ * API distribution, and tourism demand forecasting for booking platforms,
+ * travel agencies, and destination management organizations.
  *
  * Capabilities:
- * - Dijkstra terminal wayfinding: computes shortest-path navigation through any
- *   of DFW's 5 terminal buildings and Skylink connector, factoring in real-time
- *   checkpoint congestion (from SECUREX), gate changes (from AEROLEX), and
- *   accessibility needs (wheelchair, motorized cart, visual impairment routing)
- * - Collaborative filtering recommendation engine: matches each visitor's profile
- *   (travel class, loyalty tier, dietary preference, dwell time budget, past
- *   purchases) to concession operators scored by PORTEX — surfaces top 3 F&B
- *   and top 2 retail picks personalized to that visitor at their current terminal
- * - Accessibility routing: tracks 240+ active assisted-travel requests per hour
- *   at DFW; routes wheelchair, cart, and visual impairment assist requests to the
- *   nearest available RedCoat using priority-weighted assignment (urgent gate
- *   deadline → preemptive reroute); logs ADA compliance metrics
- * - Visitor satisfaction NPS driver analysis: decomposes NPS surveys into 8
- *   experience drivers (wayfinding, security wait, concession quality, cleanliness,
- *   staff helpfulness, gate info, Wi-Fi, baggage claim speed) using regression
- *   with φ-weighted driver importance; identifies which drivers move the needle most
- * - Loyalty program CLV cohort modeling: segments 2.4M enrolled DFW loyalty members
- *   into cohorts by lifetime visits, spend tier, and connection frequency; models
- *   Customer Lifetime Value using discounted cash flow (Pareto/NBD model); flags
- *   at-risk high-CLV members for proactive recovery offers
+ * - Multi-channel demand model (OTA, direct, corporate, GDS, charter)
+ * - Route yield optimization via Kelly Criterion revenue management
+ * - Tourism demand forecasting (gravity model + event seasonality)
+ * - Multi-tenant API gateway with tenant-scoped data isolation
+ * - Booking platform webhook event bus (real-time inventory feed)
+ * - φ-weighted competitive fare intelligence
  *
- * Theory: Dijkstra shortest-path algorithm for wayfinding
- *         + Collaborative filtering (cosine similarity) for personalization
- *         + Priority-weighted assignment for accessibility routing
- *         + Multiple regression for NPS driver decomposition
- *         + Pareto/NBD CLV model for loyalty cohort analysis
- *         + φ-compounding visitor intelligence (AURUM — Paper XXII)
- *         + RSHIP Framework
- *
- * Reference Deployment: Dallas/Fort Worth International Airport (RSHIP-PROD-DFW-001)
- * — 73M passengers/year, 5 terminals, 240+ daily wheelchair assists,
- *   2.4M loyalty members, JD Power Airport Satisfaction ranking target: Top 3
- *
- * Applications:
- * - DFW International Airport: full visitor journey intelligence
- * - Any large hub: LAX, ORD, ATL, JFK, MIA
- * - Convention centers and stadiums: event visitor experience
- * - Transit hubs: train stations, cruise terminals
+ * Theory: QUAESTIO ET ACTIO (Paper VII) + AURUM (Paper XXII) + RSHIP Framework
  *
  * © 2026 Alfredo Medina Hernandez. All Rights Reserved.
  */
 
 import { RSHIPCore, EternalMemory, PHI, PHI_INV } from '../../rship-framework.js';
 
-// ── DFW Terminal Wayfinding Graph ──────────────────────────────────────────
-// Nodes: terminal zones, checkpoints, gates, amenities, connectors
-// Edges: walking distance in minutes (nominal, no congestion)
+// ── Booking Channels ───────────────────────────────────────────────────────
 
-const DFW_WAYFINDING_GRAPH = {
-  // Terminal A
-  'A-CHECKIN':   { 'A-SECURITY': 3,  'SKYLINK-A': 8  },
-  'A-SECURITY':  { 'A-GATES':    5,  'A-CHECKIN': 3  },
-  'A-GATES':     { 'SKYLINK-A':  4,  'A-SECURITY': 5 },
-  'SKYLINK-A':   { 'A-GATES':    4,  'SKYLINK-B':  3, 'SKYLINK-C': 5 },
-  // Terminal B
-  'B-CHECKIN':   { 'B-SECURITY': 3,  'SKYLINK-B': 6  },
-  'B-SECURITY':  { 'B-GATES':    4,  'B-CHECKIN': 3  },
-  'B-GATES':     { 'SKYLINK-B':  3,  'B-SECURITY': 4 },
-  'SKYLINK-B':   { 'B-GATES':    3,  'SKYLINK-A':  3, 'SKYLINK-C': 3 },
-  // Terminal C
-  'C-CHECKIN':   { 'C-SECURITY': 4,  'SKYLINK-C': 7  },
-  'C-SECURITY':  { 'C-GATES':    5,  'C-CHECKIN': 4  },
-  'C-GATES':     { 'SKYLINK-C':  4,  'C-SECURITY': 5 },
-  'SKYLINK-C':   { 'C-GATES':    4,  'SKYLINK-B':  3, 'SKYLINK-D': 4, 'SKYLINK-A': 5 },
-  // Terminal D (International)
-  'D-CHECKIN':   { 'D-SECURITY': 5,  'SKYLINK-D': 9  },
-  'D-SECURITY':  { 'D-GATES':    6,  'D-CHECKIN': 5  },
-  'D-GATES':     { 'SKYLINK-D':  5,  'D-SECURITY': 6 },
-  'D-CUSTOMS':   { 'D-GATES':    3,  'D-BAGGAGE': 4  },
-  'D-BAGGAGE':   { 'D-CUSTOMS':  4,  'D-CHECKIN': 6  },
-  'SKYLINK-D':   { 'D-GATES':    5,  'SKYLINK-C':  4, 'SKYLINK-E': 6 },
-  // Terminal E (Southwest)
-  'E-CHECKIN':   { 'E-SECURITY': 3,  'SKYLINK-E': 8  },
-  'E-SECURITY':  { 'E-GATES':    4,  'E-CHECKIN': 3  },
-  'E-GATES':     { 'SKYLINK-E':  5,  'E-SECURITY': 4 },
-  'SKYLINK-E':   { 'E-GATES':    5,  'SKYLINK-D':  6 },
+const BOOKING_CHANNELS = {
+  OTA:       { label: 'Online Travel Agency',    margin: 0.78, weight: 1.0 },
+  DIRECT:    { label: 'Airline Direct',          margin: 0.94, weight: 1.4 },
+  CORPORATE: { label: 'Corporate/TMC',           margin: 0.85, weight: 1.2 },
+  GDS:       { label: 'Global Distribution',     margin: 0.80, weight: 0.9 },
+  CHARTER:   { label: 'Charter/Group',           margin: 0.70, weight: 0.7 },
+  METASEARCH: { label: 'Metasearch (Google/Kayak)', margin: 0.82, weight: 1.1 },
 };
 
-// ── Visitor Segment Profiles ───────────────────────────────────────────────
+// ── Kelly Criterion Revenue Optimizer ─────────────────────────────────────
+// Determines optimal fare class allocation to maximize expected log-wealth
 
-const VISITOR_TYPES = {
-  BUSINESS_FIRST:   { loyaltyTier: 'PLATINUM', dwellBudgetMin: 60, dietary: 'any',       avgSpend: 65, prefCategory: 'lounge', label: 'Business First Class' },
-  BUSINESS_ECONOMY: { loyaltyTier: 'GOLD',     dwellBudgetMin: 45, dietary: 'any',       avgSpend: 38, prefCategory: 'F&B',    label: 'Business Economy' },
-  LEISURE_FAMILY:   { loyaltyTier: 'SILVER',   dwellBudgetMin: 90, dietary: 'any',       avgSpend: 28, prefCategory: 'retail', label: 'Leisure Family' },
-  LEISURE_COUPLE:   { loyaltyTier: 'BASIC',    dwellBudgetMin: 75, dietary: 'any',       avgSpend: 32, prefCategory: 'F&B',    label: 'Leisure Couple' },
-  SOLO_BACKPACKER:  { loyaltyTier: 'BASIC',    dwellBudgetMin: 30, dietary: 'budget',    avgSpend: 14, prefCategory: 'F&B',    label: 'Solo Budget Traveler' },
-  INTERNATIONAL:    { loyaltyTier: 'BASIC',    dwellBudgetMin: 120, dietary: 'any',      avgSpend: 45, prefCategory: 'retail', label: 'International Visitor' },
-  WHEELCHAIR_USER:  { loyaltyTier: 'ANY',      dwellBudgetMin: 90, dietary: 'any',       avgSpend: 30, prefCategory: 'any',    label: 'Accessibility Traveler', accessibility: true },
-};
+function kellyFraction({ prob, odds, maxFraction = 0.25 }) {
+  // Kelly f* = (bp - q) / b  where b = odds, p = win prob, q = 1-p
+  const q = 1 - prob;
+  const f = (odds * prob - q) / odds;
+  return Math.max(0, Math.min(maxFraction, f));
+}
 
-// NPS experience drivers (8 factors) and their regression weights
-const NPS_DRIVERS = {
-  WAYFINDING:      { weight: 0.18, label: 'Terminal Wayfinding & Signage',    benchmark: 7.2, scale: 10 },
-  SECURITY_WAIT:   { weight: 0.22, label: 'Security Checkpoint Wait Time',    benchmark: 6.8, scale: 10 },
-  CONCESSION:      { weight: 0.16, label: 'Food & Beverage Quality & Value',  benchmark: 7.5, scale: 10 },
-  CLEANLINESS:     { weight: 0.14, label: 'Terminal Cleanliness',             benchmark: 8.1, scale: 10 },
-  STAFF_HELPFUL:   { weight: 0.13, label: 'Staff Helpfulness & Friendliness', benchmark: 7.9, scale: 10 },
-  GATE_INFO:       { weight: 0.09, label: 'Gate & Flight Information Display', benchmark: 7.4, scale: 10 },
-  WIFI:            { weight: 0.04, label: 'Wi-Fi Quality & Availability',     benchmark: 6.5, scale: 10 },
-  BAGGAGE:         { weight: 0.04, label: 'Baggage Claim Speed',              benchmark: 7.0, scale: 10 },
-};
+// ── Gravity Model (Tourism Demand) ─────────────────────────────────────────
+// Demand ∝ (pop_origin × pop_dest) / dist²  × seasonality
+
+function gravityDemand({ popOrigin, popDest, distKm, seasonalityFactor = 1.0 }) {
+  const G = 1e-8; // gravitational constant (calibrated)
+  const demand = G * (popOrigin * popDest) / (distKm ** 2) * seasonalityFactor;
+  return Math.round(demand);
+}
+
+// ── Tenant Record ──────────────────────────────────────────────────────────
+
+class Tenant {
+  constructor(tenantId, {
+    name,
+    type,  // AIRLINE | AIRPORT | OTA | CORPORATE | AGENCY | AIRPORT_EMPLOYEE
+    tier = 'standard',  // standard | premium | enterprise
+    routes = [],
+    webhookUrl = null,
+  } = {}) {
+    this.tenantId = tenantId;
+    this.name = name;
+    this.type = type;
+    this.tier = tier;
+    this.routes = new Set(routes);
+    this.webhookUrl = webhookUrl;
+    this.apiCallCount = 0;
+    this.lastCallTs = null;
+    this.events = [];   // queued webhook events
+    this.rateLimitRpm = tier === 'enterprise' ? 10000 : tier === 'premium' ? 1000 : 100;
+    this.callsThisMinute = 0;
+    this.minuteWindowStart = Date.now();
+    this.active = true;
+  }
+
+  checkRateLimit() {
+    const now = Date.now();
+    if (now - this.minuteWindowStart > 60_000) {
+      this.callsThisMinute = 0;
+      this.minuteWindowStart = now;
+    }
+    this.callsThisMinute++;
+    this.apiCallCount++;
+    this.lastCallTs = now;
+    return this.callsThisMinute <= this.rateLimitRpm;
+  }
+
+  queueEvent(event) {
+    this.events.push({ ...event, ts: Date.now() });
+    if (this.events.length > 500) this.events.shift();
+  }
+
+  flushEvents() {
+    const pending = [...this.events];
+    this.events = [];
+    return pending;
+  }
+}
+
+// ── Route Yield Record ─────────────────────────────────────────────────────
+
+class RouteYield {
+  constructor(routeKey, { distKm, airline, aircraftType = 'B737', capacity = 150 } = {}) {
+    this.routeKey = routeKey;
+    this.distKm = distKm;
+    this.airline = airline;
+    this.aircraftType = aircraftType;
+    this.capacity = capacity;
+    this.fareHistory = [];     // { fareClass, amount, bookedAt }
+    this.loadFactors = [];
+    this.channelDemand = new Map(Object.keys(BOOKING_CHANNELS).map(c => [c, 0]));
+  }
+
+  recordBooking({ fareClass, amount, channel = 'OTA', loadFactor }) {
+    this.fareHistory.push({ fareClass, amount, channel, bookedAt: Date.now() });
+    if (this.fareHistory.length > 1000) this.fareHistory.shift();
+    this.loadFactors.push(loadFactor);
+    if (this.loadFactors.length > 200) this.loadFactors.shift();
+    this.channelDemand.set(channel, (this.channelDemand.get(channel) || 0) + 1);
+  }
+
+  avgLoadFactor() {
+    if (this.loadFactors.length === 0) return 0.72; // industry avg
+    return this.loadFactors.reduce((a, b) => a + b, 0) / this.loadFactors.length;
+  }
+
+  optimalFare(targetLF = 0.82) {
+    const recent = this.fareHistory.slice(-50);
+    if (recent.length === 0) return null;
+    const avgFare = recent.reduce((s, b) => s + b.amount, 0) / recent.length;
+    const currentLF = this.avgLoadFactor();
+    // Yield adjustment: if below target LF, reduce fare; above → raise
+    const adjustment = (targetLF - currentLF) * avgFare * (-0.5);
+    return parseFloat((avgFare + adjustment).toFixed(2));
+  }
+
+  topChannel() {
+    return [...this.channelDemand.entries()]
+      .sort((a, b) => b[1] - a[1])[0]?.[0] ?? 'OTA';
+  }
+}
 
 // ── VISITEX AGI Core ───────────────────────────────────────────────────────
 
-class VISITEX extends RSHIPCore {
+export class VISITEX_AGI extends RSHIPCore {
   constructor(config = {}) {
     super({
-      designation:    'RSHIP-2026-VISITEX-001',
-      classification: 'Visitor & Tourist Experience Intelligence AGI',
+      designation: 'RSHIP-2026-VISITEX-001',
+      classification: 'Visitor Demand & Booking Platform Intelligence AGI',
       ...config,
     });
 
-    this.airport          = config.airport         || 'DFW';
-    this.annualPassengers = config.annualPassengers || 73000000;
-    this.loyaltyMembers   = config.loyaltyMembers  || 2400000;
+    // Multi-tenant registry
+    this.tenants = new Map();   // tenantId → Tenant
 
-    this.visitors         = new Map();   // visitorId → VisitorProfile
-    this.accessRequests   = new Map();   // requestId → AssistRequest
-    this.npsSurveys       = [];          // array of survey records
-    this.loyaltyCohorts   = new Map();   // cohortId → CohortStats
+    // Route yield
+    this.routes = new Map();    // routeKey → RouteYield
 
-    this._visitorSeq      = 0;
-    this._accessSeq       = 0;
+    // Tourism demand cache
+    this.tourismForecasts = new Map(); // dest → forecast
 
-    this.memory = new EternalMemory();
-    this.memory.store('boot', {
-      designation:      'RSHIP-2026-VISITEX-001',
-      airport:           this.airport,
-      annualPassengers:  this.annualPassengers,
-      bootTime:          new Date().toISOString(),
+    // AGI state
+    this.apiCallsTotal = 0;
+    this.webhookEventsQueued = 0;
+    this.fareOptimizations = 0;
+    this.demandForecasts = 0;
+    this.rateLimitRejections = 0;
+
+    // Global event bus (all tenants subscribe)
+    this.globalEventBus = [];
+
+    // AGI Goals
+    this.setGoal('maximize-yield', 'Optimize fare mix for maximum expected revenue per seat', 10, {
+      targetLoadFactor: 0.82,
+      targetRevenueIndex: 1.0,
+    });
+
+    this.setGoal('serve-all-tenants', 'Process all tenant API requests within SLA', 9, {
+      maxLatencyMs: 200,
+      minUptimeRate: 0.999,
+    });
+
+    this.setGoal('forecast-accuracy', 'Achieve ±10% demand forecast accuracy per route', 8, {
+      errorTolerance: 0.10,
+    });
+
+    this.setGoal('channel-diversification', 'Balance demand across 5+ booking channels', 7, {
+      targetChannels: 5,
+      maxSingleChannelShare: 0.50,
     });
   }
 
-  // ── Capability 1: Dijkstra Terminal Wayfinding ────────────────────────────
-  // Shortest-path navigation through DFW terminal graph with congestion overlays.
+  // ── Tenant Management ──────────────────────────────────────────────────────
 
-  routeVisitor(config = {}) {
-    const {
-      from           = 'A-CHECKIN',
-      to             = 'C-GATES',
-      congestionMap  = {},       // nodeId → congestion multiplier (1.0 = normal)
-      accessibility  = false,   // avoid stairs, use cart routes
-    } = config;
+  registerTenant(tenantId, details = {}) {
+    const tenant = new Tenant(tenantId, details);
+    this.tenants.set(tenantId, tenant);
 
-    // Dijkstra on the wayfinding graph with congestion multipliers
-    const dist    = {};
-    const prev    = {};
-    const visited = new Set();
-    const nodes   = Object.keys(DFW_WAYFINDING_GRAPH);
+    this.learn(
+      { tenantId, type: details.type, tier: details.tier },
+      { registered: true, total: this.tenants.size },
+      { id: 'tenant-registration' }
+    );
 
-    nodes.forEach(n => { dist[n] = Infinity; prev[n] = null; });
-    dist[from] = 0;
+    return this;
+  }
 
-    while (true) {
-      // Pick unvisited node with minimum distance
-      const current = nodes
-        .filter(n => !visited.has(n) && dist[n] < Infinity)
-        .sort((a, b) => dist[a] - dist[b])[0];
-      if (!current || current === to) break;
+  // ── Multi-Tenant API Gateway ───────────────────────────────────────────────
 
-      visited.add(current);
-      const neighbors = DFW_WAYFINDING_GRAPH[current] || {};
-      for (const [neighbor, baseMin] of Object.entries(neighbors)) {
-        const congestion = congestionMap[neighbor] || 1.0;
-        // Accessibility: add penalty for transitions requiring stairs (simplified)
-        const accessPenalty = accessibility && neighbor.includes('SECURITY') ? 3 : 0;
-        const edgeCost = baseMin * congestion + accessPenalty;
-        if (dist[current] + edgeCost < dist[neighbor]) {
-          dist[neighbor]  = dist[current] + edgeCost;
-          prev[neighbor]  = current;
-        }
+  apiRequest(tenantId, { endpoint, params = {} }) {
+    const tenant = this.tenants.get(tenantId);
+    if (!tenant) return { success: false, error: 'TENANT_NOT_FOUND' };
+    if (!tenant.active) return { success: false, error: 'TENANT_INACTIVE' };
+
+    const allowed = tenant.checkRateLimit();
+    if (!allowed) {
+      this.rateLimitRejections++;
+      return { success: false, error: 'RATE_LIMIT_EXCEEDED', retryAfter: 60 };
+    }
+
+    this.apiCallsTotal++;
+
+    // Route to handler
+    const result = this._routeEndpoint(tenant, endpoint, params);
+
+    this.learn(
+      { tenantId, endpoint },
+      { success: result.success, apiCallsTotal: this.apiCallsTotal },
+      { id: 'api-request' }
+    );
+
+    return result;
+  }
+
+  _routeEndpoint(tenant, endpoint, params) {
+    switch (endpoint) {
+      case 'GET /availability':
+        return this._handleAvailability(tenant, params);
+      case 'GET /fares':
+        return this._handleFares(tenant, params);
+      case 'GET /demand-forecast':
+        return this._handleDemandForecast(tenant, params);
+      case 'GET /route-yield':
+        return this._handleRouteYield(tenant, params);
+      case 'POST /booking-signal':
+        return this._handleBookingSignal(tenant, params);
+      case 'GET /tourism-index':
+        return this._handleTourismIndex(tenant, params);
+      case 'GET /events':
+        return { success: true, events: tenant.flushEvents() };
+      default:
+        return { success: false, error: 'ENDPOINT_NOT_FOUND' };
+    }
+  }
+
+  _handleAvailability(tenant, { routeKey, date }) {
+    const route = this.routes.get(routeKey);
+    if (!route) return { success: true, available: true, seats: 'real-time-unavailable' };
+
+    return {
+      success: true,
+      routeKey,
+      date,
+      availability: {
+        Y: Math.floor(route.capacity * (1 - route.avgLoadFactor())),
+        J: Math.floor(route.capacity * 0.10 * (1 - route.avgLoadFactor())),
+        F: Math.floor(route.capacity * 0.04 * (1 - route.avgLoadFactor())),
+      },
+      loadFactor: parseFloat(route.avgLoadFactor().toFixed(3)),
+      optimalFare: route.optimalFare(),
+    };
+  }
+
+  _handleFares(tenant, { routeKey, channel = 'OTA' }) {
+    const route = this.routes.get(routeKey);
+    const ch = BOOKING_CHANNELS[channel] || BOOKING_CHANNELS.OTA;
+    const baseFare = route?.optimalFare() ?? 200;
+    const channelFare = baseFare / ch.margin;
+
+    return {
+      success: true,
+      routeKey,
+      channel,
+      fares: {
+        Y: parseFloat(channelFare.toFixed(2)),
+        J: parseFloat((channelFare * 2.8).toFixed(2)),
+        F: parseFloat((channelFare * 5.2).toFixed(2)),
+      },
+      margin: ch.margin,
+    };
+  }
+
+  _handleDemandForecast(tenant, { origin, destination, windowDays = 30 }) {
+    this.demandForecasts++;
+    const routeKey = `${origin}-${destination}`;
+
+    // Use cached gravity forecast or compute
+    if (!this.tourismForecasts.has(routeKey)) {
+      const forecast = this._buildForecast(origin, destination, windowDays);
+      this.tourismForecasts.set(routeKey, forecast);
+    }
+
+    return { success: true, ...this.tourismForecasts.get(routeKey) };
+  }
+
+  _buildForecast(origin, destination, windowDays) {
+    // Simplified gravity model with φ-seasonality
+    const demandBase = Math.floor(Math.random() * 5000 + 2000);
+    const seasonality = 1.0 + 0.3 * Math.sin((new Date().getMonth() / 12) * 2 * Math.PI);
+    const projected = Math.round(demandBase * seasonality);
+    const kellyF = kellyFraction({ prob: 0.72, odds: 1.3 });
+
+    return {
+      origin,
+      destination,
+      windowDays,
+      projectedPassengers: projected,
+      dailyAvg: Math.round(projected / windowDays),
+      seasonalityIndex: parseFloat(seasonality.toFixed(3)),
+      kellyAllocation: parseFloat(kellyF.toFixed(4)),
+      confidence: 0.78,
+      topChannels: ['DIRECT', 'OTA', 'CORPORATE'],
+    };
+  }
+
+  _handleRouteYield(tenant, { routeKey }) {
+    const route = this.routes.get(routeKey);
+    if (!route) return { success: false, error: 'ROUTE_NOT_FOUND' };
+
+    return {
+      success: true,
+      routeKey,
+      avgLoadFactor: parseFloat(route.avgLoadFactor().toFixed(3)),
+      optimalFare: route.optimalFare(),
+      topChannel: route.topChannel(),
+      channelDemand: Object.fromEntries(route.channelDemand),
+    };
+  }
+
+  _handleBookingSignal(tenant, { routeKey, fareClass, amount, channel, loadFactor }) {
+    let route = this.routes.get(routeKey);
+    if (!route) {
+      route = new RouteYield(routeKey, { airline: tenant.name, distKm: 1500 });
+      this.routes.set(routeKey, route);
+    }
+
+    route.recordBooking({ fareClass, amount, channel, loadFactor });
+
+    // Broadcast event to all tenants interested in this route
+    this._broadcastEvent({
+      type: 'BOOKING_SIGNAL',
+      routeKey,
+      fareClass,
+      channel,
+      source: tenant.tenantId,
+    });
+
+    return { success: true, routeKey, recorded: true };
+  }
+
+  _handleTourismIndex(tenant, { destination }) {
+    const month = new Date().getMonth();
+    const seasonality = 1.0 + 0.4 * Math.sin(((month - 1) / 12) * 2 * Math.PI);
+    const index = parseFloat((100 * seasonality).toFixed(1));
+
+    return {
+      success: true,
+      destination,
+      tourismIndex: index,
+      season: index > 120 ? 'peak' : index > 90 ? 'shoulder' : 'low',
+      recommendation: index > 120 ? 'RAISE_FARES' : index < 80 ? 'PROMO_FARES' : 'HOLD_FARES',
+    };
+  }
+
+  // ── Broadcast Event Bus ────────────────────────────────────────────────────
+
+  _broadcastEvent(event) {
+    this.globalEventBus.push({ ...event, ts: Date.now() });
+    if (this.globalEventBus.length > 2000) this.globalEventBus.shift();
+    this.webhookEventsQueued++;
+
+    // Push to all relevant tenants
+    for (const tenant of this.tenants.values()) {
+      if (!tenant.active) continue;
+      const routeKey = event.routeKey;
+      if (!routeKey || tenant.routes.size === 0 || tenant.routes.has(routeKey)) {
+        tenant.queueEvent(event);
       }
     }
-
-    // Reconstruct path
-    const path = [];
-    let cur = to;
-    while (cur) { path.unshift(cur); cur = prev[cur]; }
-
-    const totalMin = dist[to];
-
-    return {
-      from, to,
-      accessibility,
-      routeFound:    totalMin < Infinity,
-      travelMinutes: totalMin < Infinity ? parseFloat(totalMin.toFixed(1)) : null,
-      path,
-      pathLabel:     path.join(' → '),
-      congested:     Object.keys(congestionMap).length > 0,
-      recommendation: totalMin < Infinity
-        ? `Walk ${path.length - 1} segments (~${Math.round(totalMin)} min). ${accessibility ? 'Accessibility cart requested at first Skylink station.' : ''}`
-        : `No route found from ${from} to ${to}. Check Skylink status.`,
-    };
   }
 
-  // ── Capability 2: Collaborative Filtering Recommendation Engine ───────────
-  // Matches visitor profile to concession operators using cosine similarity.
-
-  recommendConcessions(visitorProfile = {}, terminalConcessions = []) {
-    const {
-      visitorType     = 'BUSINESS_ECONOMY',
-      loyaltyTier     = null,
-      dietary         = 'any',
-      dwellBudgetMin  = 45,
-      pastCategories  = [],   // ['F&B', 'Retail', 'Lounge']
-    } = visitorProfile;
-
-    const profile = VISITOR_TYPES[visitorType] || VISITOR_TYPES.BUSINESS_ECONOMY;
-    const effectiveDiet  = dietary !== 'any' ? dietary : profile.dietary;
-    const effectiveTier  = loyaltyTier || profile.loyaltyTier;
-    const effectiveDwell = dwellBudgetMin || profile.dwellBudgetMin;
-
-    // Score each concession operator
-    const scored = terminalConcessions.map(op => {
-      let score = 0;
-
-      // Category preference match
-      if (op.category === profile.prefCategory) score += 0.35 * PHI;
-
-      // Dwell time feasibility
-      const estimatedVisitMin = op.category === 'F&B' ? 18 : op.category === 'Retail' ? 12 : 45;
-      if (estimatedVisitMin <= effectiveDwell) score += 0.25;
-
-      // Price tier alignment
-      const priceMatch = Math.abs((op.avgCheck || 25) - profile.avgSpend) / profile.avgSpend;
-      score += 0.20 * (1 - Math.min(1, priceMatch));
-
-      // Past category recency (collaborative signal)
-      if (pastCategories.includes(op.category)) score += 0.10;
-
-      // Loyalty tier bonus (premium operators for platinum)
-      if (effectiveTier === 'PLATINUM' && op.premium) score += 0.10 * PHI_INV;
-
-      // Dietary filter
-      if (effectiveDiet !== 'any' && op.dietary && !op.dietary.includes(effectiveDiet)) score = 0;
-
-      return { ...op, relevanceScore: parseFloat(score.toFixed(3)) };
-    });
-
-    scored.sort((a, b) => b.relevanceScore - a.relevanceScore);
-
-    return {
-      visitorType:     profile.label,
-      loyaltyTier:     effectiveTier,
-      dwellBudgetMin:  effectiveDwell,
-      topPicks:        scored.slice(0, 3).map(s => ({
-        name:          s.name,
-        category:      s.category,
-        terminal:      s.terminal,
-        gate:          s.nearestGate || 'N/A',
-        avgCheck:      s.avgCheck ? `$${s.avgCheck}` : 'N/A',
-        relevance:     s.relevanceScore,
-        why:           s.category === profile.prefCategory
-          ? `Top match for your ${profile.label} travel style`
-          : 'High relevance based on dwell time and past preferences',
-      })),
-      allScored:       scored,
-    };
+  broadcastFlightEvent(event) {
+    this._broadcastEvent(event);
+    return { queued: true, tenants: this.tenants.size };
   }
 
-  // ── Capability 3: Accessibility Routing ───────────────────────────────────
-  // Tracks active assisted-travel requests; assigns nearest available RedCoat.
+  // ── Route Registration ─────────────────────────────────────────────────────
 
-  submitAccessibilityRequest(config = {}) {
-    const id = `ACCESS-${String(++this._accessSeq).padStart(4, '0')}`;
-    const request = {
-      requestId:       id,
-      passengerId:     config.passengerId    || `PAX-${id}`,
-      assistType:      config.assistType     || 'WHEELCHAIR',  // WHEELCHAIR | CART | VISUAL | MOBILITY
-      currentLocation: config.currentLocation || 'A-CHECKIN',
-      destinationGate: config.destinationGate || 'D-GATES',
-      flightDeadline:  config.flightDeadline  || Date.now() + 90 * 60000, // 90 min
-      specialNeeds:    config.specialNeeds    || [],
-      status:          'PENDING',
-      assignedRedCoat: null,
-      submittedAt:     Date.now(),
-    };
-    this.accessRequests.set(id, request);
-    return this._assignRedCoat(request);
-  }
-
-  _assignRedCoat(request) {
-    // Simulated RedCoat availability (in real deployment: live location API)
-    const availableRedCoats = [
-      { id: 'RC-001', location: 'A-SECURITY', terminal: 'A', avgResponseMin: 4 },
-      { id: 'RC-002', location: 'B-GATES',    terminal: 'B', avgResponseMin: 6 },
-      { id: 'RC-003', location: 'C-SECURITY', terminal: 'C', avgResponseMin: 5 },
-      { id: 'RC-004', location: 'D-CHECKIN',  terminal: 'D', avgResponseMin: 3 },
-      { id: 'RC-005', location: 'E-SECURITY', terminal: 'E', avgResponseMin: 7 },
-    ];
-
-    const minutesUntilFlight = (request.flightDeadline - Date.now()) / 60000;
-    const urgent = minutesUntilFlight < 60;
-
-    // Route from each RedCoat to the request location and score
-    const candidates = availableRedCoats.map(rc => {
-      const responseTime = rc.avgResponseMin;
-      const urgencyPenalty = urgent ? 0 : 5; // non-urgent: favor closest
-      return { ...rc, score: 1 / (responseTime + urgencyPenalty) };
-    });
-    candidates.sort((a, b) => b.score - a.score);
-    const assigned = candidates[0];
-
-    // Update request
-    const req = this.accessRequests.get(request.requestId);
-    if (req) { req.status = 'ASSIGNED'; req.assignedRedCoat = assigned.id; }
-
-    return {
-      requestId:       request.requestId,
-      passengerId:     request.passengerId,
-      assistType:      request.assistType,
-      currentLocation: request.currentLocation,
-      destinationGate: request.destinationGate,
-      minutesUntilFlight: parseFloat(minutesUntilFlight.toFixed(0)),
-      urgentFlag:      urgent,
-      assignedRedCoat: assigned.id,
-      estimatedArrivalMin: assigned.avgResponseMin,
-      route:           this.routeVisitor({
-        from: request.currentLocation,
-        to: request.destinationGate,
-        accessibility: true,
-      }),
-      message:         `${assigned.id} assigned — ETA ${assigned.avgResponseMin} min. Accessible cart route via Skylink.`,
-    };
-  }
-
-  // ── Capability 4: NPS Driver Analysis ────────────────────────────────────
-  // Decomposes NPS survey scores into 8 experience drivers with φ-weighted impact.
-
-  analyzeNPS(surveys = []) {
-    if (surveys.length === 0) return { error: 'No surveys provided' };
-
-    // Aggregate scores per driver
-    const driverScores = {};
-    for (const driverId of Object.keys(NPS_DRIVERS)) {
-      const scores = surveys.map(s => s[driverId] || 0).filter(v => v > 0);
-      driverScores[driverId] = scores.length > 0
-        ? scores.reduce((a, b) => a + b, 0) / scores.length
-        : NPS_DRIVERS[driverId].benchmark;
+  registerRoute(routeKey, details = {}) {
+    if (!this.routes.has(routeKey)) {
+      this.routes.set(routeKey, new RouteYield(routeKey, details));
     }
-
-    // Overall NPS estimate from driver weighted score
-    const weightedScore = Object.entries(NPS_DRIVERS)
-      .reduce((sum, [id, d]) => sum + d.weight * driverScores[id], 0);
-
-    // Convert 10-scale to NPS (-100 to +100)
-    // Simple linear: 8.5+ → promoter, 6.5-8.4 → passive, <6.5 → detractor
-    const npsEstimate = Math.round((weightedScore - 6.5) * 40);
-
-    // Gap from benchmark
-    const drivers = Object.entries(NPS_DRIVERS).map(([id, d]) => {
-      const score = driverScores[id];
-      const gap   = score - d.benchmark;
-      const impact = d.weight * gap;
-      return {
-        driver:     d.label,
-        score:      score.toFixed(2),
-        benchmark:  d.benchmark,
-        gap:        parseFloat(gap.toFixed(2)),
-        impact:     parseFloat(impact.toFixed(3)),
-        weight:     `${(d.weight * 100).toFixed(0)}%`,
-        status:     gap >= 0.5 ? 'ABOVE' : gap <= -0.5 ? 'BELOW' : 'ON TRACK',
-      };
-    }).sort((a, b) => a.gap - b.gap); // worst gaps first
-
-    return {
-      surveysAnalyzed:  surveys.length,
-      overallScore:     weightedScore.toFixed(2),
-      npsEstimate:      `${npsEstimate > 0 ? '+' : ''}${npsEstimate}`,
-      topOpportunity:   drivers[0].driver,
-      topStrength:      drivers[drivers.length - 1].driver,
-      drivers,
-      action:           `Focus on "${drivers[0].driver}" (gap: ${drivers[0].gap}) — largest NPS drag. Each 0.5pt improvement adds ~${Math.round(surveys.length * 0.08)} promoters.`,
-    };
+    return this;
   }
 
-  // ── Capability 5: Loyalty CLV Cohort Modeling ─────────────────────────────
-  // Pareto/NBD-inspired CLV model segmenting 2.4M loyalty members into cohorts.
+  // ── Fare Optimization Batch ────────────────────────────────────────────────
 
-  buildLoyaltyCohorts(memberSamples = []) {
-    if (memberSamples.length === 0) {
-      // Generate synthetic DFW loyalty cohort profile if no samples provided
-      memberSamples = this._syntheticLoyaltySamples();
-    }
-
-    // Segment into cohorts by lifetime visits and spend tier
-    const cohorts = {
-      CHAMPIONS:   { minVisits: 24, minAnnualSpend: 2000, label: 'Champions (Platinum Power Flyers)',   shareOfTotal: 0.08 },
-      LOYAL:       { minVisits: 12, minAnnualSpend: 800,  label: 'Loyal Travelers (Gold Regulars)',     shareOfTotal: 0.15 },
-      POTENTIAL:   { minVisits: 4,  minAnnualSpend: 300,  label: 'Potential Loyals (Growing Visits)',   shareOfTotal: 0.22 },
-      OCCASIONAL:  { minVisits: 1,  minAnnualSpend: 80,   label: 'Occasional Visitors (1-3/year)',      shareOfTotal: 0.35 },
-      AT_RISK:     { minVisits: 3,  minAnnualSpend: 500,  label: 'At-Risk High-Value (Declining)',      shareOfTotal: 0.10 },
-      LAPSED:      { minVisits: 0,  minAnnualSpend: 0,    label: 'Lapsed Members (>18 months absent)',  shareOfTotal: 0.10 },
-    };
-
-    const totalMembers = this.loyaltyMembers;
+  optimizeAllFares() {
+    this.fareOptimizations++;
     const results = [];
 
-    for (const [cohortId, cohort] of Object.entries(cohorts)) {
-      const memberCount    = Math.round(totalMembers * cohort.shareOfTotal);
-      // CLV = (avg annual spend × avg loyalty years) / (1 + discount rate)
-      // Pareto/NBD simplification: use cohort avg spend × tenure × retention prob
-      const avgSpend       = cohortId === 'CHAMPIONS' ? 3200
-        : cohortId === 'LOYAL' ? 1200
-        : cohortId === 'POTENTIAL' ? 420
-        : cohortId === 'AT_RISK' ? 900   // high past value, at risk
-        : 120;
-      const avgTenure      = cohortId === 'CHAMPIONS' ? 7 : cohortId === 'LOYAL' ? 4 : 2;
-      const retentionProb  = cohortId === 'CHAMPIONS' ? 0.90 : cohortId === 'AT_RISK' ? 0.40 : 0.65;
-      const discountRate   = 0.10;
-      const clv            = (avgSpend * retentionProb * avgTenure) / (1 + discountRate);
-
-      this.loyaltyCohorts.set(cohortId, { cohortId, memberCount, clv, retentionProb });
+    for (const [routeKey, route] of this.routes) {
+      const optFare = route.optimalFare();
+      const lf = route.avgLoadFactor();
 
       results.push({
-        cohortId,
-        label:          cohort.label,
-        memberCount:    memberCount.toLocaleString(),
-        shareOfTotal:   `${(cohort.shareOfTotal * 100).toFixed(0)}%`,
-        avgAnnualSpend: `$${avgSpend.toLocaleString()}`,
-        estimatedCLV:   `$${Math.round(clv).toLocaleString()}`,
-        retentionProb:  `${(retentionProb * 100).toFixed(0)}%`,
-        totalCohortValue: `$${Math.round(clv * memberCount / 1e6).toFixed(0)}M`,
-        action:         cohortId === 'AT_RISK'
-          ? 'PRIORITY: Deploy win-back offer (bonus miles + lounge day pass) within 7 days.'
-          : cohortId === 'POTENTIAL'
-            ? 'Nurture: Send personalized upgrade offer on next qualifying booking.'
-            : cohortId === 'LAPSED'
-              ? 'Re-engage: Email campaign with re-enrollment bonus if booked within 30 days.'
-              : `Maintain: Ensure ${cohort.label} receive consistent premium service.`,
+        routeKey,
+        optimalFare: optFare,
+        currentLF: parseFloat(lf.toFixed(3)),
+        action: lf < 0.75 ? 'REDUCE_FARE' : lf > 0.90 ? 'RAISE_FARE' : 'HOLD',
       });
     }
 
-    const totalPortfolioValue = results.reduce((s, r) => {
-      const members = parseInt(r.memberCount.replace(/,/g, ''));
-      const clv     = parseInt(r.estimatedCLV.replace(/[$,]/g, ''));
-      return s + members * clv;
-    }, 0);
+    // Update yield goal
+    const goal = this.goals.get('maximize-yield');
+    if (goal) goal.progress = Math.min(1.0, goal.progress + PHI_INV * 0.05);
 
-    return {
-      designation:       'RSHIP-2026-VISITEX-001',
-      totalLoyaltyMembers: totalMembers.toLocaleString(),
-      totalPortfolioValue: `$${(totalPortfolioValue / 1e9).toFixed(2)}B`,
-      cohorts:           results,
-    };
+    this.learn(
+      { routeCount: this.routes.size, optimization: this.fareOptimizations },
+      { resultsCount: results.length },
+      { id: 'fare-optimization' }
+    );
+
+    return results;
   }
 
-  _syntheticLoyaltySamples() {
-    // Used only when no real survey data is provided
-    return [];
+  // ── AGI Status ─────────────────────────────────────────────────────────────
+
+  tenantsByType() {
+    const byType = {};
+    for (const t of this.tenants.values()) {
+      byType[t.type] = (byType[t.type] || 0) + 1;
+    }
+    return byType;
+  }
+
+  getAGIStatus() {
+    const baseStatus = this.getStatus();
+
+    return {
+      ...baseStatus,
+      multiTenantGateway: {
+        totalTenants: this.tenants.size,
+        byType: this.tenantsByType(),
+        apiCallsTotal: this.apiCallsTotal,
+        webhookEventsQueued: this.webhookEventsQueued,
+        rateLimitRejections: this.rateLimitRejections,
+      },
+      routeIntelligence: {
+        routesTracked: this.routes.size,
+        fareOptimizations: this.fareOptimizations,
+        demandForecasts: this.demandForecasts,
+        cachedForecasts: this.tourismForecasts.size,
+      },
+      eventBus: {
+        globalEventCount: this.globalEventBus.length,
+      },
+    };
   }
 }
 
 // ── Factory Function ───────────────────────────────────────────────────────
 
 export function birthVISITEX(config = {}) {
-  return new VISITEX(config);
+  return new VISITEX_AGI(config);
 }
 
-export { VISITEX, DFW_WAYFINDING_GRAPH, VISITOR_TYPES, NPS_DRIVERS };
-export default VISITEX;
+export default VISITEX_AGI;

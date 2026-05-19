@@ -1,0 +1,54 @@
+name               = "rship-sentinel"
+main               = "worker.js"
+compatibility_date = "2024-09-02"
+
+# Cron trigger — alert scan every 5 minutes
+[[triggers.crons]]
+cron = "*/5 * * * *"
+
+# Optional secrets:
+#   SENTINEL_SLACK_WEBHOOK    — Slack incoming webhook for alerts
+#   SENTINEL_DISCORD_WEBHOOK  — Discord webhook for alerts
+#   SENTINEL_AUTH_TOKEN       — Protect rule management endpoints
+
+[vars]
+DESIGNATION    = "RSHIP-BOT-SNT-001"
+BOT_NAME       = "SENTINEL"
+BOT_LATIN      = "sentinel"
+BOT_MEANING    = "Watchman · Guardian · Alert Monitor"
+VERSION        = "2.0.0"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# INTELLIGENT BINDINGS — Give SENTINEL threat awareness
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# ── Workers AI — Threat analysis ──────────────────────────────────────────────
+[ai]
+binding = "AI"
+
+# ── KV Namespace — Alert tracking ─────────────────────────────────────────────
+[[kv_namespaces]]
+binding = "ALERT_STATE"
+id = "sentinel-alert-state"
+preview_id = "sentinel-alert-state-preview"
+
+[[kv_namespaces]]
+binding = "IP_BLOCKLIST"
+id = "sentinel-ip-blocklist"
+preview_id = "sentinel-ip-blocklist-preview"
+
+# ── D1 Database — Security data ───────────────────────────────────────────────
+[[d1_databases]]
+binding = "HONEYPOT_DB"
+database_name = "medinatech-honeypot"
+database_id = "medinatech-honeypot-db"
+
+# ── Queue — Alert dispatch ────────────────────────────────────────────────────
+[[queues.producers]]
+binding = "ALERT_QUEUE"
+queue = "alert-dispatch"
+
+# ── Vectorize — Threat matching ───────────────────────────────────────────────
+[[vectorize]]
+binding = "THREAT_VECTORS"
+index_name = "honeypot-signatures"

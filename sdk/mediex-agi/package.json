@@ -1,0 +1,10 @@
+{
+  "name": "@rship/mediex-agi",
+  "version": "1.0.0",
+  "description": "MEDIEX AGI — Medical & Health Intelligence (RSHIP-2026-MEDIEX-001)",
+  "main": "mediex-agi.js",
+  "type": "module",
+  "author": "Alfredo Medina Hernandez <medina@medinatech.io>",
+  "license": "UNLICENSED",
+  "keywords": ["medical", "health", "diagnostics", "agi", "rship", "bayesian", "fhir"]
+}

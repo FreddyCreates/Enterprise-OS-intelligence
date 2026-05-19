@@ -1,165 +1,205 @@
-// Package composition manages composition components, links, and signal diffusion.
+// Package composition provides a lightweight organism composition diffusion
+// engine for the Go gateway.
+//
+// It models a directed graph of organisms/programs and diffuses a signal from
+// one source across graph edges with φ-harmonic attenuation and Fibonacci
+// coupling multipliers.
+//
+// Ring: Interface Ring | Go Gateway
 package composition
 
 import (
-	"fmt"
+	"errors"
+	"math"
 	"sync"
 	"time"
 )
 
-type Component struct {
-	ComponentID  string                 `json:"component_id"`
-	Role         string                 `json:"role"`
-	Metadata     map[string]interface{} `json:"metadata"`
-	RegisteredAt int64                  `json:"registered_at"`
+const (
+	PHI    = 1.618033988749895
+	PHIInv = 0.618033988749895
+)
+
+var (
+	ErrProgramExists   = errors.New("program already exists")
+	ErrProgramNotFound = errors.New("program not found")
+	ErrInvalidLink     = errors.New("invalid link")
+	ErrInvalidSource   = errors.New("invalid source")
+)
+
+// Program is one composition node.
+type Program struct {
+	ID        string  `json:"id"`
+	Kind      string  `json:"kind"`
+	Weight    float64 `json:"weight"`
+	CreatedMs int64   `json:"created_ms"`
 }
 
+// Link represents one directed coupling edge.
 type Link struct {
-	FromComponentID string  `json:"from_component_id"`
-	ToComponentID   string  `json:"to_component_id"`
-	Relation        string  `json:"relation"`
-	Weight          float64 `json:"weight"`
-	LinkedAt        int64   `json:"linked_at"`
+	From        string `json:"from"`
+	To          string `json:"to"`
+	CouplingFib int    `json:"coupling_fib"`
+	CreatedMs   int64  `json:"created_ms"`
 }
 
-type DiffusionEvent struct {
-	Signal     string  `json:"signal"`
-	Scope      string  `json:"scope"`
-	TargetRole string  `json:"target_role,omitempty"`
-	Intensity  float64 `json:"intensity"`
-	Impacted   int     `json:"impacted"`
-	DiffusedAt int64   `json:"diffused_at"`
+// DiffusionResult contains one diffusion execution output.
+type DiffusionResult struct {
+	Source      string             `json:"source"`
+	Signal      float64            `json:"signal"`
+	Steps       int                `json:"steps"`
+	Reached     map[string]float64 `json:"reached"`
+	EdgeHops    int                `json:"edge_hops"`
+	TimestampMs int64              `json:"timestamp_ms"`
 }
 
-type Manager struct {
-	mu         sync.RWMutex
-	components map[string]Component
-	links      []Link
-	diffusions []DiffusionEvent
+// Engine stores graph state and executes diffusion.
+type Engine struct {
+	mu sync.RWMutex
+
+	programs map[string]Program
+	adj      map[string][]Link
+
+	diffusions int64
+	last       *DiffusionResult
 }
 
-func NewManager() *Manager {
-	return &Manager{
-		components: make(map[string]Component),
-		links:      make([]Link, 0),
-		diffusions: make([]DiffusionEvent, 0),
+func NewEngine() *Engine {
+	return &Engine{
+		programs: make(map[string]Program),
+		adj:      make(map[string][]Link),
 	}
 }
 
-func (m *Manager) Register(componentID, role string, metadata map[string]interface{}) (Component, error) {
-	if componentID == "" || role == "" {
-		return Component{}, fmt.Errorf("component_id and role are required")
+func (e *Engine) RegisterProgram(id, kind string, weight float64) error {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	if id == "" {
+		return ErrProgramNotFound
 	}
-	if metadata == nil {
-		metadata = map[string]interface{}{}
-	}
-
-	c := Component{
-		ComponentID:  componentID,
-		Role:         role,
-		Metadata:     metadata,
-		RegisteredAt: time.Now().UnixMilli(),
-	}
-
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	m.components[componentID] = c
-	return c, nil
-}
-
-func (m *Manager) LinkComponents(fromComponentID, toComponentID, relation string, weight float64) (Link, error) {
-	if fromComponentID == "" || toComponentID == "" {
-		return Link{}, fmt.Errorf("from_component_id and to_component_id are required")
-	}
-	if fromComponentID == toComponentID {
-		return Link{}, fmt.Errorf("cannot link component to itself")
-	}
-	if relation == "" {
-		relation = "connected"
+	if _, ok := e.programs[id]; ok {
+		return ErrProgramExists
 	}
 	if weight <= 0 {
 		weight = 1.0
 	}
-
-	m.mu.Lock()
-	defer m.mu.Unlock()
-
-	if _, ok := m.components[fromComponentID]; !ok {
-		return Link{}, fmt.Errorf("from_component_id not registered: %s", fromComponentID)
+	e.programs[id] = Program{
+		ID:        id,
+		Kind:      kind,
+		Weight:    weight,
+		CreatedMs: time.Now().UnixMilli(),
 	}
-	if _, ok := m.components[toComponentID]; !ok {
-		return Link{}, fmt.Errorf("to_component_id not registered: %s", toComponentID)
-	}
-
-	l := Link{
-		FromComponentID: fromComponentID,
-		ToComponentID:   toComponentID,
-		Relation:        relation,
-		Weight:          weight,
-		LinkedAt:        time.Now().UnixMilli(),
-	}
-	m.links = append(m.links, l)
-	return l, nil
+	return nil
 }
 
-func (m *Manager) Diffuse(signal, scope, targetRole string, intensity float64) (DiffusionEvent, error) {
-	if signal == "" {
-		return DiffusionEvent{}, fmt.Errorf("signal is required")
+func (e *Engine) LinkPrograms(from, to string, couplingFib int) error {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	if from == "" || to == "" || from == to {
+		return ErrInvalidLink
 	}
-	if scope == "" {
-		scope = "all"
+	if _, ok := e.programs[from]; !ok {
+		return ErrProgramNotFound
 	}
-	if intensity <= 0 {
-		intensity = 1.0
+	if _, ok := e.programs[to]; !ok {
+		return ErrProgramNotFound
+	}
+	if couplingFib <= 0 {
+		couplingFib = 1
+	}
+	e.adj[from] = append(e.adj[from], Link{
+		From:        from,
+		To:          to,
+		CouplingFib: couplingFib,
+		CreatedMs:   time.Now().UnixMilli(),
+	})
+	return nil
+}
+
+func fib(n int) int {
+	if n <= 0 {
+		return 0
+	}
+	if n <= 2 {
+		return 1
+	}
+	a, b := 1, 1
+	for i := 3; i <= n; i++ {
+		a, b = b, a+b
+	}
+	return b
+}
+
+// Diffuse propagates a signal from source for N steps.
+// Per hop attenuation:
+//
+//	next = current × φ⁻¹ × (nodeWeight / fib(coupling))
+func (e *Engine) Diffuse(source string, signal float64, steps int) (DiffusionResult, error) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+
+	if _, ok := e.programs[source]; !ok {
+		return DiffusionResult{}, ErrInvalidSource
+	}
+	if signal <= 0 {
+		signal = 1.0
+	}
+	if steps <= 0 {
+		steps = 1
 	}
 
-	m.mu.Lock()
-	defer m.mu.Unlock()
+	reached := map[string]float64{source: signal}
+	current := map[string]float64{source: signal}
+	edgeHops := 0
 
-	impacted := 0
-	switch scope {
-	case "all":
-		impacted = len(m.components)
-	case "role":
-		if targetRole == "" {
-			return DiffusionEvent{}, fmt.Errorf("target_role is required when scope=role")
-		}
-		for _, c := range m.components {
-			if c.Role == targetRole {
-				impacted++
+	for i := 0; i < steps; i++ {
+		next := make(map[string]float64)
+		for node, value := range current {
+			for _, edge := range e.adj[node] {
+				p := e.programs[edge.To]
+				hop := value * PHIInv * (p.Weight / math.Max(1, float64(fib(edge.CouplingFib))))
+				if hop <= 0 {
+					continue
+				}
+				next[edge.To] += hop
+				reached[edge.To] += hop
+				edgeHops++
 			}
 		}
-	default:
-		return DiffusionEvent{}, fmt.Errorf("invalid scope: %s", scope)
+		if len(next) == 0 {
+			break
+		}
+		current = next
 	}
 
-	event := DiffusionEvent{
-		Signal:     signal,
-		Scope:      scope,
-		TargetRole: targetRole,
-		Intensity:  intensity,
-		Impacted:   impacted,
-		DiffusedAt: time.Now().UnixMilli(),
+	res := DiffusionResult{
+		Source:      source,
+		Signal:      signal,
+		Steps:       steps,
+		Reached:     reached,
+		EdgeHops:    edgeHops,
+		TimestampMs: time.Now().UnixMilli(),
 	}
-	m.diffusions = append(m.diffusions, event)
-	return event, nil
+	e.last = &res
+	e.diffusions++
+	return res, nil
 }
 
-func (m *Manager) Status() map[string]interface{} {
-	m.mu.RLock()
-	defer m.mu.RUnlock()
+func (e *Engine) Status() map[string]interface{} {
+	e.mu.RLock()
+	defer e.mu.RUnlock()
 
-	components := make([]Component, 0, len(m.components))
-	for _, c := range m.components {
-		components = append(components, c)
+	linkCount := 0
+	for _, ls := range e.adj {
+		linkCount += len(ls)
 	}
-
-	return map[string]interface{}{
-		"components":      components,
-		"links":           m.links,
-		"diffusions":      m.diffusions,
-		"component_count": len(components),
-		"link_count":      len(m.links),
-		"diffusion_count": len(m.diffusions),
+	out := map[string]interface{}{
+		"program_count": len(e.programs),
+		"link_count":    linkCount,
+		"diffusions":    e.diffusions,
 	}
+	if e.last != nil {
+		out["last"] = e.last
+	}
+	return out
 }

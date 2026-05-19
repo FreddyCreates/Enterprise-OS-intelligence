@@ -1,0 +1,79 @@
+name               = "nova"
+main               = "worker.js"
+compatibility_date = "2024-09-02"
+
+[vars]
+DESIGNATION    = "RSHIP-ML-NV-001"
+WORKER_NAME    = "NOVA"
+WORKER_LATIN   = "nova"
+WORKER_MEANING = "New — Bright — Emergence"
+VERSION        = "2.1.0"
+HOST           = "nova.medinatechlabs.net"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# INTELLIGENT BINDINGS — Give NOVA brains, memory, and coordination
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# ── Workers AI — LLM-powered threat analysis ──────────────────────────────────
+# Enables: /api/ai/analyze-threat, intelligent specimen classification
+[ai]
+binding = "AI"
+
+# ── KV Namespace — Specimen memory (short-term) ───────────────────────────────
+# Stores: attacker dossiers, session data, recent specimens (TTL-based)
+[[kv_namespaces]]
+binding = "SPECIMEN_MEMORY"
+id = "nova-specimen-memory"
+preview_id = "nova-specimen-memory-preview"
+
+# ── KV Namespace — Knowledge cache ────────────────────────────────────────────
+# Stores: knowledge shards, AI training data, research references
+[[kv_namespaces]]
+binding = "KNOWLEDGE_CACHE"
+id = "nova-knowledge-cache"
+preview_id = "nova-knowledge-cache-preview"
+
+# ── D1 Database — Persistent threat intelligence ──────────────────────────────
+# Stores: long-term attacker profiles, path statistics, behavioral patterns
+[[d1_databases]]
+binding = "THREAT_DB"
+database_name = "nova-threat-intelligence"
+database_id = "nova-threat-db"
+
+# ── Queue — Async specimen processing ─────────────────────────────────────────
+# Routes specimens to: adversary lab workers, AI analysis, alerting
+[[queues.producers]]
+binding = "SPECIMEN_QUEUE"
+queue = "nova-specimens"
+
+[[queues.producers]]
+binding = "ALERT_QUEUE"
+queue = "nova-alerts"
+
+# ── Queue Consumer — Process incoming specimens ───────────────────────────────
+[[queues.consumers]]
+queue = "nova-specimens"
+max_batch_size = 10
+max_batch_timeout = 30
+
+# ── R2 Bucket — Large specimen storage ────────────────────────────────────────
+# Stores: full request captures, payload archives, forensic data
+[[r2_buckets]]
+binding = "SPECIMEN_ARCHIVE"
+bucket_name = "nova-specimen-archive"
+
+# ── Vectorize — Semantic threat search ────────────────────────────────────────
+# Enables: similarity search for attack patterns, RAG for threat context
+[[vectorize]]
+binding = "THREAT_VECTORS"
+index_name = "nova-threat-patterns"
+
+# ── Analytics Engine — Threat metrics ─────────────────────────────────────────
+[[analytics_engine_datasets]]
+binding = "THREAT_ANALYTICS"
+dataset = "nova_threat_events"
+
+# ── Routes ────────────────────────────────────────────────────────────────────
+# [[routes]]
+# pattern = "nova.medinatechlabs.net/*"
+# zone_name = "medinatechlabs.net"

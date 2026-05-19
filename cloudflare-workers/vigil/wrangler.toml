@@ -1,0 +1,64 @@
+name               = "vigil"
+main               = "worker.js"
+compatibility_date = "2024-09-02"
+
+[vars]
+DESIGNATION    = "RSHIP-AIS-VG-001"
+WORKER_NAME    = "VIGIL"
+WORKER_LATIN   = "vigil"
+WORKER_MEANING = "Watchman — Sentinel — Guardian"
+VERSION        = "2.0.0"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# INTELLIGENT BINDINGS — VIGIL watches and protects
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# ── Workers AI — Threat analysis ──────────────────────────────────────────────
+[ai]
+binding = "AI"
+
+# ── KV Namespace — Threat tracking ────────────────────────────────────────────
+[[kv_namespaces]]
+binding = "THREAT_CACHE"
+id = "vigil-threat-cache"
+preview_id = "vigil-threat-cache-preview"
+
+[[kv_namespaces]]
+binding = "IP_BLOCKLIST"
+id = "vigil-ip-blocklist"
+preview_id = "vigil-ip-blocklist-preview"
+
+# ── D1 Database — Security data ───────────────────────────────────────────────
+[[d1_databases]]
+binding = "HONEYPOT_DB"
+database_name = "medinatech-honeypot"
+database_id = "medinatech-honeypot-db"
+
+[[d1_databases]]
+binding = "CORE_DB"
+database_name = "medinatech-core"
+database_id = "medinatech-core-db"
+
+# ── Queue — Alert dispatch ────────────────────────────────────────────────────
+[[queues.producers]]
+binding = "ALERT_QUEUE"
+queue = "alert-dispatch"
+
+[[queues.producers]]
+binding = "HONEYPOT_QUEUE"
+queue = "honeypot-events"
+
+# ── R2 Bucket — Capture archive ───────────────────────────────────────────────
+[[r2_buckets]]
+binding = "CAPTURE_ARCHIVE"
+bucket_name = "honeypot-captures"
+
+# ── Vectorize — Threat pattern matching ───────────────────────────────────────
+[[vectorize]]
+binding = "THREAT_VECTORS"
+index_name = "honeypot-signatures"
+
+# ── Analytics Engine ──────────────────────────────────────────────────────────
+[[analytics_engine_datasets]]
+binding = "SECURITY_ANALYTICS"
+dataset = "vigil_events"

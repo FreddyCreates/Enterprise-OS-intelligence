@@ -1,0 +1,56 @@
+name               = "rship-nuntius"
+main               = "worker.js"
+compatibility_date = "2024-09-02"
+
+# Cron: morning briefing + evening summary
+[[triggers.crons]]
+cron = "0 9 * * 1-5"    # 09:00 UTC Mon-Fri — Morning enterprise briefing
+[[triggers.crons]]
+cron = "0 17 * * 1-5"   # 17:00 UTC Mon-Fri — End-of-day summary
+
+# Required secrets:
+#   SLACK_SIGNING_SECRET      — from api.slack.com/apps
+#   SLACK_BOT_TOKEN           — Bot User OAuth Token (xoxb-...)
+#
+# Channel IDs (right-click channel in Slack → Copy link → ID is last segment):
+#   NUNTIUS_OPS_CHANNEL       — #rship-ops channel ID (C...)
+#   NUNTIUS_MARKET_CHANNEL    — #rship-market channel ID
+#   NUNTIUS_ALERTS_CHANNEL    — #rship-alerts channel ID
+#   NUNTIUS_INTEL_CHANNEL     — #rship-intel channel ID (general)
+
+[vars]
+DESIGNATION    = "RSHIP-BOT-NNT-001"
+BOT_NAME       = "NUNTIUS"
+BOT_LATIN      = "nuntius"
+BOT_MEANING    = "Messenger · Announcer · Voice of the Organism"
+VERSION        = "2.0.0"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# INTELLIGENT BINDINGS — Give NUNTIUS reporting intelligence
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# ── Workers AI — Report generation ────────────────────────────────────────────
+[ai]
+binding = "AI"
+
+# ── KV Namespace — Report cache ───────────────────────────────────────────────
+[[kv_namespaces]]
+binding = "REPORT_CACHE"
+id = "nuntius-report-cache"
+preview_id = "nuntius-report-cache-preview"
+
+# ── D1 Database — Analytics data ──────────────────────────────────────────────
+[[d1_databases]]
+binding = "CORE_DB"
+database_name = "medinatech-core"
+database_id = "medinatech-core-db"
+
+[[d1_databases]]
+binding = "KNOWLEDGE_DB"
+database_name = "medinatech-knowledge"
+database_id = "medinatech-knowledge-db"
+
+# ── Analytics Engine ──────────────────────────────────────────────────────────
+[[analytics_engine_datasets]]
+binding = "NUNTIUS_ANALYTICS"
+dataset = "nuntius_events"

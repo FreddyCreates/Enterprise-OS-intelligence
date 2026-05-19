@@ -1,0 +1,10 @@
+{
+  "name": "@rship/agrex-agi",
+  "version": "1.0.0",
+  "description": "AGREX AGI — Agriculture & Precision Farming Intelligence (RSHIP-2026-AGREX-001)",
+  "main": "agrex-agi.js",
+  "type": "module",
+  "author": "Alfredo Medina Hernandez <medina@medinatech.io>",
+  "license": "UNLICENSED",
+  "keywords": ["agriculture", "precision-farming", "soil", "crop", "agi", "rship", "irrigation"]
+}

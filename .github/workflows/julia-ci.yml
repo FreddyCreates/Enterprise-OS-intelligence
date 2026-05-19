@@ -1,0 +1,199 @@
+name: Julia Organism CI
+
+on:
+  push:
+    paths:
+      - 'julia/**'
+      - 'sdk/julia-organism-bridge/**'
+      - '.github/workflows/julia-ci.yml'
+  pull_request:
+    paths:
+      - 'julia/**'
+      - 'sdk/julia-organism-bridge/**'
+
+jobs:
+  validate:
+    name: Validate Julia Components
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Julia
+        uses: julia-actions/setup-julia@v2
+        with:
+          version: '1.10'
+
+      - name: Cache Julia packages
+        uses: julia-actions/cache@v2
+
+      - name: Instantiate project
+        working-directory: julia
+        run: julia --project=. -e "using Pkg; Pkg.instantiate()"
+
+      - name: Validate engines
+        working-directory: julia
+        run: |
+          julia --project=. -e "
+            include(\"engines/organism_core_engine.jl\")
+            using .OrganismCoreEngine
+            core = OrganismCore(\"CI-TEST\")
+            pulse!(core)
+            println(\"✓ organism_core_engine\")
+
+            include(\"engines/neural_engine.jl\")
+            using .NeuralEngine
+            net = NeuralNetwork([8, 16, 8], \"CI-NEURAL\")
+            result = process!(net, randn(8))
+            println(\"✓ neural_engine\")
+
+            include(\"engines/quantum_engine.jl\")
+            using .QuantumEngine
+            reg = QuantumRegister(4)
+            println(\"✓ quantum_engine\")
+
+            include(\"engines/resonance_engine.jl\")
+            using .ResonanceEngine
+            net = OscillatorNetwork(8, :phi)
+            step!(net, 0.1)
+            println(\"✓ resonance_engine\")
+
+            include(\"engines/medina_field_engine.jl\")
+            using .MedinaFieldEngine
+            field = MedinaField(8, (-5.0, 5.0))
+            println(\"✓ medina_field_engine\")
+
+            include(\"engines/swarm_engine.jl\")
+            using .SwarmEngine
+            swarm = create_swarm(8, 2)
+            step!(swarm)
+            println(\"✓ swarm_engine\")
+
+            include(\"engines/memory_engine.jl\")
+            using .MemoryEngine
+            graph = KnowledgeGraph()
+            store!(graph, randn(8))
+            println(\"✓ memory_engine\")
+          "
+
+      - name: Validate transformers
+        working-directory: julia
+        run: |
+          julia --project=. -e "
+            include(\"transformers/coherence_transformer.jl\")
+            using .CoherenceTransformer
+            amp = CoherenceAmplifier()
+            println(\"✓ coherence_transformer\")
+
+            include(\"transformers/emergence_transformer.jl\")
+            using .EmergenceTransformer
+            det = EmergenceDetector()
+            process!(det, randn(32))
+            println(\"✓ emergence_transformer\")
+
+            include(\"transformers/gauge_transformer.jl\")
+            using .GaugeTransformer
+            println(\"✓ gauge_transformer\")
+
+            include(\"transformers/phi_transformer.jl\")
+            using .PhiTransformer
+            state = PhiState()
+            transform!(state, randn(16), :basis)
+            println(\"✓ phi_transformer\")
+
+            include(\"transformers/topology_transformer.jl\")
+            using .TopologyTransformer
+            pts = randn(2, 10)
+            feats = transform!(pts; max_radius=2.0, max_dim=1)
+            println(\"✓ topology_transformer — betti_0=\", feats[:betti_0])
+          "
+
+      - name: Validate synthesizers
+        working-directory: julia
+        run: |
+          julia --project=. -e "
+            include(\"synthesizers/intelligence_synthesizer.jl\")
+            using .IntelligenceSynthesizer
+            engine = IntelligenceEngine()
+            println(\"✓ intelligence_synthesizer\")
+
+            include(\"synthesizers/protocol_synthesizer.jl\")
+            using .ProtocolSynthesizer
+            orch = ProtocolOrchestrator()
+            println(\"✓ protocol_synthesizer\")
+
+            include(\"synthesizers/sovereign_synthesizer.jl\")
+            using .SovereignSynthesizer
+            core = SovereignCore(\"CI-SOVEREIGN\")
+            establish!(core)
+            println(\"✓ sovereign_synthesizer\")
+
+            include(\"synthesizers/field_synthesizer.jl\")
+            using .FieldSynthesizer
+            gen = FieldGenerator(2, 16)
+            activate_phi_mode!(gen)
+            println(\"✓ field_synthesizer\")
+
+            include(\"synthesizers/evolution_synthesizer.jl\")
+            using .EvolutionSynthesizer
+            pop = Population(16, 8)
+            evolve!(pop, x -> -sum((x .- 1.618) .^ 2))
+            println(\"✓ evolution_synthesizer\")
+          "
+
+      - name: Validate full integration
+        working-directory: julia
+        run: |
+          julia --project=. -e "
+            include(\"organism_integration.jl\")
+            using .OrganismIntegration
+
+            org = create_organism(\"CI-ORGANISM\")
+            println(\"✓ organism created\")
+
+            result = pulse!(org)
+            @assert result[:status] == :pulsed \"pulse failed\"
+            println(\"✓ pulse: heartbeat=\", result[:heartbeat])
+
+            breathe_result = breathe!(org)
+            @assert breathe_result[:status] == :breathed \"breathe failed\"
+            println(\"✓ breathe\")
+
+            signal = randn(64)
+            sig_result = process_signal(org, signal)
+            @assert sig_result[:status] == :processed \"process_signal failed\"
+            println(\"✓ process_signal\")
+
+            status = organism_status(org)
+            println(\"✓ status — phi_accumulated=\", status[:phi_accumulated])
+          "
+
+      - name: Validate server command dispatcher
+        working-directory: julia
+        run: |
+          julia --project=. -e "
+            using JSON
+            include(\"organism_integration.jl\")
+            using .OrganismIntegration
+
+            org = create_organism(\"CI-SERVER\")
+
+            for cmd in [\"pulse\", \"breathe\", \"status\", \"synthesizeKnowledge\"]
+              result = process_command(org, Dict(\"id\" => cmd, \"command\" => cmd, \"params\" => Dict()))
+              @assert !haskey(result, \"error\") \"command \$cmd returned error: \$(get(result, \\\"error\\\", \\\"\\\"))\"
+              println(\"✓ process_command('\$cmd')\")
+            end
+
+            # processSignal
+            r = process_command(org, Dict(
+              \"id\" => \"sig\", \"command\" => \"processSignal\",
+              \"params\" => Dict(\"signal\" => randn(64))
+            ))
+            @assert !haskey(r, \"error\") \"processSignal error: \$(get(r, \\\"error\\\", \\\"\\\"))\"
+            println(\"✓ process_command('processSignal')\")
+
+            println(\"All dispatcher commands OK\")
+          "

@@ -1,0 +1,42 @@
+name               = "rship-imperium"
+main               = "worker.js"
+compatibility_date = "2024-09-02"
+
+# Required secrets:
+#   SLACK_SIGNING_SECRET   — from api.slack.com/apps → Basic Information
+#   SLACK_BOT_TOKEN        — Bot User OAuth Token (xoxb-...)
+#
+# Optional:
+#   IMPERIUM_OPS_CHANNEL   — Slack channel ID where /org speak posts by default
+
+[vars]
+DESIGNATION    = "RSHIP-BOT-IMP-001"
+BOT_NAME       = "IMPERIUM"
+BOT_LATIN      = "imperium"
+BOT_MEANING    = "Command · Authority · Empire"
+VERSION        = "2.0.0"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# INTELLIGENT BINDINGS — Give IMPERIUM command intelligence
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# ── Workers AI — Command interpretation ───────────────────────────────────────
+[ai]
+binding = "AI"
+
+# ── KV Namespace — Command state ──────────────────────────────────────────────
+[[kv_namespaces]]
+binding = "COMMAND_STATE"
+id = "imperium-command-state"
+preview_id = "imperium-command-state-preview"
+
+# ── D1 Database — Core data ───────────────────────────────────────────────────
+[[d1_databases]]
+binding = "CORE_DB"
+database_name = "medinatech-core"
+database_id = "medinatech-core-db"
+
+# ── Queue — Command dispatch ──────────────────────────────────────────────────
+[[queues.producers]]
+binding = "COMMAND_QUEUE"
+queue = "ai-analysis"

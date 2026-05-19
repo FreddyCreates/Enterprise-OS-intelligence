@@ -1,326 +1,74 @@
-name: "Security Intelligence [FORTRESS] — Automated Vulnerability Scan & Alert Triage"
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Engine identity mapping
-#   FORTRESS — Security Intelligence Meta-Engine (wraps E6·E13·E14)
-#   E6  — Risk Scorer        : computes FORTRESS security posture score
-#   E13 — Evidence Registry  : catalogs all findings, patterns, and violations
-#   E14 — Dispute/Correction : flags items needing human review
-#
-# JOB 1 — dependency-scan  [FORTRESS·E13]
-#   Runs on: push to main/copilot/** (sdk/ or production-apps/ changed),
-#            daily schedule (02:00 UTC), workflow_dispatch
-#   Checks for a root-level package.json and runs npm audit. Then discovers
-#   all package.json files in subdirectories (excluding node_modules) and
-#   audits each independently. All findings flow to the step summary.
-#   Mirrors E13 (Evidence Registry) — every dependency is evidence.
-#
-# JOB 2 — pattern-scan  [FORTRESS·E6·E13]
-#   Runs on: same triggers as dependency-scan
-#   Scans JS source files in sdk/ and production-apps/ for three dangerous
-#   code patterns: eval() usage, hardcoded API key assignments, and direct
-#   process.env serialization. Computes the FORTRESS security posture score
-#   (100 base, deductions per finding). Publishes SECURE / REVIEW NEEDED /
-#   ACTION REQUIRED verdict to the step summary.
-#   Mirrors E6 (Risk Scorer) — every risk pattern is measured and scored.
-#
-# JOB 3 — sdk-integrity-check  [FORTRESS·E5·E14]
-#   Runs on: same triggers as dependency-scan
-#   Runs node --check on every *.js file found under sdk/ and production-apps/
-#   to catch syntax errors before they reach production. Reports total pass/fail
-#   counts. A single syntax error fails the job.
-#   Mirrors E5 (Runtime Truth Engine) — validate before you ship.
-#
-# VIVIT · MEMINIT · GUBERNAT — Medina Tech · Chaos Lab
-# ─────────────────────────────────────────────────────────────────────────────
+name: "Security Intelligence [FORTRESS] — Repo Hardening"
 
 on:
   push:
-    branches:
-      - main
-      - 'copilot/**'
     paths:
       - 'sdk/**'
       - 'production-apps/**'
+      - 'protocols/**'
       - 'cloudflare-workers/**'
-  schedule:
-    - cron: '0 2 * * *'
+      - '.github/workflows/**'
+  pull_request:
+    paths:
+      - 'sdk/**'
+      - 'production-apps/**'
+      - 'protocols/**'
+      - 'cloudflare-workers/**'
+      - '.github/workflows/**'
   workflow_dispatch:
 
 permissions:
   contents: read
-  security-events: write
-
-env:
-  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
-
-  # ───────────────────────────────────────────────────────────────────────────
-  # JOB 1 — Dependency Scan [FORTRESS·E13]
-  # ───────────────────────────────────────────────────────────────────────────
-  dependency-scan:
-    name: "[FORTRESS·E13] Dependency Scan — npm audit"
+  fortress-security:
+    name: "FORTRESS Security Hardening Scan"
     runs-on: ubuntu-latest
 
     steps:
-      - name: "[E1] Ingest — Checkout repository"
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: "[E2] Parse — Setup Node.js 20"
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
 
-      - name: "[E13] Evidence Registry — Audit root package.json"
-        id: root-audit
+      - name: Scan for high-risk patterns
         run: |
-          if [ -f "package.json" ]; then
-            echo "Root package.json found — running npm audit"
-            npm audit --audit-level=moderate 2>&1 || true
-            ROOT_RESULT="audited"
-          else
-            echo "No root package.json — skipping root audit"
-            ROOT_RESULT="skipped"
-          fi
-          echo "root_result=$ROOT_RESULT" >> "$GITHUB_OUTPUT"
-
-      - name: "[E13] Evidence Registry — Audit all subdirectory package.json files"
-        id: subdir-audit
-        run: |
-          TOTAL=0
-          FAILED=0
-          AUDIT_LOG=""
-
-          while IFS= read -r pkg; do
-            DIR=$(dirname "$pkg")
-            echo "Auditing: $DIR"
-            TOTAL=$((TOTAL + 1))
-            OUTPUT=$(cd "$DIR" && npm audit --audit-level=moderate 2>&1 || true)
-            if echo "$OUTPUT" | grep -qiE "critical|high|moderate"; then
-              FAILED=$((FAILED + 1))
-              AUDIT_LOG="$AUDIT_LOG\n⚠️  $DIR — vulnerabilities found"
-            else
-              AUDIT_LOG="$AUDIT_LOG\n✅ $DIR — clean"
-            fi
-          done < <(find . -name "package.json" -not -path "*/node_modules/*" -not -maxdepth 1)
-
-          echo "total=$TOTAL" >> "$GITHUB_OUTPUT"
-          echo "failed=$FAILED" >> "$GITHUB_OUTPUT"
-          printf "$AUDIT_LOG" > audit_results.txt
-
-      - name: "[E15] Render/Export — Publish dependency scan summary"
-        env:
-          ROOT_RESULT: ${{ steps.root-audit.outputs.root_result }}
-          TOTAL: ${{ steps.subdir-audit.outputs.total }}
-          FAILED: ${{ steps.subdir-audit.outputs.failed }}
-        run: |
-          echo "### 🔒 FORTRESS Dependency Scan" >> "$GITHUB_STEP_SUMMARY"
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Field | Value |" >> "$GITHUB_STEP_SUMMARY"
-          echo "|-------|-------|" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Root package.json | $ROOT_RESULT |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Subdirectory packages scanned | $TOTAL |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Packages with findings | $FAILED |" >> "$GITHUB_STEP_SUMMARY"
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-          if [ -f "audit_results.txt" ]; then
-            echo "#### Per-Package Results" >> "$GITHUB_STEP_SUMMARY"
-            echo "\`\`\`" >> "$GITHUB_STEP_SUMMARY"
-            cat audit_results.txt >> "$GITHUB_STEP_SUMMARY"
-            echo "\`\`\`" >> "$GITHUB_STEP_SUMMARY"
-          fi
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "*FORTRESS·E13 Evidence Registry — VIVIT · MEMINIT · GUBERNAT*" >> "$GITHUB_STEP_SUMMARY"
-
-  # ───────────────────────────────────────────────────────────────────────────
-  # JOB 2 — Pattern Scan [FORTRESS·E6·E13]
-  # ───────────────────────────────────────────────────────────────────────────
-  pattern-scan:
-    name: "[FORTRESS·E6] Pattern Scan — FORTRESS Security Posture Score"
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: "[E1] Ingest — Checkout repository"
-        uses: actions/checkout@v4
-
-      - name: "[E13] Evidence Registry — Scan for dangerous code patterns"
-        id: scan
-        run: |
-          echo "## Pattern Scan Results" >> "$GITHUB_STEP_SUMMARY"
-
-          # Check for eval() usage (excluding commented lines)
-          EVAL_COUNT=0
-          if [ -d "sdk" ] || [ -d "production-apps" ]; then
-            EVAL_COUNT=$(grep -r "eval(" sdk/ production-apps/ --include="*.js" 2>/dev/null \
-              | grep -v "//.*eval" | wc -l || echo 0)
-          fi
-
-          # Check for hardcoded API keys pattern
-          API_KEY_COUNT=0
-          if [ -d "sdk" ] || [ -d "production-apps" ]; then
-            API_KEY_COUNT=$(grep -rE "(api_key|apikey|secret_key|access_token)\s*=\s*['\"][^'\"]{10,}" \
-              sdk/ production-apps/ --include="*.js" -i 2>/dev/null | wc -l || echo 0)
-          fi
-
-          # Check for process.env direct exposure
-          ENV_EXPOSURE=0
-          if [ -d "sdk" ] || [ -d "production-apps" ]; then
-            ENV_EXPOSURE=$(grep -r "JSON.stringify(process.env)" sdk/ production-apps/ \
-              --include="*.js" 2>/dev/null | wc -l || echo 0)
-          fi
-
-          echo "eval_count=$EVAL_COUNT" >> "$GITHUB_OUTPUT"
-          echo "api_key_count=$API_KEY_COUNT" >> "$GITHUB_OUTPUT"
-          echo "env_exposure=$ENV_EXPOSURE" >> "$GITHUB_OUTPUT"
-
-          echo "Pattern scan — eval:$EVAL_COUNT api_keys:$API_KEY_COUNT env_exposure:$ENV_EXPOSURE"
-
-      - name: "[E6] Risk Scorer — Compute FORTRESS security posture score"
-        id: score
-        env:
-          EVAL_COUNT: ${{ steps.scan.outputs.eval_count }}
-          API_KEY_COUNT: ${{ steps.scan.outputs.api_key_count }}
-          ENV_EXPOSURE: ${{ steps.scan.outputs.env_exposure }}
-        run: |
-          SCORE=$((100 - (EVAL_COUNT * 10) - (API_KEY_COUNT * 25) - (ENV_EXPOSURE * 15)))
-          if [ "$SCORE" -lt 0 ]; then SCORE=0; fi
-
-          if [ "$SCORE" -ge 90 ]; then
-            STATUS="✅ SECURE"
-          elif [ "$SCORE" -ge 60 ]; then
-            STATUS="⚠️ REVIEW NEEDED"
-          else
-            STATUS="🚨 ACTION REQUIRED"
-          fi
-
-          echo "score=$SCORE" >> "$GITHUB_OUTPUT"
-          echo "status=$STATUS" >> "$GITHUB_OUTPUT"
-          echo "FORTRESS score: $SCORE — $STATUS"
-
-      - name: "[E15] Render/Export — Publish FORTRESS security posture"
-        env:
-          EVAL_COUNT: ${{ steps.scan.outputs.eval_count }}
-          API_KEY_COUNT: ${{ steps.scan.outputs.api_key_count }}
-          ENV_EXPOSURE: ${{ steps.scan.outputs.env_exposure }}
-          SCORE: ${{ steps.score.outputs.score }}
-          STATUS: ${{ steps.score.outputs.status }}
-        run: |
-          echo "### 🏰 FORTRESS Security Posture Report" >> "$GITHUB_STEP_SUMMARY"
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "## Posture Score: **${SCORE}/100** — ${STATUS}" >> "$GITHUB_STEP_SUMMARY"
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Pattern | Occurrences | Deduction |" >> "$GITHUB_STEP_SUMMARY"
-          echo "|---------|-------------|-----------|" >> "$GITHUB_STEP_SUMMARY"
-          echo "| \`eval()\` usage | $EVAL_COUNT | -$((EVAL_COUNT * 10)) pts |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Hardcoded API keys | $API_KEY_COUNT | -$((API_KEY_COUNT * 25)) pts |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| process.env exposure | $ENV_EXPOSURE | -$((ENV_EXPOSURE * 15)) pts |" >> "$GITHUB_STEP_SUMMARY"
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "**Final Score: ${SCORE}/100 — ${STATUS}**" >> "$GITHUB_STEP_SUMMARY"
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "*FORTRESS·E6 Risk Scorer·E13 Evidence Registry — VIVIT · MEMINIT · GUBERNAT*" >> "$GITHUB_STEP_SUMMARY"
-
-  # ───────────────────────────────────────────────────────────────────────────
-  # JOB 3 — SDK Integrity Check [FORTRESS·E5·E14]
-  # ───────────────────────────────────────────────────────────────────────────
-  sdk-integrity-check:
-    name: "[FORTRESS·E5·E14] SDK Integrity Check — Syntax Validation"
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: "[E1] Ingest — Checkout repository"
-        uses: actions/checkout@v4
-
-      - name: "[E2] Parse — Setup Node.js 20"
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: "[E5] Runtime Truth Engine — Syntax check all SDK files"
-        id: sdk-check
-        run: |
-          PASSED=0
-          FAILED=0
-          FAIL_LIST=""
-
-          while IFS= read -r f; do
-            if node --check "$f" 2>/dev/null; then
-              PASSED=$((PASSED + 1))
-            else
-              echo "FAIL: $f"
-              FAILED=$((FAILED + 1))
-              FAIL_LIST="$FAIL_LIST\n  - $f"
-            fi
-          done < <(find sdk/ -name "*.js" 2>/dev/null || true)
-
-          echo "sdk_passed=$PASSED" >> "$GITHUB_OUTPUT"
-          echo "sdk_failed=$FAILED" >> "$GITHUB_OUTPUT"
-          printf "$FAIL_LIST" > sdk_fail_list.txt
-          echo "SDK syntax check — passed:$PASSED failed:$FAILED"
-
-      - name: "[E5] Runtime Truth Engine — Syntax check all production app files"
-        id: app-check
-        run: |
-          PASSED=0
-          FAILED=0
-          FAIL_LIST=""
-
-          while IFS= read -r f; do
-            if node --check "$f" 2>/dev/null; then
-              PASSED=$((PASSED + 1))
-            else
-              echo "FAIL: $f"
-              FAILED=$((FAILED + 1))
-              FAIL_LIST="$FAIL_LIST\n  - $f"
-            fi
-          done < <(find production-apps/ -name "*.js" 2>/dev/null || true)
-
-          echo "app_passed=$PASSED" >> "$GITHUB_OUTPUT"
-          echo "app_failed=$FAILED" >> "$GITHUB_OUTPUT"
-          printf "$FAIL_LIST" > app_fail_list.txt
-          echo "App syntax check — passed:$PASSED failed:$FAILED"
-
-      - name: "[E14] Dispute/Correction — Fail if any syntax errors found"
-        env:
-          SDK_FAILED: ${{ steps.sdk-check.outputs.sdk_failed }}
-          APP_FAILED: ${{ steps.app-check.outputs.app_failed }}
-        run: |
-          TOTAL_FAILED=$((SDK_FAILED + APP_FAILED))
-          if [ "$TOTAL_FAILED" -gt 0 ]; then
-            echo "❌ $TOTAL_FAILED syntax error(s) detected — integrity check FAILED"
+          set -euo pipefail
+          PATTERN='(eval\(|new Function\(|child_process|exec\(|spawn\(|process\.env\.[A-Z_]+|private[_-]?key|BEGIN RSA PRIVATE KEY)'
+          if grep -RInE --exclude-dir=node_modules --exclude-dir=.git "$PATTERN" sdk production-apps protocols; then
+            echo "::error::High-risk pattern detected. Review and remediate."
             exit 1
           fi
-          echo "✅ All files passed syntax validation"
+          echo "No blocked high-risk patterns found."
 
-      - name: "[E15] Render/Export — Publish integrity check summary"
-        if: always()
-        env:
-          SDK_PASSED: ${{ steps.sdk-check.outputs.sdk_passed }}
-          SDK_FAILED: ${{ steps.sdk-check.outputs.sdk_failed }}
-          APP_PASSED: ${{ steps.app-check.outputs.app_passed }}
-          APP_FAILED: ${{ steps.app-check.outputs.app_failed }}
+      - name: Scan for Cloudflare/Slack secret leaks
         run: |
-          TOTAL_PASSED=$((SDK_PASSED + APP_PASSED))
-          TOTAL_FAILED=$((SDK_FAILED + APP_FAILED))
-
-          echo "### 🔍 FORTRESS SDK Integrity Check" >> "$GITHUB_STEP_SUMMARY"
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Category | Passed | Failed |" >> "$GITHUB_STEP_SUMMARY"
-          echo "|----------|--------|--------|" >> "$GITHUB_STEP_SUMMARY"
-          echo "| AGI SDK Files | $SDK_PASSED | $SDK_FAILED |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Production App Files | $APP_PASSED | $APP_FAILED |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| **Total** | **$TOTAL_PASSED** | **$TOTAL_FAILED** |" >> "$GITHUB_STEP_SUMMARY"
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-          if [ "$TOTAL_FAILED" -eq 0 ]; then
-            echo "**✅ All files passed syntax validation**" >> "$GITHUB_STEP_SUMMARY"
-          else
-            echo "**🚨 $TOTAL_FAILED file(s) failed syntax validation**" >> "$GITHUB_STEP_SUMMARY"
-            if [ -f "sdk_fail_list.txt" ] && [ -s "sdk_fail_list.txt" ]; then
-              echo "" >> "$GITHUB_STEP_SUMMARY"
-              echo "SDK failures:" >> "$GITHUB_STEP_SUMMARY"
-              echo "\`\`\`" >> "$GITHUB_STEP_SUMMARY"
-              cat sdk_fail_list.txt >> "$GITHUB_STEP_SUMMARY"
-              echo "\`\`\`" >> "$GITHUB_STEP_SUMMARY"
-            fi
+          set -euo pipefail
+          SECRET_PATTERN='(CLOUDFLARE_API_TOKEN\s*[:=]\s*["'\''][^"'\'']{10,}["'\'']|SLACK_(BOT_TOKEN|SIGNING_SECRET)\s*[:=]\s*["'\''][^"'\'']{10,}["'\''])'
+          if grep -RInE --exclude-dir=node_modules --exclude-dir=.git --exclude='*.md' "$SECRET_PATTERN" cloudflare-workers .github/workflows; then
+            echo "::error::Potential Cloudflare/Slack secret exposure detected."
+            exit 1
           fi
+          echo "No Cloudflare/Slack secret literals detected."
+
+      - name: Validate JavaScript syntax (changed surfaces)
+        run: |
+          set -euo pipefail
+          FILES=$(find sdk production-apps protocols cloudflare-workers -type f -name '*.js')
+          for file in $FILES; do
+            node --check "$file"
+          done
+
+      - name: Publish security summary
+        run: |
+          echo "### FORTRESS Security Hardening" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "*FORTRESS·E5 Runtime Truth·E14 Dispute/Correction — VIVIT · MEMINIT · GUBERNAT*" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Check | Status |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|---|---|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| High-risk pattern scan | ✅ |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| JavaScript syntax validation | ✅ |" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Scope: sdk/, production-apps/, protocols/, cloudflare-workers/, workflows." >> "$GITHUB_STEP_SUMMARY"

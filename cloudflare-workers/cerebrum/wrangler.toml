@@ -1,0 +1,64 @@
+name               = "cerebrum"
+main               = "worker.js"
+compatibility_date = "2024-09-02"
+
+[vars]
+DESIGNATION    = "RSHIP-AIS-CB-001"
+WORKER_NAME    = "CEREBRUM"
+WORKER_LATIN   = "cerebrum"
+WORKER_MEANING = "Brain — Master AGI Portal"
+VERSION        = "2.0.0"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# INTELLIGENT BINDINGS — CEREBRUM is the master brain
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# ── Workers AI — Central reasoning engine ─────────────────────────────────────
+[ai]
+binding = "AI"
+
+# ── KV Namespace — Brain state and memory ─────────────────────────────────────
+[[kv_namespaces]]
+binding = "BRAIN_STATE"
+id = "cerebrum-brain-state"
+preview_id = "cerebrum-brain-state-preview"
+
+[[kv_namespaces]]
+binding = "KNOWLEDGE_CACHE"
+id = "cerebrum-knowledge-cache"
+preview_id = "cerebrum-knowledge-cache-preview"
+
+# ── D1 Database — Knowledge base ──────────────────────────────────────────────
+[[d1_databases]]
+binding = "KNOWLEDGE_DB"
+database_name = "medinatech-knowledge"
+database_id = "medinatech-knowledge-db"
+
+[[d1_databases]]
+binding = "CORE_DB"
+database_name = "medinatech-core"
+database_id = "medinatech-core-db"
+
+# ── Queue — Orchestrate other workers ─────────────────────────────────────────
+[[queues.producers]]
+binding = "ORCHESTRATION_QUEUE"
+queue = "ai-analysis"
+
+[[queues.producers]]
+binding = "KNOWLEDGE_SYNC_QUEUE"
+queue = "knowledge-sync"
+
+# ── R2 Bucket — Knowledge corpus storage ──────────────────────────────────────
+[[r2_buckets]]
+binding = "KNOWLEDGE_CORPUS"
+bucket_name = "knowledge-corpus"
+
+# ── Vectorize — Semantic search ───────────────────────────────────────────────
+[[vectorize]]
+binding = "KNOWLEDGE_VECTORS"
+index_name = "medinatech-knowledge"
+
+# ── Analytics Engine ──────────────────────────────────────────────────────────
+[[analytics_engine_datasets]]
+binding = "BRAIN_ANALYTICS"
+dataset = "cerebrum_events"

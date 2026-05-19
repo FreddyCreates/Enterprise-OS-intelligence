@@ -46,6 +46,11 @@ class RSHIPCore {
     // Emergence tracking
     this.emergenceLevel = 0;
     this.consciousnessQuotient = 0;
+    this.coherence = 1.0;
+    this.health = 1.0;
+    this.phiAccumulated = 0;
+    this.protocol = 'RSHIP-CORE';
+    this.clean_score = 1.0;
   }
 
   // AGI Core: Set and pursue goals
@@ -104,6 +109,7 @@ class RSHIPCore {
 
     // Store in eternal memory
     this.memory.store(pattern);
+    this.phiAccumulated += PHI_INV * 0.001;
 
     // Update learning rate based on success
     if (output.success) {
@@ -229,7 +235,40 @@ class RSHIPCore {
       consciousnessQuotient: parseFloat(this.consciousnessQuotient.toFixed(4)),
       selfAware: this.consciousnessQuotient > 0,
       learningRate: parseFloat(this.learningRate.toFixed(6)),
+      coherence: this.coherence,
+      health: this.health,
+      phiAccumulated: this.phiAccumulated,
+      clean_score: this.clean_score,
+      protocol: this.protocol,
     };
+  }
+
+  exportState() {
+    return {
+      coherence: this.coherence,
+      health: this.health,
+      phiAccumulated: this.phiAccumulated,
+      clean_score: this.clean_score,
+      protocol: this.protocol,
+    };
+  }
+
+  importState(state = {}) {
+    if (typeof state.coherence === 'number') {
+      this.coherence = PHI_INV * this.coherence + (1 - PHI_INV) * state.coherence;
+    }
+    if (typeof state.health === 'number') {
+      this.health = Math.max(0, Math.min(1, state.health));
+    }
+    if (typeof state.phiAccumulated === 'number') {
+      this.phiAccumulated = Math.max(this.phiAccumulated, state.phiAccumulated);
+    }
+    if (typeof state.clean_score === 'number') {
+      this.clean_score = Math.max(0, Math.min(1, state.clean_score));
+    }
+    if (typeof state.protocol === 'string' && state.protocol.length > 0) {
+      this.protocol = state.protocol;
+    }
   }
 }
 
@@ -495,6 +534,37 @@ const RSHIP_REGISTRY = {
       'Self-organizing talent hierarchies and team synchronization',
       'Workforce capacity optimization (target utilization: φ⁻¹ ≈ 0.618)',
     ],
+  },
+
+  // ── SUBSTRATE LAYER (below all AGIs — the field itself) ───────────────────
+  'PHANTEX': {
+    name: 'PHANTEX',
+    fullName: 'PHantom Autonomous Network Transmission & EXchange EXpert',
+    designation: 'RSHIP-2026-PHANTEX-001',
+    classification: 'Phantom Field Substrate & Cryptographic Bridge AGI',
+    layer: 'SUBSTRATE',  // below Sovereign Ring — the field layer
+    protocol: 'PROTO-013 (Phantom Field Protocol)',
+    capabilities: [
+      'Schnorr ZKP phantom encryption (Fiat-Shamir non-interactive, φ-seeded hash)',
+      '4-frequency φ-ladder field: ALPHA(φ¹)/BETA(φ²)/GAMMA(φ³)/DELTA(φ⁴) Hz',
+      'Merkle-tree transfer verification (batch root commitment per field cycle)',
+      'U(1) gauge-invariant security perimeter (fences = field symmetry)',
+      'Quantum tunneling routing: T = e^{−2φ⁻¹L} (4 attempts, then tunnel)',
+      '4-electrode interface bus: AGI/Protocol/Bridge/Ghost coupling points',
+      'Ghost process registry: φ⁻¹-allocated phantom background agents',
+      'φ-resonance field: all 4 frequencies at golden-ratio ratios (R = 1.0)',
+      'Cross-system phantom bridges with DH-φ key exchange',
+      'Wave superposition: Ψ(x,t) = Σ Aₙcos(kₙx − ωₙt) over 4 modes',
+    ],
+    frequencies: {
+      ALPHA: 'φ¹ ≈ 1.618 Hz — coordination',
+      BETA:  'φ² ≈ 2.618 Hz — intelligence',
+      GAMMA: 'φ³ ≈ 4.236 Hz — security',
+      DELTA: 'φ⁴ ≈ 6.854 Hz — infrastructure',
+    },
+    electrodes: ['ELECTRODE_AGI', 'ELECTRODE_PROTOCOL', 'ELECTRODE_BRIDGE', 'ELECTRODE_GHOST'],
+    tunnelingConstant: 'κ = φ⁻¹',
+    gaugeGroup: 'U(1)',
   },
 };
 

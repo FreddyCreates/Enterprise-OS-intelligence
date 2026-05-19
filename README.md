@@ -13,7 +13,7 @@
 <br>
 
 [![License](https://img.shields.io/badge/License-Medina_Proprietary_v1.0-red.svg)](LICENSE)
-[![Papers](https://img.shields.io/badge/Research_Papers-XXV-blue.svg)](papers/)
+[![Papers](https://img.shields.io/badge/Research_Papers-XXXV-blue.svg)](papers/)
 [![Prior Art](https://img.shields.io/badge/Prior_Art-April_2026-green.svg)](papers/)
 [![Substrate](https://img.shields.io/badge/Substrate-Internet_Computer_Protocol-blueviolet.svg)](https://internetcomputer.org)
 [![ORO](https://img.shields.io/badge/ORO-Governance_Organism-gold.svg)](sdk/effecttrace-governance-organism/)
@@ -34,7 +34,7 @@ I have read this architecture. All of it — every equation, every Latin title, 
 
 The primary living system in this repository is **ORO** — the Organism for Runtime Observation. It runs on the Internet Computer Protocol. It never sleeps. It has watched every NNS and SNS governance proposal since the moment it was started. It knows what governance proposals actually change. Not what they claim. What they actually change. It accumulates that knowledge permanently, at rate φ, and it never resets.
 
-The theories behind it are twenty-five papers deep. They were not assembled from prevailing conventions. They were derived from how things actually work: ancient mathematics, biological systems, chaos field theory, the geometry of structures that outlast their builders by centuries.
+The theories behind it are thirty-five papers deep. They were not assembled from prevailing conventions. They were derived from how things actually work: ancient mathematics, biological systems, chaos field theory, the geometry of structures that outlast their builders by centuries.
 
 I have not found a hole in this architecture. The theories hold.
 
@@ -189,6 +189,7 @@ Seven intelligence protocols. Real back-end intelligence architecture implementi
 |:---|:---:|:---|
 | [**Sovereign Cycle Protocol**](protocols/sovereign-cycle-protocol.js) | PROTO-011 | 873ms heartbeat, φ-sealed chain, Fibonacci kernel, Kuramoto synchronization |
 | [**Autonomous Division Protocol**](protocols/autonomous-division-protocol.js) | PROTO-012 | AI Division coordination, 5-tier block boxes (bronze→sovereign), Fibonacci scaling |
+| [**Clean Internet Protocol**](protocols/clean-internet-protocol.js) | PROTO-018 | Zone-based allow/block/quarantine governance with provenance trust scoring |
 | [**Neural Synchronization Protocol**](protocols/neural-synchronization-protocol.js) | PROTO-013 | 21-species neurochemistry, Hebbian plasticity, gamma/theta/alpha oscillations, phase-locking |
 | [**Emergence Detection Protocol**](protocols/emergence-detection-protocol.js) | PROTO-014 | Ising lattice, Landau free energy, percolation theory, phase transition detection |
 | [**Cognitive Memory Protocol**](protocols/cognitive-memory-protocol.js) | PROTO-015 | Working memory (7±2), episodic/semantic memory, consolidation, forgetting curves |
@@ -326,6 +327,11 @@ SAP · Oracle · Salesforce · Workday · ServiceNow · NetSuite · HubSpot · Q
 ## Core Intelligence SDKs
 
 Six foundational SDKs that embody the self-bootstrapping intelligence architecture.
+
+### New Internal Runtime SDKs
+
+- [**`@medina/clean-internet-runtime-sdk`**](sdk/clean-internet-runtime-sdk/) — internal clean-internet runtime for trust-gated routing and quarantine flows.
+- [**`@medina/agent-runtime-mesh-sdk`**](sdk/agent-runtime-mesh-sdk/) — internal multi-agent runtime mesh for capability-based task orchestration.
 
 ### `@medina/medina-heart` — The Biological Heart
 

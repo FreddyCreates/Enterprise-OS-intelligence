@@ -1,0 +1,45 @@
+name               = "rship-conduit"
+main               = "worker.js"
+compatibility_date = "2024-09-02"
+
+# Optional secrets:
+#   CONDUIT_AUTH_TOKEN     — Bearer token to protect the routing API
+#   SLACK_WEBHOOK_URL      — Default Slack incoming webhook for /route output
+#   DISCORD_WEBHOOK_URL    — Default Discord webhook
+
+[vars]
+DESIGNATION    = "RSHIP-BOT-CDT-001"
+BOT_NAME       = "CONDUIT"
+BOT_LATIN      = "conduit"
+BOT_MEANING    = "Channel · Pipe · Connector"
+VERSION        = "2.0.0"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# INTELLIGENT BINDINGS — Give CONDUIT routing intelligence
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# ── Workers AI — Smart routing ────────────────────────────────────────────────
+[ai]
+binding = "AI"
+
+# ── KV Namespace — Routing state ──────────────────────────────────────────────
+[[kv_namespaces]]
+binding = "ROUTING_STATE"
+id = "conduit-routing-state"
+preview_id = "conduit-routing-state-preview"
+
+# ── D1 Database — Core data ───────────────────────────────────────────────────
+[[d1_databases]]
+binding = "CORE_DB"
+database_name = "medinatech-core"
+database_id = "medinatech-core-db"
+
+# ── Queue — Message routing ───────────────────────────────────────────────────
+[[queues.producers]]
+binding = "ROUTE_QUEUE"
+queue = "ai-analysis"
+
+[[queues.consumers]]
+queue = "ai-analysis"
+max_batch_size = 10
+max_batch_timeout = 30
