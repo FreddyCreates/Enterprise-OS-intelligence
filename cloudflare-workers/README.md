@@ -133,4 +133,44 @@ Workers are **stateless by default** — for persistent state, wire Cloudflare K
 
 ---
 
+## Intelligent Cache Architecture (v5.0.0)
+
+The v5.0.0 release introduces a two-layer compute architecture:
+
+### Outer Membrane (GATE-NODE)
+```
+RSHIP-AIS-GN-001 · gate-node · "porta-nodus"
+├─ Terminate TLS
+├─ Classify requests (cheap pattern matching, NOT AI)
+├─ Route to cache-organisms
+└─ MINIMAL BILLED COMPUTE
+```
+
+### Inner Organism (CACHE-ORGANISM)
+```
+RSHIP-AIS-CO-001 · cache-organism · "cachea-organismus"
+├─ Persistent state across requests (KV)
+├─ Learned patterns stored as cache entries
+├─ Local decision logic
+├─ Semi-autonomous behavior
+└─ NOT 1:1 mapped to Cloudflare CPU billing
+```
+
+### The Key Inversion
+
+| Traditional | Organism Model |
+|-------------|----------------|
+| cache = dumb storage | cache = semi-autonomous agent |
+| Workers = all compute | Workers = thin membrane |
+| every thought = billed | cognition decoupled from billing |
+
+### Deploy Membrane Layer
+```bash
+npm run deploy:membrane  # Deploys gate-node + cache-organism
+```
+
+See `papers/XXXVIII-CACHEA-INTELLIGENS.md` for full architecture documentation.
+
+---
+
 © 2026 Alfredo Medina Hernandez · RSHIP AGI Systems · All Rights Reserved.

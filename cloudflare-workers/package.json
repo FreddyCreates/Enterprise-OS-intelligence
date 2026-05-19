@@ -1,7 +1,7 @@
 {
   "name": "rship-ais-cloudflare-workers",
-  "version": "4.0.0",
-  "description": "RSHIP AGI Systems — Cloudflare Worker Network: 6 AI Agent workers + 6 Bot workers (Slack, Workflow, Cron, Alerts, Enterprise Control, Broadcast)",
+  "version": "5.0.0",
+  "description": "RSHIP AGI Systems — Cloudflare Worker Network: 6 AI Workers + 6 Bots + Gate-Node (membrane) + Cache-Organism (intelligent cache)",
   "private": true,
   "scripts": {
     "dev:cerebrum": "cd cerebrum && wrangler dev",
@@ -17,6 +17,12 @@
     "deploy:nexus":    "cd nexus    && wrangler deploy",
     "deploy:vigil":    "cd vigil    && wrangler deploy",
     "deploy:cursor":   "cd cursor   && wrangler deploy",
+
+    "dev:gate-node":      "cd gate-node      && wrangler dev",
+    "dev:cache-organism": "cd cache-organism && wrangler dev",
+
+    "deploy:gate-node":      "cd gate-node      && wrangler deploy",
+    "deploy:cache-organism": "cd cache-organism && wrangler deploy",
 
     "dev:herald":   "cd bots/herald   && wrangler dev",
     "dev:conduit":  "cd bots/conduit  && wrangler dev",
@@ -34,10 +40,11 @@
     "deploy:imperium": "cd bots/imperium && wrangler deploy",
     "deploy:nuntius":  "cd bots/nuntius  && wrangler deploy",
 
-    "deploy:agents":  "npm run deploy:cerebrum && npm run deploy:animus && npm run deploy:agens && npm run deploy:nexus && npm run deploy:vigil && npm run deploy:cursor",
-    "deploy:bots":    "npm run deploy:herald && npm run deploy:conduit && npm run deploy:pulse && npm run deploy:sentinel && npm run deploy:imperium && npm run deploy:nuntius",
-    "deploy:slack":   "npm run deploy:herald && npm run deploy:imperium && npm run deploy:nuntius",
-    "deploy:all":     "npm run deploy:agents && npm run deploy:bots"
+    "deploy:membrane": "npm run deploy:gate-node && npm run deploy:cache-organism",
+    "deploy:agents":   "npm run deploy:cerebrum && npm run deploy:animus && npm run deploy:agens && npm run deploy:nexus && npm run deploy:vigil && npm run deploy:cursor",
+    "deploy:bots":     "npm run deploy:herald && npm run deploy:conduit && npm run deploy:pulse && npm run deploy:sentinel && npm run deploy:imperium && npm run deploy:nuntius",
+    "deploy:slack":    "npm run deploy:herald && npm run deploy:imperium && npm run deploy:nuntius",
+    "deploy:all":      "npm run deploy:membrane && npm run deploy:agents && npm run deploy:bots"
   },
   "devDependencies": {
     "wrangler": "^3.0.0"
