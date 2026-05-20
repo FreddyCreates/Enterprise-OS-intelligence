@@ -1,0 +1,23 @@
+{
+  "name": "@rship/eddi-core",
+  "version": "1.0.0",
+  "description": "EDDI Core — Enterprise Data-Driven Intelligence. Unified AGI orchestration for transformer lifecycle management.",
+  "main": "eddi-core.js",
+  "type": "module",
+  "keywords": [
+    "enterprise",
+    "agi",
+    "orchestration",
+    "transformer",
+    "pipeline",
+    "lifecycle",
+    "rship"
+  ],
+  "author": "Alfredo Medina Hernandez",
+  "license": "Proprietary",
+  "dependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/FreddyCreates/Enterprise-OS-intelligence"
+  }
+}
