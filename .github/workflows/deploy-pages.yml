@@ -1,0 +1,74 @@
+name: "Deploy to GitHub Pages"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Deploys the dist/ directory to GitHub Pages automatically
+# whenever code is pushed to the main branch.
+#
+# This workflow uses the official GitHub Pages actions for deployment,
+# which handles all the GITHUB_TOKEN permissions automatically.
+#
+# After the first successful deployment:
+#   - Go to repo Settings → Pages → set Source to "GitHub Actions"
+#   - Your site will be available at: https://freddycreates.github.io/Enterprise-OS-intelligence/
+# ─────────────────────────────────────────────────────────────────────────────
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'dist/**'
+      - '.github/workflows/deploy-pages.yml'
+  workflow_dispatch:
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  # Build job - prepares the site for deployment
+  build:
+    name: "Build Pages"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./dist
+
+  # Deployment job
+  deploy:
+    name: "Deploy Pages"
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: Report deployment URL
+        run: |
+          echo "═══════════════════════════════════════════════════════════════════"
+          echo "  RSHIP Enterprise OS Intelligence — GitHub Pages Deployment"
+          echo "═══════════════════════════════════════════════════════════════════"
+          echo ""
+          echo "  ✅ Successfully deployed to GitHub Pages!"
+          echo ""
+          echo "  🌐 Live URL: ${{ steps.deployment.outputs.page_url }}"
+          echo ""
+          echo "═══════════════════════════════════════════════════════════════════"
