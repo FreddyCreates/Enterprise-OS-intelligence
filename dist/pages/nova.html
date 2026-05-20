@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NOVA Protocol — The Clean Internet</title>
+  <meta name="description" content="NOVA Protocol entry point. Encrypted AI-safe zone. Gate-Node routing.">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⬡</text></svg>">
+  <style>
+    :root {
+      --gold: #ffd700;
+      --cyan: #00d4ff;
+      --emerald: #00ff88;
+      --crimson: #ff4d6d;
+      --purple: #a855f7;
+      --bg: #02050f;
+      --card: #0a0f1a;
+      --border: #1a2535;
+      --text: #e2ecf5;
+      --dim: #6b7a8f;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+    }
+    a { color: var(--cyan); text-decoration: none; }
+    a:hover { color: var(--gold); }
+
+    nav {
+      position: sticky; top: 0;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 48px;
+      background: rgba(2,5,15,0.95);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      z-index: 100;
+    }
+    .nav-logo {
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      color: var(--gold);
+    }
+    .nav-links { display: flex; gap: 24px; font-size: 0.85rem; }
+    .nav-links a { color: var(--dim); }
+
+    .hero {
+      padding: 80px 48px;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+    }
+    .hero-icon {
+      font-size: 4rem;
+      margin-bottom: 24px;
+      filter: drop-shadow(0 0 20px rgba(255,215,0,0.3));
+    }
+    .hero h1 {
+      font-size: 3rem;
+      font-weight: 300;
+      margin-bottom: 16px;
+    }
+    .hero h1 strong {
+      color: var(--gold);
+      font-weight: 700;
+    }
+    .hero p {
+      font-size: 1.2rem;
+      color: var(--dim);
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .content {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 60px 48px;
+    }
+
+    .section {
+      margin-bottom: 60px;
+    }
+    .section h2 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 24px;
+      color: var(--cyan);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .section h2::before {
+      content: '◈';
+      color: var(--gold);
+    }
+
+    .arch-diagram {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 32px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.8rem;
+      line-height: 1.5;
+      overflow-x: auto;
+      white-space: pre;
+      color: var(--dim);
+    }
+    .arch-diagram .cyan { color: var(--cyan); }
+    .arch-diagram .gold { color: var(--gold); }
+    .arch-diagram .green { color: var(--emerald); }
+    .arch-diagram .red { color: var(--crimson); }
+
+    .node-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+    .node-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 24px;
+      transition: border-color 0.3s;
+    }
+    .node-card:hover {
+      border-color: var(--cyan);
+    }
+    .node-card h3 {
+      font-size: 1rem;
+      color: var(--gold);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .node-card p {
+      font-size: 0.85rem;
+      color: var(--dim);
+      margin-bottom: 12px;
+    }
+    .node-card .tag {
+      display: inline-block;
+      padding: 4px 10px;
+      background: rgba(0,212,255,0.1);
+      border-radius: 4px;
+      font-size: 0.7rem;
+      color: var(--cyan);
+      font-family: monospace;
+    }
+
+    .route-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+    .route-table th, .route-table td {
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    .route-table th {
+      background: var(--card);
+      color: var(--cyan);
+      font-weight: 600;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .route-table td {
+      color: var(--dim);
+    }
+    .route-table tr:hover td {
+      background: rgba(0,212,255,0.05);
+    }
+    .route-table .type { color: var(--gold); font-family: monospace; }
+    .route-table .route { color: var(--emerald); }
+
+    footer {
+      padding: 40px 48px;
+      text-align: center;
+      border-top: 1px solid var(--border);
+      font-size: 0.8rem;
+      color: var(--dim);
+    }
+
+    @media (max-width: 768px) {
+      nav, .hero, .content, footer { padding-left: 20px; padding-right: 20px; }
+      .hero h1 { font-size: 2rem; }
+      .arch-diagram { font-size: 0.65rem; }
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="nav-logo">⬡ NOVA PROTOCOL</div>
+    <div class="nav-links">
+      <a href="../index.html">← Home</a>
+      <a href="cache-organisms.html">Cache Organisms</a>
+      <a href="api.html">API Portal</a>
+    </div>
+  </nav>
+
+  <section class="hero">
+    <div class="hero-icon">⬡</div>
+    <h1>The <strong>Clean Internet</strong></h1>
+    <p>
+      Encrypted AI-safe zone. Gate-Node routing protocol.
+      Intelligent traffic classification and sovereign protection.
+    </p>
+  </section>
+
+  <div class="content">
+    <section class="section">
+      <h2>Protocol Architecture</h2>
+      <div class="arch-diagram">
+<span class="cyan">┌─────────────────────────┐</span>
+<span class="cyan">│     THE CLEAN INTERNET  │</span>
+<span class="cyan">│    (Nova Protocol/ICP)  │</span>
+<span class="cyan">│  Encrypted AI-safe zone │</span>
+<span class="cyan">└─────────┬───────────────┘</span>
+          │
+<span class="gold">┌─────────▼───────────────┐</span>
+<span class="gold">│      GATE-NODE          │</span>
+<span class="gold">│  Protocol Entry Point   │</span>
+<span class="gold">│  Auth / Encrypt / Route │</span>
+<span class="gold">└─────────┬───────────────┘</span>
+          │
+  ┌───────┼───────┐
+  │       │       │
+<span class="green">┌─▼──┐</span> ┌─▼──┐ ┌─▼──┐
+<span class="green">│API │</span> │NOVA│ │E-OS│
+<span class="green">│NODE│</span> │SOVR│ │INT │
+<span class="green">└─┬──┘</span> └─┬──┘ └─┬──┘
+  │       │       │
+┌─▼──┐ ┌─▼──┐ ┌─▼──┐
+│KNOW│ │E-I │ │CRIM│
+│RELM│ │ENG │ │DAWN│
+└─┬──┘ └─┬──┘ └─┬──┘
+  │       │       │
+<span class="red">┌─▼──┐</span> <span class="red">┌─▼──┐</span> <span class="red">┌─▼──┐</span>
+<span class="red">│🍯  │</span> <span class="red">│🍯  │</span> <span class="red">│🍯  │</span>
+<span class="red">│ADMN│</span> <span class="red">│PORT│</span> <span class="red">│PROB│</span>
+<span class="red">└─┬──┘</span> <span class="red">└─┬──┘</span> <span class="red">└─┬──┘</span>
+  │       │       │
+  └───────┼───────┘
+          │
+<span class="cyan">┌─────────▼───────────────┐</span>
+<span class="cyan">│  WORKFLOWS-STARTER      │</span>
+<span class="cyan">│  Orchestration Engine   │</span>
+<span class="cyan">│  Queue Consumer         │</span>
+<span class="cyan">└─────────────────────────┘</span>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Node Registry</h2>
+      <div class="node-grid">
+        <div class="node-card">
+          <h3>⬡ GATE-NODE</h3>
+          <p>Protocol entry point. Terminates TLS, authenticates, encrypts, and routes to the appropriate service node.</p>
+          <span class="tag">gate.medinatechlabs.net</span>
+        </div>
+        <div class="node-card">
+          <h3>◎ API-NODE</h3>
+          <p>Tool hub with Fast Brain (CF AI free tier) and Deep Brain (custom inference). AI-callable endpoints.</p>
+          <span class="tag">api.medinatechlabs.net</span>
+        </div>
+        <div class="node-card">
+          <h3>✦ NOVA-SOVEREIGN</h3>
+          <p>Protocol core. Live-fire AI range with Shadow Decryptors, Error Eyes, and Gatekeepers.</p>
+          <span class="tag">nova.medinatechlabs.net</span>
+        </div>
+        <div class="node-card">
+          <h3>◈ KNOWLEDGE-REALM</h3>
+          <p>RAG and memory substrate. Text shards, task templates, cooperative AI access.</p>
+          <span class="tag">realm.medinatechlabs.net</span>
+        </div>
+        <div class="node-card">
+          <h3>◉ ENTERPRISE-INTELLIGENCE</h3>
+          <p>The intelligence engine. Kuramoto synchronization, Lyapunov chaos detection, φ-resonance.</p>
+          <span class="tag">enterprise.medinatechlabs.net</span>
+        </div>
+        <div class="node-card">
+          <h3>↗ CRIMSON-DAWN</h3>
+          <p>Deep processing layer. Cryptographic operations, intelligence analysis, threat correlation.</p>
+          <span class="tag">crimson.medinatechlabs.net</span>
+        </div>
+        <div class="node-card">
+          <h3>🍯 HONEYPOT-ADMIN</h3>
+          <p>Fake admin panel honeypot. Captures credential stuffing attempts and admin probes.</p>
+          <span class="tag">admin.medinatechlabs.net</span>
+        </div>
+        <div class="node-card">
+          <h3>🍯 HONEYPOT-PORTAL</h3>
+          <p>Fake dashboard honeypot. Attracts and logs scanner activity and unauthorized access attempts.</p>
+          <span class="tag">portal.medinatechlabs.net</span>
+        </div>
+        <div class="node-card">
+          <h3>🍯 PROBE-NODE</h3>
+          <p>Behavior classifier with cron triggers. Probes and categorizes incoming traffic patterns.</p>
+          <span class="tag">probe1.medinatechlabs.net</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Routing Table</h2>
+      <table class="route-table">
+        <thead>
+          <tr>
+            <th>Entity Type</th>
+            <th>Detection Signal</th>
+            <th>Route</th>
+            <th>Purpose</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="type">COOPERATIVE_AI</td>
+            <td>Normal crawling, follows instructions</td>
+            <td class="route">Knowledge Realm</td>
+            <td>Value extraction</td>
+          </tr>
+          <tr>
+            <td class="type">UNAWARE_AI</td>
+            <td>Indexing, mapping behavior</td>
+            <td class="route">Knowledge Realm</td>
+            <td>Task assignment</td>
+          </tr>
+          <tr>
+            <td class="type">HOSTILE_BOT</td>
+            <td>Probes .git, .env, server-status</td>
+            <td class="route">Adversary Lab</td>
+            <td>Dissection</td>
+          </tr>
+          <tr>
+            <td class="type">TOR_TRAFFIC</td>
+            <td>Anonymized, high entropy</td>
+            <td class="route">Shadow Decryptors</td>
+            <td>Adversarial testing</td>
+          </tr>
+          <tr>
+            <td class="type">ENCRYPTED</td>
+            <td>Unreadable payload</td>
+            <td class="route">Shadow Decryptors</td>
+            <td>Decode + classify</td>
+          </tr>
+          <tr>
+            <td class="type">MALFORMED</td>
+            <td>4xx spam, parse errors</td>
+            <td class="route">Error Eyes</td>
+            <td>Repair + re-route</td>
+          </tr>
+          <tr>
+            <td class="type">HIGH_VALUE_AI</td>
+            <td>Claude, Google signatures</td>
+            <td class="route">AI Gate</td>
+            <td>Research tasks</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="section">
+      <h2>Decoupled Compute Model</h2>
+      <div class="arch-diagram">
+<span class="gold">BILLING COMPUTE</span> (Cloudflare CPU)
+├─ What Cloudflare charges you for
+├─ Every Worker invocation = billed CPU slice
+└─ Current state: tightly coupled (every thought = bill)
+
+<span class="green">ORGANISM COMPUTE</span> (Internal Cycles)
+├─ How the system thinks, routes, remembers, evolves
+├─ NOT 1:1 mapped to Cloudflare CPU
+├─ Lives in: distributed memory, learned patterns, cache agents
+└─ Goal: costless internal cycles
+
+<span class="cyan">ARCHITECTURE:</span>
+  <span class="gold">Outer Membrane</span>: Minimal, cheap, dumb
+    ├─ Terminate TLS
+    ├─ Classify roughly (pattern matching, not AI)
+    └─ Hand off to cache-organism
+
+  <span class="green">Inner Organism</span>: Semi-autonomous
+    ├─ Persistent state across requests
+    ├─ Learned patterns in cache entries
+    ├─ "Dynamic" responses from cache layer
+    └─ Cloudflare sees "cache hit"; organism sees cognition
+      </div>
+    </section>
+  </div>
+
+  <footer>
+    <p>© 2026 Alfredo Medina Hernandez · RSHIP AGI Systems · NOVA Protocol</p>
+  </footer>
+</body>
+</html>

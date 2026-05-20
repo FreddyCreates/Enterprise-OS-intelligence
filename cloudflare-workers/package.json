@@ -26,6 +26,12 @@
     "deploy:gate-node":      "cd gate-node      && wrangler deploy",
     "deploy:cache-organism": "cd cache-organism && wrangler deploy",
 
+    "dev:gate-node":      "cd gate-node      && wrangler dev",
+    "dev:cache-organism": "cd cache-organism && wrangler dev",
+
+    "deploy:gate-node":      "cd gate-node      && wrangler deploy",
+    "deploy:cache-organism": "cd cache-organism && wrangler deploy",
+
     "dev:herald":   "cd bots/herald   && wrangler dev",
     "dev:conduit":  "cd bots/conduit  && wrangler dev",
     "dev:pulse":    "cd bots/pulse    && wrangler dev",

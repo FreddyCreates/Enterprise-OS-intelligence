@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>API Endpoints — RSHIP Enterprise OS Intelligence</title>
+  <meta name="description" content="Complete API documentation with intelligent caching. All Worker endpoints with service bindings.">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⬡</text></svg>">
+  <style>
+    :root {
+      --phi: 1.618033988749895;
+      --gold: #ffd700;
+      --cyan: #00d4ff;
+      --emerald: #00ff88;
+      --crimson: #ff4d6d;
+      --purple: #a855f7;
+      --orange: #ff6b35;
+      --bg: #02050f;
+      --card: #0a0f1a;
+      --border: #1a2535;
+      --text: #e2ecf5;
+      --dim: #6b7a8f;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+    }
+    a { color: var(--cyan); text-decoration: none; }
+    a:hover { color: var(--gold); }
+
+    /* Navigation */
+    nav {
+      position: sticky; top: 0;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 48px;
+      background: rgba(2,5,15,0.9);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      z-index: 100;
+    }
+    .nav-logo {
+      font-size: 1.2rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .nav-logo span { color: var(--purple); }
+    .nav-links { display: flex; gap: 32px; font-size: 0.85rem; }
+    .nav-links a { color: var(--dim); }
+
+    /* Hero */
+    .hero {
+      padding: 60px 48px 40px;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+    }
+    .hero h1 {
+      font-size: 2.5rem;
+      font-weight: 300;
+      margin-bottom: 16px;
+    }
+    .hero h1 strong { color: var(--purple); }
+    .hero p {
+      color: var(--dim);
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    .hero-badge {
+      display: inline-block;
+      padding: 6px 16px;
+      background: rgba(168,85,247,0.1);
+      border: 1px solid rgba(168,85,247,0.3);
+      border-radius: 20px;
+      font-size: 0.75rem;
+      color: var(--purple);
+      margin-bottom: 24px;
+    }
+
+    /* Content */
+    .content {
+      padding: 40px 48px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    /* Base URL */
+    .base-url {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px 24px;
+      margin-bottom: 40px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .base-url code {
+      font-family: 'Courier New', monospace;
+      font-size: 1rem;
+      color: var(--cyan);
+    }
+    .base-url .label {
+      font-size: 0.85rem;
+      color: var(--dim);
+    }
+
+    /* Service Section */
+    .service-section {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      margin-bottom: 24px;
+      overflow: hidden;
+    }
+    .service-header {
+      padding: 20px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+    }
+    .service-header:hover {
+      background: rgba(0,212,255,0.03);
+    }
+    .service-icon {
+      font-size: 1.8rem;
+    }
+    .service-info h2 {
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+    .service-info .binding {
+      font-size: 0.75rem;
+      color: var(--dim);
+      font-family: 'Courier New', monospace;
+    }
+    .cache-badge {
+      margin-left: auto;
+      padding: 4px 12px;
+      background: rgba(0,255,136,0.1);
+      border: 1px solid rgba(0,255,136,0.3);
+      border-radius: 12px;
+      font-size: 0.7rem;
+      color: var(--emerald);
+    }
+
+    /* Endpoint List */
+    .endpoint-list {
+      padding: 0;
+    }
+    .endpoint {
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: 80px 1fr auto;
+      gap: 16px;
+      align-items: center;
+    }
+    .endpoint:last-child {
+      border-bottom: none;
+    }
+    .endpoint:hover {
+      background: rgba(0,212,255,0.03);
+    }
+    .method {
+      font-family: 'Courier New', monospace;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 4px;
+      text-align: center;
+    }
+    .method.get { background: rgba(0,255,136,0.15); color: var(--emerald); }
+    .method.post { background: rgba(0,212,255,0.15); color: var(--cyan); }
+    .method.put { background: rgba(255,215,0,0.15); color: var(--gold); }
+    .method.delete { background: rgba(255,77,109,0.15); color: var(--crimson); }
+    .endpoint-info {
+      min-width: 0;
+    }
+    .endpoint-path {
+      font-family: 'Courier New', monospace;
+      font-size: 0.9rem;
+      color: var(--text);
+      margin-bottom: 2px;
+    }
+    .endpoint-desc {
+      font-size: 0.8rem;
+      color: var(--dim);
+    }
+    .cache-indicator {
+      font-size: 0.7rem;
+      padding: 2px 8px;
+      border-radius: 4px;
+      background: rgba(0,212,255,0.1);
+      color: var(--cyan);
+    }
+
+    /* Cache Info Box */
+    .cache-info {
+      background: rgba(0,255,136,0.05);
+      border: 1px solid rgba(0,255,136,0.2);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 40px;
+    }
+    .cache-info h3 {
+      font-size: 1rem;
+      color: var(--emerald);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .cache-info h3::before {
+      content: '◎';
+    }
+    .cache-info p {
+      font-size: 0.85rem;
+      color: var(--dim);
+      margin-bottom: 16px;
+    }
+    .cache-headers {
+      font-family: 'Courier New', monospace;
+      font-size: 0.8rem;
+      color: var(--dim);
+    }
+    .cache-headers code {
+      color: var(--cyan);
+    }
+
+    /* Footer */
+    footer {
+      padding: 40px 48px;
+      text-align: center;
+      border-top: 1px solid var(--border);
+      font-size: 0.8rem;
+      color: var(--dim);
+    }
+
+    @media (max-width: 768px) {
+      nav { padding: 12px 20px; }
+      .nav-links { display: none; }
+      .hero, .content { padding: 40px 20px; }
+      .hero h1 { font-size: 1.8rem; }
+      .endpoint { grid-template-columns: 1fr; gap: 8px; }
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="nav-logo">
+      <span>⬡</span> API Endpoints
+    </div>
+    <div class="nav-links">
+      <a href="../index.html">Home</a>
+      <a href="api.html">API Portal</a>
+      <a href="cache-dashboard.html">Cache Dashboard</a>
+      <a href="nova.html">NOVA Protocol</a>
+    </div>
+  </nav>
+
+  <section class="hero">
+    <div class="hero-badge">◎ INTELLIGENT API CACHE</div>
+    <h1><strong>API</strong> Endpoints</h1>
+    <p>All endpoints routed through intelligent cache layer. GET requests are cached with pattern learning.</p>
+  </section>
+
+  <div class="content">
+    <!-- Base URL -->
+    <div class="base-url">
+      <span class="label">Base URL:</span>
+      <code>/api/{service}/{endpoint}</code>
+    </div>
+
+    <!-- Cache Info -->
+    <div class="cache-info">
+      <h3>Intelligent Caching</h3>
+      <p>
+        All GET requests pass through the cache organism. Responses include cache headers indicating
+        whether the response came from the intelligent cache (HIT) or was freshly computed (MISS).
+      </p>
+      <div class="cache-headers">
+        <code>X-Cache-Organism: HIT | MISS</code><br>
+        <code>X-Cache-Age: {milliseconds}</code><br>
+        <code>X-Cache-Hits: {count}</code><br>
+        <code>X-Organism-Type: {classification}</code>
+      </div>
+    </div>
+
+    <!-- CEREBRUM -->
+    <div class="service-section">
+      <div class="service-header" style="--service-color: var(--cyan);">
+        <div class="service-icon" style="color: var(--cyan);">◎</div>
+        <div class="service-info">
+          <h2 style="color: var(--cyan);">CEREBRUM</h2>
+          <div class="binding">Service: cerebrum → /api/cerebrum/*</div>
+        </div>
+        <span class="cache-badge">CACHED</span>
+      </div>
+      <div class="endpoint-list">
+        <div class="endpoint">
+          <span class="method get">GET</span>
+          <div class="endpoint-info">
+            <div class="endpoint-path">/api/cerebrum/status</div>
+            <div class="endpoint-desc">Worker health and status</div>
+          </div>
+          <span class="cache-indicator">60s TTL</span>
+        </div>
+        <div class="endpoint">
+          <span class="method get">GET</span>
+          <div class="endpoint-info">
+            <div class="endpoint-path">/api/cerebrum/agents</div>
+            <div class="endpoint-desc">All registered agents</div>
+          </div>
+          <span class="cache-indicator">300s TTL</span>
+        </div>
+        <div class="endpoint">
+          <span class="method get">GET</span>
+          <div class="endpoint-info">
+            <div class="endpoint-path">/api/cerebrum/protocols</div>
+            <div class="endpoint-desc">Intelligence protocols</div>
+          </div>
+          <span class="cache-indicator">300s TTL</span>
+        </div>
+        <div class="endpoint">
+          <span class="method get">GET</span>
+          <div class="endpoint-info">
+            <div class="endpoint-path">/api/cerebrum/health</div>
+            <div class="endpoint-desc">Network health status</div>
+          </div>
+          <span class="cache-indicator">60s TTL</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- AGENS -->
+    <div class="service-section">
+      <div class="service-header">
+        <div class="service-icon" style="color: var(--orange);">⬡</div>
+        <div class="service-info">
+          <h2 style="color: var(--orange);">AGENS</h2>
+          <div class="binding">Service: agens → /api/agens/*</div>
+        </div>
+        <span class="cache-badge">CACHED</span>
+      </div>
+      <div class="endpoint-list">
+        <div class="endpoint">
+          <span class="method get">GET</span>
+          <div class="endpoint-info">
+            <div class="endpoint-path">/api/agens/status</div>
+            <div class="endpoint-desc">Worker health</div>
+          </div>
+          <span class="cache-indicator">60s TTL</span>
+        </div>
+        <div class="endpoint">
+          <span class="method get">GET</span>
+          <div class="endpoint-info">
+            <div class="endpoint-path">/api/agens/catalog</div>
+            <div class="endpoint-desc">Full agent catalog</div>
+          </div>
+          <span class="cache-indicator">300s TTL</span>
+        </div>
+        <div class="endpoint">
+          <span class="method post">POST</span>
+          <div class="endpoint-info">
+            <div class="endpoint-path">/api/agens/deploy</div>
+            <div class="endpoint-desc">Deploy an agent</div>
+          </div>
+        </div>
+        <div class="endpoint">
+          <span class="method post">POST</span>
+          <div class="endpoint-info">
+            <div class="endpoint-path">/api/agens/quote</div>
+            <div class="endpoint-desc">Get pricing quote</div>
+          </div>
+        </div>
+        <div class="endpoint">
+          <span class="method get">GET</span>
+          <div class="endpoint-info">
+            <div class="endpoint-path">/api/agens/internal/overview</div>
+            <div class="endpoint-desc">Internal production overview</div>
+          </div>
+          <span class="cache-indicator">300s TTL</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ANIMUS -->
+    <div class="service-section">
+      <div class="service-header">
+        <div class="service-icon" style="color: var(--gold);">✦</div>
+        <div class="service-info">
+          <h2 style="color: var(--gold);">ANIMUS</h2>
+          <div class="binding">Service: animus → /api/animus/*</div>
+        </div>
+        <span class="cache-badge">CACHED</span>
+      </div>
+      <div class="endpoint-list">
+        <div class="endpoint">
+          <span class="method post">POST</span>
+          <div class="endpoint-info">
+            <div class="endpoint-path">/api/animus/intelligence/dock</div>
+            <div class="endpoint-desc">Dock AI via φ-resonance key</div>
+          </div>
+        </div>
+        <div class="endpoint">
+          <span class="method post">POST</span>
+          <div class="endpoint-info">
+            <div class="endpoint-path">/api/animus/intelligence/exchange</div>
+            <div class="endpoint-desc">Bilateral awareness exchange</div>
+          </div>
+        </div>
+        <div class="endpoint">
+          <span class="method delete">DELETE</span>
+          <div class="endpoint-info">
+            <div class="endpoint-path">/api/animus/intelligence/undock</div>
+            <div class="endpoint-desc">Graceful undock</div>
+          </div>
+        </div>
+        <div class="endpoint">
+          <span class="method post">POST</span>
+          <div class="endpoint-info">
+            <div class="endpoint-path">/api/animus/machine/request</div>
+            <div class="endpoint-desc">Machine API request</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- NEXUS -->
+    <div class="service-section">
+      <div class="service-header">
+        <div class="service-icon" style="color: var(--emerald);">◈</div>
+        <div class="service-info">
+          <h2 style="color: var(--emerald);">NEXUS</h2>
+          <div class="binding">Service: nexus → /api/nexus/*</div>
+        </div>
+        <span class="cache-badge">CACHED</span>
+      </div>
+      <div class="endpoint-list">
+        <div class="endpoint">
+          <span class="method get">GET</span>
+          <div class="endpoint-info">
+            <div class="endpoint-path">/api/nexus/nodes</div>
+            <div class="endpoint-desc">All network nodes + sync status</div>
+          </div>
+          <span class="cache-indicator">300s TTL</span>
+        </div>
+        <div class="endpoint">
+          <span class="method post">POST</span>
+          <div class="endpoint-info">
+            <div class="endpoint-path">/api/nexus/disruption/report</div>
+            <div class="endpoint-desc">Report a disruption</div>
+          </div>
+        </div>
+        <div class="endpoint">
+          <span class="method get">GET</span>
+          <div class="endpoint-info">
+            <div class="endpoint-path">/api/nexus/disruption/active</div>
+            <div class="endpoint-desc">Active disruptions</div>
+          </div>
+          <span class="cache-indicator">60s TTL</span>
+        </div>
+        <div class="endpoint">
+          <span class="method post">POST</span>
+          <div class="endpoint-info">
+            <div class="endpoint-path">/api/nexus/route/optimize</div>
+            <div class="endpoint-desc">Optimal route calculation</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VIGIL -->
+    <div class="service-section">
+      <div class="service-header">
+        <div class="service-icon" style="color: #ff9500;">◉</div>
+        <div class="service-info">
+          <h2 style="color: #ff9500;">VIGIL</h2>
+          <div class="binding">Service: vigil → /api/vigil/*</div>
+        </div>
+        <span class="cache-badge">CACHED</span>
+      </div>
+      <div class="endpoint-list">
+        <div class="endpoint">
+          <span class="method post">POST</span>
+          <div class="endpoint-info">
+            <div class="endpoint-path">/api/vigil/market/predict</div>
+            <div class="endpoint-desc">Predict market regime + movement</div>
+          </div>
+        </div>
+        <div class="endpoint">
+          <span class="method get">GET</span>
+          <div class="endpoint-info">
+            <div class="endpoint-path">/api/vigil/market/regime</div>
+            <div class="endpoint-desc">Current regime (CHAOTIC/STABLE)</div>
+          </div>
+          <span class="cache-indicator">60s TTL</span>
+        </div>
+        <div class="endpoint">
+          <span class="method post">POST</span>
+          <div class="endpoint-info">
+            <div class="endpoint-path">/api/vigil/portfolio/analyze</div>
+            <div class="endpoint-desc">Portfolio intelligence analysis</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CURSOR -->
+    <div class="service-section">
+      <div class="service-header">
+        <div class="service-icon" style="color: var(--purple);">↗</div>
+        <div class="service-info">
+          <h2 style="color: var(--purple);">CURSOR</h2>
+          <div class="binding">Service: cursor → /api/cursor/*</div>
+        </div>
+        <span class="cache-badge">CACHED</span>
+      </div>
+      <div class="endpoint-list">
+        <div class="endpoint">
+          <span class="method post">POST</span>
+          <div class="endpoint-info">
+            <div class="endpoint-path">/api/cursor/companion/interact</div>
+            <div class="endpoint-desc">Travel companion AI interaction</div>
+          </div>
+        </div>
+        <div class="endpoint">
+          <span class="method post">POST</span>
+          <div class="endpoint-info">
+            <div class="endpoint-path">/api/cursor/flight/predict</div>
+            <div class="endpoint-desc">Flight price prediction (Lyapunov)</div>
+          </div>
+        </div>
+        <div class="endpoint">
+          <span class="method get">GET</span>
+          <div class="endpoint-info">
+            <div class="endpoint-path">/api/cursor/social/mesh</div>
+            <div class="endpoint-desc">Airport social graph snapshot</div>
+          </div>
+          <span class="cache-indicator">300s TTL</span>
+        </div>
+        <div class="endpoint">
+          <span class="method get">GET</span>
+          <div class="endpoint-info">
+            <div class="endpoint-path">/api/cursor/crisis/active</div>
+            <div class="endpoint-desc">Active travel disruptions</div>
+          </div>
+          <span class="cache-indicator">60s TTL</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- CACHE-ORGANISM -->
+    <div class="service-section">
+      <div class="service-header">
+        <div class="service-icon" style="color: var(--emerald);">◎</div>
+        <div class="service-info">
+          <h2 style="color: var(--emerald);">CACHE-ORGANISM</h2>
+          <div class="binding">Service: cache-organism → /api/cache/*</div>
+        </div>
+        <span class="cache-badge">DIRECT</span>
+      </div>
+      <div class="endpoint-list">
+        <div class="endpoint">
+          <span class="method get">GET</span>
+          <div class="endpoint-info">
+            <div class="endpoint-path">/api/cache/status</div>
+            <div class="endpoint-desc">Organism state and health</div>
+          </div>
+          <span class="cache-indicator">60s TTL</span>
+        </div>
+        <div class="endpoint">
+          <span class="method get">GET</span>
+          <div class="endpoint-info">
+            <div class="endpoint-path">/api/cache/patterns</div>
+            <div class="endpoint-desc">Learned traffic patterns</div>
+          </div>
+          <span class="cache-indicator">300s TTL</span>
+        </div>
+        <div class="endpoint">
+          <span class="method get">GET</span>
+          <div class="endpoint-info">
+            <div class="endpoint-path">/api/cache/memory</div>
+            <div class="endpoint-desc">Organism memory stats</div>
+          </div>
+          <span class="cache-indicator">60s TTL</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- GATE-NODE -->
+    <div class="service-section">
+      <div class="service-header">
+        <div class="service-icon" style="color: var(--gold);">🜲</div>
+        <div class="service-info">
+          <h2 style="color: var(--gold);">GATE-NODE</h2>
+          <div class="binding">Service: gate-node → /api/gate/*</div>
+        </div>
+        <span class="cache-badge">MEMBRANE</span>
+      </div>
+      <div class="endpoint-list">
+        <div class="endpoint">
+          <span class="method get">GET</span>
+          <div class="endpoint-info">
+            <div class="endpoint-path">/api/gate/classify</div>
+            <div class="endpoint-desc">Classify current request</div>
+          </div>
+          <span class="cache-indicator">No cache</span>
+        </div>
+        <div class="endpoint">
+          <span class="method get">GET</span>
+          <div class="endpoint-info">
+            <div class="endpoint-path">/api/gate/stats</div>
+            <div class="endpoint-desc">Gate routing statistics</div>
+          </div>
+          <span class="cache-indicator">60s TTL</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <p>© 2026 Alfredo Medina Hernandez · RSHIP AGI Systems · Intelligent API Endpoints</p>
+  </footer>
+</body>
+</html>
