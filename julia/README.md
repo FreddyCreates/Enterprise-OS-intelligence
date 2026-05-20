@@ -18,10 +18,16 @@ julia/
 │   ├── resonance_engine.jl     # Kuramoto oscillators & sync
 │   └── medina_field_engine.jl  # Field mathematics
 ├── transformers/               # Signal transformation modules
+│   ├── attractor_transformer.jl    # Dynamical systems & attractors
 │   ├── coherence_transformer.jl    # Coherence amplification
 │   ├── emergence_transformer.jl    # Pattern emergence
+│   ├── entropy_transformer.jl      # Information theory
 │   ├── gauge_transformer.jl        # Gauge invariance
-│   └── phi_transformer.jl          # φ-based transforms
+│   ├── gradient_transformer.jl     # Differential geometry
+│   ├── phi_transformer.jl          # φ-based transforms
+│   ├── resonance_transformer.jl    # Spectral analysis
+│   ├── symmetry_transformer.jl     # Noether symmetries
+│   └── topology_transformer.jl     # Topological data analysis
 ├── synthesizers/               # Knowledge synthesis modules
 │   ├── intelligence_synthesizer.jl # Knowledge fusion
 │   ├── protocol_synthesizer.jl     # Protocol composition
@@ -73,6 +79,14 @@ The φ-topology mathematics:
 
 ## Transformers
 
+### Attractor Transformer
+Analyzes dynamical systems and strange attractors:
+- Lorenz/Rössler attractor simulation
+- Lyapunov exponent computation
+- Phase space reconstruction
+- Recurrence quantification analysis
+- φ-attractor (golden ratio chaos)
+
 ### Coherence Transformer
 Amplifies coherence in signals:
 - Kuramoto phase alignment
@@ -85,17 +99,51 @@ Detects and amplifies emergence:
 - Criticality analysis
 - Self-organization patterns
 
+### Entropy Transformer
+Information-theoretic operations:
+- Shannon entropy computation
+- KL divergence / mutual information
+- φ-entropy (golden information measure)
+- Thermodynamic free energy
+
 ### Gauge Transformer
 Implements gauge invariance:
 - U(1) gauge transformations
 - Gauge-covariant derivatives
 - Wilson loop calculations
 
+### Gradient Transformer
+Differential geometry operations:
+- Gradient computation & flow
+- Hessian & curvature analysis
+- φ-geodesic paths
+- Potential field analysis
+
 ### Phi Transformer
 Golden ratio transformations:
 - φ-basis transform
 - Fibonacci decomposition
 - φ-wavelet analysis
+
+### Resonance Transformer
+Frequency domain analysis:
+- FFT-based spectral analysis
+- φ-frequency detection
+- Schumann resonance alignment
+- Harmonic series extraction
+
+### Symmetry Transformer
+Noether symmetry operations:
+- Discrete symmetry detection (reflection, rotation)
+- Conservation law extraction
+- Noether current computation
+- φ-symmetry preservation
+
+### Topology Transformer
+Topological data analysis:
+- Persistent homology
+- Betti numbers
+- Vietoris-Rips complexes
 
 ## Synthesizers
 
