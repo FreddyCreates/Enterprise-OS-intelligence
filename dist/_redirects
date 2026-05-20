@@ -1,10 +1,29 @@
+# ═══════════════════════════════════════════════════════════════════════════════
 # RSHIP Enterprise OS Intelligence — Cloudflare Pages Redirects
-# Redirect API paths to the appropriate workers
+# 
+# NOTE: With Pages Functions enabled, /api/* routes are handled by
+# functions/api/[[route]].js with intelligent caching.
+#
+# These redirects serve as fallbacks for direct Worker access.
+# ═══════════════════════════════════════════════════════════════════════════════
 
-/api/*  https://cerebrum.rship.workers.dev/api/:splat  302
+# Direct Worker access (bypass Pages Functions)
+/direct/cerebrum/*  https://cerebrum.rship.workers.dev/:splat  302
+/direct/animus/*    https://animus.rship.workers.dev/:splat  302
+/direct/nexus/*     https://nexus.rship.workers.dev/:splat  302
+/direct/vigil/*     https://vigil.rship.workers.dev/:splat  302
+/direct/cursor/*    https://cursor.rship.workers.dev/:splat  302
+/direct/agens/*     https://agens.rship.workers.dev/:splat  302
+
+# Cache organism direct access
+/direct/cache/*     https://cache-organism.rship.workers.dev/:splat  302
+/direct/gate/*      https://gate-node.rship.workers.dev/:splat  302
+
+# Legacy redirects (deprecated, use /api/* instead)
 /cerebrum/*  https://cerebrum.rship.workers.dev/:splat  302
-/animus/*  https://animus.rship.workers.dev/:splat  302
-/nexus/*  https://nexus.rship.workers.dev/:splat  302
-/vigil/*  https://vigil.rship.workers.dev/:splat  302
-/cursor/*  https://cursor.rship.workers.dev/:splat  302
-/agens/*  https://agens.rship.workers.dev/:splat  302
+/animus/*    https://animus.rship.workers.dev/:splat  302
+/nexus/*     https://nexus.rship.workers.dev/:splat  302
+/vigil/*     https://vigil.rship.workers.dev/:splat  302
+/cursor/*    https://cursor.rship.workers.dev/:splat  302
+/agens/*     https://agens.rship.workers.dev/:splat  302
+

@@ -1,11 +1,161 @@
 {
+  // ═══════════════════════════════════════════════════════════════════════════════
   // RSHIP Enterprise OS Intelligence — Cloudflare Pages Configuration
-  // This configuration enables Cloudflare Pages auto-deployment for the repository landing page.
-  // The actual AI Workers are deployed separately via cloudflare-workers/ subdirectories.
+  // Intelligent Cache Organisms + API Cache + Full Worker Bindings
+  // ═══════════════════════════════════════════════════════════════════════════════
+  //
+  // ARCHITECTURE:
+  //   OUTER MEMBRANE: Pages Functions (_middleware.js, api/[[route]].js)
+  //     - Cheap classification and routing
+  //     - Minimal billed compute
+  //
+  //   INNER ORGANISM: KV cache layer
+  //     - Intelligent response caching
+  //     - Pattern learning
+  //     - NOT 1:1 mapped to Cloudflare CPU
+  //
+  // ═══════════════════════════════════════════════════════════════════════════════
   
   "name": "enterprise-os-intelligence",
   "compatibility_date": "2024-09-02",
+  
+  // Static assets from dist/
   "assets": {
     "directory": "./dist"
+  },
+
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // INTELLIGENT CACHE BINDINGS
+  // The cache layer IS the intelligent agent — not just storage
+  // ═══════════════════════════════════════════════════════════════════════════════
+
+  // KV Namespaces — Organism Memory
+  "kv_namespaces": [
+    {
+      "binding": "ORGANISM_MEMORY",
+      "id": "PLACEHOLDER_ORGANISM_MEMORY_ID"
+      // Create: wrangler kv namespace create ORGANISM_MEMORY
+    },
+    {
+      "binding": "PATTERN_STORE",
+      "id": "PLACEHOLDER_PATTERN_STORE_ID"
+      // Create: wrangler kv namespace create PATTERN_STORE
+    },
+    {
+      "binding": "API_CACHE",
+      "id": "PLACEHOLDER_API_CACHE_ID"
+      // Create: wrangler kv namespace create API_CACHE
+    },
+    {
+      "binding": "SESSION_STORE",
+      "id": "PLACEHOLDER_SESSION_STORE_ID"
+      // Create: wrangler kv namespace create SESSION_STORE
+    },
+    {
+      "binding": "KNOWLEDGE_CACHE",
+      "id": "PLACEHOLDER_KNOWLEDGE_CACHE_ID"
+      // Create: wrangler kv namespace create KNOWLEDGE_CACHE
+    }
+  ],
+
+  // D1 Database — Structured intelligence storage
+  "d1_databases": [
+    {
+      "binding": "INTELLIGENCE_DB",
+      "database_name": "medinatech-intelligence",
+      "database_id": "PLACEHOLDER_D1_DATABASE_ID"
+      // Create: wrangler d1 create medinatech-intelligence
+    }
+  ],
+
+  // R2 Buckets — Object storage
+  "r2_buckets": [
+    {
+      "binding": "ASSET_STORE",
+      "bucket_name": "medinatech-assets"
+      // Create: wrangler r2 bucket create medinatech-assets
+    },
+    {
+      "binding": "KNOWLEDGE_ARCHIVE",
+      "bucket_name": "knowledge-archive"
+      // Create: wrangler r2 bucket create knowledge-archive
+    }
+  ],
+
+  // Workers AI — LLM reasoning
+  "ai": {
+    "binding": "AI"
+  },
+
+  // Analytics Engine — Telemetry
+  "analytics_engine_datasets": [
+    {
+      "binding": "PAGES_ANALYTICS",
+      "dataset": "pages_telemetry"
+    }
+  ],
+
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // SERVICE BINDINGS — Route to Workers
+  // Pages Functions can call Workers directly
+  // ═══════════════════════════════════════════════════════════════════════════════
+
+  "services": [
+    {
+      "binding": "CEREBRUM",
+      "service": "cerebrum"
+    },
+    {
+      "binding": "AGENS",
+      "service": "agens"
+    },
+    {
+      "binding": "ANIMUS",
+      "service": "animus"
+    },
+    {
+      "binding": "NEXUS",
+      "service": "nexus"
+    },
+    {
+      "binding": "VIGIL",
+      "service": "vigil"
+    },
+    {
+      "binding": "CURSOR",
+      "service": "cursor"
+    },
+    {
+      "binding": "CACHE_ORGANISM",
+      "service": "cache-organism"
+    },
+    {
+      "binding": "GATE_NODE",
+      "service": "gate-node"
+    }
+  ],
+
+  // Vectorize — Semantic search
+  "vectorize": [
+    {
+      "binding": "KNOWLEDGE_VECTORS",
+      "index_name": "medinatech-knowledge-index"
+    }
+  ],
+
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // PAGES CONFIGURATION
+  // ═══════════════════════════════════════════════════════════════════════════════
+
+  // Build configuration (if needed)
+  "pages_build_output_dir": "./dist",
+  
+  // Environment variables
+  "vars": {
+    "DESIGNATION": "RSHIP-PAGES-001",
+    "VERSION": "1.0.0",
+    "ORGANISM_TYPE": "INTELLIGENT_CACHE",
+    "PHI": "1.618033988749895"
   }
 }
+
