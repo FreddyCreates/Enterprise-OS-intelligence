@@ -1,0 +1,30 @@
+{
+  "name": "@medina/praedex-agi",
+  "version": "1.0.0",
+  "description": "PRAEDEX AGI — Predictive Demand & Market Intelligence with Lyapunov stability forecasting and attractor basin mapping",
+  "main": "praedex-agi.js",
+  "type": "module",
+  "keywords": [
+    "medina",
+    "rship",
+    "praedex",
+    "agi",
+    "predictive-analytics",
+    "demand-forecasting",
+    "lyapunov",
+    "attractor-basin",
+    "bid-scoring",
+    "delay-prediction",
+    "churn-risk",
+    "market-regime",
+    "construction",
+    "phi"
+  ],
+  "author": "Alfredo Medina Hernandez",
+  "license": "SEE LICENSE IN ../../LICENSE",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/FreddyCreates/Enterprise-OS-intelligence.git",
+    "directory": "sdk/praedex-agi"
+  }
+}

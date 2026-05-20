@@ -1,0 +1,29 @@
+{
+  "name": "@medina/aequex-agi",
+  "version": "1.0.0",
+  "description": "AEQUEX AGI — Adaptive Quality & Equilibrium Intelligence with HJB optimal control, defect pattern recognition, punch list management, and compliance monitoring",
+  "main": "aequex-agi.js",
+  "type": "module",
+  "keywords": [
+    "medina",
+    "rship",
+    "aequex",
+    "agi",
+    "quality-control",
+    "equilibrium",
+    "hjb-optimal-control",
+    "defect-patterns",
+    "punch-list",
+    "compliance",
+    "lessons-learned",
+    "construction",
+    "phi"
+  ],
+  "author": "Alfredo Medina Hernandez",
+  "license": "SEE LICENSE IN ../../LICENSE",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/FreddyCreates/Enterprise-OS-intelligence.git",
+    "directory": "sdk/aequex-agi"
+  }
+}
