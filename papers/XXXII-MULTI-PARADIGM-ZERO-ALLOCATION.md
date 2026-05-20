@@ -237,27 +237,7 @@ fibStrict n = go n 1 1
 ### 4.2 F#: Functional-First Zero-Allocation
 
 ```fsharp
-module ZeroCost.FSharp.Engine
-
-open System
-open System.Runtime.CompilerServices
-open System.Runtime.InteropServices
-
-[<Literal>]
-let PHI = 1.618033988749895
-
-[<Struct; StructLayout(LayoutKind.Sequential)>]
-type CacheEntry =
-    val mutable KeyHash: uint64
-    val mutable Value: int64
-    val mutable Valid: bool
-    val mutable Timestamp: uint64
-
-[<MethodImpl(MethodImplOptions.AggressiveInlining)>]
-let inline phiHash (key: uint64) : uint64 =
-    let mutable h = key ^^^ (key >>> 33)
-    h <- h * 11400714819323198485UL
-    h ^^^ (h >>> 29)
+[IMPLEMENTATION REDACTED — see ORO SDK]
 ```
 
 ---
