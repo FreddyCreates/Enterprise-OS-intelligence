@@ -1,65 +1,50 @@
-name            = "cursor"
-main            = "worker.js"
+name               = "cursor"
+main               = "worker.js"
 compatibility_date = "2024-09-02"
 
 [vars]
-DESIGNATION     = "RSHIP-AIS-CS-001"
-WORKER_NAME     = "CURSOR"
-WORKER_LATIN    = "cursor"
-WORKER_MEANING  = "Runner — Messenger"
-VERSION         = "2.0.0"
+DESIGNATION    = "RSHIP-AIS-CS-001"
+WORKER_NAME    = "CURSOR"
+WORKER_LATIN   = "cursor"
+WORKER_MEANING = "Runner — Messenger"
+VERSION        = "2.0.0"
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# INTELLIGENT BINDINGS — "Brains and Hearts"
-# CURSOR is the Messenger — optimized for fast delivery and routing
+# INTELLIGENT BINDINGS — CURSOR delivers messages between workers
 # ═══════════════════════════════════════════════════════════════════════════════
 
-# Workers AI — LLM reasoning for message transformation
+# ── Workers AI — Smart routing ────────────────────────────────────────────────
 [ai]
 binding = "AI"
 
-# KV Namespaces — Fast key-value storage for message queues
+# ── KV Namespace — Message queue state ────────────────────────────────────────
 [[kv_namespaces]]
-binding = "MESSAGE_QUEUE"
-id = "PLACEHOLDER_MESSAGE_QUEUE_ID"
-# Create with: wrangler kv namespace create MESSAGE_QUEUE
+binding = "MESSAGE_STATE"
+id = "cursor-message-state"
+preview_id = "cursor-message-state-preview"
 
 [[kv_namespaces]]
-binding = "DELIVERY_STATUS"
-id = "PLACEHOLDER_DELIVERY_STATUS_ID"
-# Create with: wrangler kv namespace create DELIVERY_STATUS
+binding = "ROUTING_TABLE"
+id = "cursor-routing-table"
+preview_id = "cursor-routing-table-preview"
 
-[[kv_namespaces]]
-binding = "SESSION_STORE"
-id = "PLACEHOLDER_SESSION_STORE_ID"
-
-# D1 Database — Structured message history
+# ── D1 Database — Core data ───────────────────────────────────────────────────
 [[d1_databases]]
-binding = "MESSAGE_DB"
-database_name = "medinatech-intelligence"
-database_id = "PLACEHOLDER_D1_DATABASE_ID"
+binding = "CORE_DB"
+database_name = "medinatech-core"
+database_id = "medinatech-core-db"
 
-# Queues — Async message passing
+# ── Queue — Message routing ───────────────────────────────────────────────────
 [[queues.producers]]
-binding = "OUTBOUND_QUEUE"
-queue = "outbound-messages"
-# Create with: wrangler queues create outbound-messages
+binding = "DISPATCH_QUEUE"
+queue = "ai-analysis"
 
 [[queues.consumers]]
-queue = "outbound-messages"
-max_batch_size = 100
-max_retries = 5
+queue = "ai-analysis"
+max_batch_size = 10
+max_batch_timeout = 30
 
-# Analytics Engine — Delivery metrics
+# ── Analytics Engine ──────────────────────────────────────────────────────────
 [[analytics_engine_datasets]]
 binding = "CURSOR_ANALYTICS"
-dataset = "cursor_delivery_telemetry"
-
-# Service Bindings
-[[services]]
-binding = "CEREBRUM"
-service = "cerebrum"
-
-[[services]]
-binding = "NEXUS"
-service = "nexus"
+dataset = "cursor_events"

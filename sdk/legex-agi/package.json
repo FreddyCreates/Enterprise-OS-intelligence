@@ -1,0 +1,10 @@
+{
+  "name": "@rship/legex-agi",
+  "version": "1.0.0",
+  "description": "LEGEX AGI — Legal Reasoning & Contract Intelligence (RSHIP-2026-LEGEX-001)",
+  "main": "legex-agi.js",
+  "type": "module",
+  "author": "Alfredo Medina Hernandez <medina@medinatech.io>",
+  "license": "UNLICENSED",
+  "keywords": ["legal", "contract", "compliance", "litigation", "agi", "rship", "ip"]
+}

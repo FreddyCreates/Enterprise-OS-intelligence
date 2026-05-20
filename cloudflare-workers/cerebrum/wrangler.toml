@@ -1,102 +1,64 @@
-name            = "cerebrum"
-main            = "worker.js"
+name               = "cerebrum"
+main               = "worker.js"
 compatibility_date = "2024-09-02"
 
 [vars]
-DESIGNATION     = "RSHIP-AIS-CB-001"
-WORKER_NAME     = "CEREBRUM"
-WORKER_LATIN    = "cerebrum"
-WORKER_MEANING  = "Brain — Master AGI Portal"
-VERSION         = "2.0.0"
+DESIGNATION    = "RSHIP-AIS-CB-001"
+WORKER_NAME    = "CEREBRUM"
+WORKER_LATIN   = "cerebrum"
+WORKER_MEANING = "Brain — Master AGI Portal"
+VERSION        = "2.0.0"
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# INTELLIGENT BINDINGS — "Brains and Hearts"
-# CEREBRUM is the Master Brain — gets full binding suite
+# INTELLIGENT BINDINGS — CEREBRUM is the master brain
 # ═══════════════════════════════════════════════════════════════════════════════
 
-# Workers AI — LLM reasoning, image generation, embeddings
+# ── Workers AI — Central reasoning engine ─────────────────────────────────────
 [ai]
 binding = "AI"
 
-# KV Namespaces — Fast key-value storage
+# ── KV Namespace — Brain state and memory ─────────────────────────────────────
 [[kv_namespaces]]
-binding = "SESSION_STORE"
-id = "PLACEHOLDER_SESSION_STORE_ID"
+binding = "BRAIN_STATE"
+id = "cerebrum-brain-state"
+preview_id = "cerebrum-brain-state-preview"
 
 [[kv_namespaces]]
 binding = "KNOWLEDGE_CACHE"
-id = "PLACEHOLDER_KNOWLEDGE_CACHE_ID"
+id = "cerebrum-knowledge-cache"
+preview_id = "cerebrum-knowledge-cache-preview"
 
-[[kv_namespaces]]
-binding = "IP_BLOCKLIST"
-id = "PLACEHOLDER_IP_BLOCKLIST_ID"
-
-[[kv_namespaces]]
-binding = "MEMORY_STORE"
-id = "PLACEHOLDER_MEMORY_STORE_ID"
-# Create with: wrangler kv namespace create MEMORY_STORE
-
-# D1 Database — Structured intelligence storage
+# ── D1 Database — Knowledge base ──────────────────────────────────────────────
 [[d1_databases]]
-binding = "INTELLIGENCE_DB"
-database_name = "medinatech-intelligence"
-database_id = "PLACEHOLDER_D1_DATABASE_ID"
+binding = "KNOWLEDGE_DB"
+database_name = "medinatech-knowledge"
+database_id = "medinatech-knowledge-db"
 
-# Queues — Async message passing between Workers
-[[queues.producers]]
-binding = "EVENT_QUEUE"
-queue = "intelligence-events"
+[[d1_databases]]
+binding = "CORE_DB"
+database_name = "medinatech-core"
+database_id = "medinatech-core-db"
 
+# ── Queue — Orchestrate other workers ─────────────────────────────────────────
 [[queues.producers]]
-binding = "ANALYSIS_QUEUE"
+binding = "ORCHESTRATION_QUEUE"
 queue = "ai-analysis"
 
 [[queues.producers]]
-binding = "ORCHESTRATION_QUEUE"
-queue = "orchestration-tasks"
+binding = "KNOWLEDGE_SYNC_QUEUE"
+queue = "knowledge-sync"
 
-[[queues.consumers]]
-queue = "orchestration-tasks"
-max_batch_size = 10
-max_retries = 3
-
-# R2 Bucket — Object storage for files, archives, large data
+# ── R2 Bucket — Knowledge corpus storage ──────────────────────────────────────
 [[r2_buckets]]
-binding = "ASSET_STORE"
-bucket_name = "medinatech-assets"
+binding = "KNOWLEDGE_CORPUS"
+bucket_name = "knowledge-corpus"
 
-[[r2_buckets]]
-binding = "KNOWLEDGE_ARCHIVE"
-bucket_name = "knowledge-archive"
-# Create with: wrangler r2 bucket create knowledge-archive
-
-# Vectorize — Vector search for semantic/RAG capabilities
+# ── Vectorize — Semantic search ───────────────────────────────────────────────
 [[vectorize]]
 binding = "KNOWLEDGE_VECTORS"
-index_name = "medinatech-knowledge-index"
+index_name = "medinatech-knowledge"
 
-# Analytics Engine — Metrics and telemetry
+# ── Analytics Engine ──────────────────────────────────────────────────────────
 [[analytics_engine_datasets]]
-binding = "CEREBRUM_ANALYTICS"
-dataset = "cerebrum_telemetry"
-
-# Service Bindings — Direct Worker-to-Worker calls (CEREBRUM orchestrates all)
-[[services]]
-binding = "AGENS"
-service = "agens"
-
-[[services]]
-binding = "NEXUS"
-service = "nexus"
-
-[[services]]
-binding = "VIGIL"
-service = "vigil"
-
-[[services]]
-binding = "ANIMUS"
-service = "animus"
-
-[[services]]
-binding = "CURSOR"
-service = "cursor"
+binding = "BRAIN_ANALYTICS"
+dataset = "cerebrum_events"

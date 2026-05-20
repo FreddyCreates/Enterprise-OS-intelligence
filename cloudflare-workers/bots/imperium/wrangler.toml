@@ -1,5 +1,5 @@
-name            = "rship-imperium"
-main            = "worker.js"
+name               = "rship-imperium"
+main               = "worker.js"
 compatibility_date = "2024-09-02"
 
 # Required secrets:
@@ -10,67 +10,33 @@ compatibility_date = "2024-09-02"
 #   IMPERIUM_OPS_CHANNEL   — Slack channel ID where /org speak posts by default
 
 [vars]
-DESIGNATION     = "RSHIP-BOT-IMP-001"
-BOT_NAME        = "IMPERIUM"
-BOT_LATIN       = "imperium"
-BOT_MEANING     = "Command · Authority · Empire"
-VERSION         = "2.0.0"
+DESIGNATION    = "RSHIP-BOT-IMP-001"
+BOT_NAME       = "IMPERIUM"
+BOT_LATIN      = "imperium"
+BOT_MEANING    = "Command · Authority · Empire"
+VERSION        = "2.0.0"
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# INTELLIGENT BINDINGS — "Brains and Hearts"
-# IMPERIUM is the Command Center — optimized for authority and control
+# INTELLIGENT BINDINGS — Give IMPERIUM command intelligence
 # ═══════════════════════════════════════════════════════════════════════════════
 
-# Workers AI — LLM reasoning for command interpretation
+# ── Workers AI — Command interpretation ───────────────────────────────────────
 [ai]
 binding = "AI"
 
-# KV Namespaces — Fast key-value storage for command state
+# ── KV Namespace — Command state ──────────────────────────────────────────────
 [[kv_namespaces]]
 binding = "COMMAND_STATE"
-id = "PLACEHOLDER_COMMAND_STATE_ID"
-# Create with: wrangler kv namespace create COMMAND_STATE
+id = "imperium-command-state"
+preview_id = "imperium-command-state-preview"
 
-[[kv_namespaces]]
-binding = "AUTHORITY_MATRIX"
-id = "PLACEHOLDER_AUTHORITY_MATRIX_ID"
-# Create with: wrangler kv namespace create AUTHORITY_MATRIX
-
-[[kv_namespaces]]
-binding = "SESSION_STORE"
-id = "PLACEHOLDER_SESSION_STORE_ID"
-
-# D1 Database — Structured command history
+# ── D1 Database — Core data ───────────────────────────────────────────────────
 [[d1_databases]]
-binding = "COMMAND_DB"
-database_name = "medinatech-intelligence"
-database_id = "PLACEHOLDER_D1_DATABASE_ID"
+binding = "CORE_DB"
+database_name = "medinatech-core"
+database_id = "medinatech-core-db"
 
-# Queues — Async command distribution
+# ── Queue — Command dispatch ──────────────────────────────────────────────────
 [[queues.producers]]
 binding = "COMMAND_QUEUE"
-queue = "command-distribution"
-# Create with: wrangler queues create command-distribution
-
-[[queues.consumers]]
-queue = "command-distribution"
-max_batch_size = 10
-max_retries = 3
-
-# Analytics Engine — Command metrics
-[[analytics_engine_datasets]]
-binding = "IMPERIUM_ANALYTICS"
-dataset = "imperium_command_telemetry"
-
-# Service Bindings — IMPERIUM commands all Workers
-[[services]]
-binding = "CEREBRUM"
-service = "cerebrum"
-
-[[services]]
-binding = "ARBITER"
-service = "rship-arbiter"
-
-[[services]]
-binding = "NEXUS"
-service = "nexus"
+queue = "ai-analysis"

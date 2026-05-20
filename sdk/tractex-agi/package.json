@@ -1,0 +1,28 @@
+{
+  "name": "@medina/tractex-agi",
+  "version": "1.0.0",
+  "description": "TRACTEX AGI — Transactional Revenue Intelligence with Markov chain AR/AP modeling and φ-compounding cash flow dynamics",
+  "main": "tractex-agi.js",
+  "type": "module",
+  "keywords": [
+    "medina",
+    "rship",
+    "tractex",
+    "agi",
+    "revenue-intelligence",
+    "cash-flow",
+    "markov-chain",
+    "accounts-receivable",
+    "invoice-tracking",
+    "construction",
+    "financial-close",
+    "phi"
+  ],
+  "author": "Alfredo Medina Hernandez",
+  "license": "SEE LICENSE IN ../../LICENSE",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/FreddyCreates/Enterprise-OS-intelligence.git",
+    "directory": "sdk/tractex-agi"
+  }
+}

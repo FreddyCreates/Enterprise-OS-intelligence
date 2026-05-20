@@ -1,5 +1,5 @@
-name            = "rship-arbiter"
-main            = "worker.js"
+name               = "rship-arbiter"
+main               = "worker.js"
 compatibility_date = "2024-09-02"
 
 # Required secrets:
@@ -10,63 +10,33 @@ compatibility_date = "2024-09-02"
 #   ARBITER_OPS_CHANNEL    — Channel ID to post workflow notifications (e.g. #rship-ops)
 
 [vars]
-DESIGNATION     = "RSHIP-BOT-ARB-001"
-BOT_NAME        = "ARBITER"
-BOT_LATIN       = "arbiter"
-BOT_MEANING     = "Task Master · Workflow Judge · Orchestrator"
-VERSION         = "2.0.0"
+DESIGNATION    = "RSHIP-BOT-ARB-001"
+BOT_NAME       = "ARBITER"
+BOT_LATIN      = "arbiter"
+BOT_MEANING    = "Task Master · Workflow Judge · Orchestrator"
+VERSION        = "2.0.0"
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# INTELLIGENT BINDINGS — "Brains and Hearts"
-# ARBITER is the Task Master — optimized for workflow orchestration
+# INTELLIGENT BINDINGS — Give ARBITER decision-making power
 # ═══════════════════════════════════════════════════════════════════════════════
 
-# Workers AI — LLM reasoning for task analysis and prioritization
+# ── Workers AI — Intelligent task routing ─────────────────────────────────────
 [ai]
 binding = "AI"
 
-# KV Namespaces — Fast key-value storage for task state
-[[kv_namespaces]]
-binding = "TASK_QUEUE"
-id = "PLACEHOLDER_TASK_QUEUE_ID"
-# Create with: wrangler kv namespace create TASK_QUEUE
-
+# ── KV Namespace — Workflow state ─────────────────────────────────────────────
 [[kv_namespaces]]
 binding = "WORKFLOW_STATE"
-id = "PLACEHOLDER_WORKFLOW_STATE_ID"
-# Create with: wrangler kv namespace create WORKFLOW_STATE
+id = "arbiter-workflow-state"
+preview_id = "arbiter-workflow-state-preview"
 
-[[kv_namespaces]]
-binding = "SESSION_STORE"
-id = "PLACEHOLDER_SESSION_STORE_ID"
-
-# D1 Database — Structured task and workflow storage
+# ── D1 Database — Task history ────────────────────────────────────────────────
 [[d1_databases]]
-binding = "WORKFLOW_DB"
-database_name = "medinatech-intelligence"
-database_id = "PLACEHOLDER_D1_DATABASE_ID"
+binding = "CORE_DB"
+database_name = "medinatech-core"
+database_id = "medinatech-core-db"
 
-# Queues — Async task distribution
+# ── Queue — Task dispatch ─────────────────────────────────────────────────────
 [[queues.producers]]
-binding = "TASK_DISTRIBUTION_QUEUE"
-queue = "task-distribution"
-# Create with: wrangler queues create task-distribution
-
-[[queues.consumers]]
-queue = "task-distribution"
-max_batch_size = 10
-max_retries = 3
-
-# Analytics Engine — Workflow metrics
-[[analytics_engine_datasets]]
-binding = "ARBITER_ANALYTICS"
-dataset = "arbiter_workflow_telemetry"
-
-# Service Bindings
-[[services]]
-binding = "CEREBRUM"
-service = "cerebrum"
-
-[[services]]
-binding = "NEXUS"
-service = "nexus"
+binding = "TASK_QUEUE"
+queue = "ai-analysis"

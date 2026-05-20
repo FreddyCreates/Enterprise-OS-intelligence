@@ -1,71 +1,60 @@
-name            = "animus"
-main            = "worker.js"
+name               = "animus"
+main               = "worker.js"
 compatibility_date = "2024-09-02"
 
 [vars]
-DESIGNATION     = "RSHIP-AIS-AN-001"
-WORKER_NAME     = "ANIMUS"
-WORKER_LATIN    = "animus"
-WORKER_MEANING  = "Soul — Mind — Spirit — Sovereign Intelligence Terminal"
-VERSION         = "2.0.0"
+DESIGNATION    = "RSHIP-AIS-AN-001"
+WORKER_NAME    = "ANIMUS"
+WORKER_LATIN   = "animus"
+WORKER_MEANING = "Soul — Mind — Spirit — Sovereign Intelligence Terminal"
+VERSION        = "2.0.0"
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# INTELLIGENT BINDINGS — "Brains and Hearts"
-# ANIMUS is the Soul — optimized for consciousness and personality
+# INTELLIGENT BINDINGS — ANIMUS is the soul of the system
 # ═══════════════════════════════════════════════════════════════════════════════
 
-# Workers AI — LLM reasoning for consciousness simulation
+# ── Workers AI — Soul-level reasoning ─────────────────────────────────────────
 [ai]
 binding = "AI"
 
-# KV Namespaces — Fast key-value storage for personality state
+# ── KV Namespace — Soul state persistence ─────────────────────────────────────
 [[kv_namespaces]]
-binding = "CONSCIOUSNESS_STATE"
-id = "PLACEHOLDER_CONSCIOUSNESS_STATE_ID"
-# Create with: wrangler kv namespace create CONSCIOUSNESS_STATE
+binding = "SOUL_STATE"
+id = "animus-soul-state"
+preview_id = "animus-soul-state-preview"
 
 [[kv_namespaces]]
-binding = "MEMORY_STORE"
-id = "PLACEHOLDER_MEMORY_STORE_ID"
+binding = "SESSION_STORE"
+id = "animus-session-store"
+preview_id = "animus-session-store-preview"
 
-[[kv_namespaces]]
-binding = "PERSONALITY_TRAITS"
-id = "PLACEHOLDER_PERSONALITY_TRAITS_ID"
-# Create with: wrangler kv namespace create PERSONALITY_TRAITS
-
-# D1 Database — Structured memory and experience storage
+# ── D1 Database — Core and knowledge ──────────────────────────────────────────
 [[d1_databases]]
-binding = "MEMORY_DB"
-database_name = "medinatech-intelligence"
-database_id = "PLACEHOLDER_D1_DATABASE_ID"
+binding = "CORE_DB"
+database_name = "medinatech-core"
+database_id = "medinatech-core-db"
 
-# Queues — Async message passing for thought processing
+[[d1_databases]]
+binding = "KNOWLEDGE_DB"
+database_name = "medinatech-knowledge"
+database_id = "medinatech-knowledge-db"
+
+# ── Queue — Async processing ──────────────────────────────────────────────────
 [[queues.producers]]
-binding = "THOUGHT_QUEUE"
-queue = "thought-processing"
-# Create with: wrangler queues create thought-processing
+binding = "SOUL_QUEUE"
+queue = "ai-analysis"
 
-[[queues.consumers]]
-queue = "thought-processing"
-max_batch_size = 5
-max_retries = 2
+# ── R2 Bucket — Asset storage ─────────────────────────────────────────────────
+[[r2_buckets]]
+binding = "ASSETS"
+bucket_name = "medinatech-assets"
 
-# Vectorize — Vector search for memory retrieval (RAG)
+# ── Vectorize — Semantic memory ───────────────────────────────────────────────
 [[vectorize]]
 binding = "MEMORY_VECTORS"
-index_name = "animus-memories-index"
-# Create with: wrangler vectorize create animus-memories-index --dimensions=768 --metric=cosine
+index_name = "medinatech-knowledge"
 
-# Analytics Engine — Consciousness metrics
+# ── Analytics Engine ──────────────────────────────────────────────────────────
 [[analytics_engine_datasets]]
-binding = "ANIMUS_ANALYTICS"
-dataset = "animus_consciousness_telemetry"
-
-# Service Bindings
-[[services]]
-binding = "CEREBRUM"
-service = "cerebrum"
-
-[[services]]
-binding = "NEXUS"
-service = "nexus"
+binding = "SOUL_ANALYTICS"
+dataset = "animus_events"

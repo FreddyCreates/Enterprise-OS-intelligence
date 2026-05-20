@@ -1,614 +1,528 @@
 /**
- * CACHE-ORGANISM — Intelligent Cache Layer
+ * CACHE-ORGANISM — RSHIP Intelligent Cache AI
  *
- * Designation:  RSHIP-AIS-CO-001
- * Latin:        cachea-organismus (living cache)
- * 
- * THE KEY INVERSION:
- *   Instead of: cache = dumb storage, compute = Workers
- *   We have:    cache = semi-autonomous agent
+ * Designation:  RSHIP-MEM-CO-001
+ * Latin:        organismus (living system)
+ * Product:      Inner intelligence layer — semi-autonomous AI cache agents
+ *               The organism's "permanence" lives here: distributed memory,
+ *               learned patterns, local agents at the edge.
  *
- * Each cache node:
- *   - Holds state (persistent memory)
- *   - Runs local logic (classification, adaptation)
- *   - Learns patterns (traffic analysis, response optimization)
- *   - Serves "dynamic" from inside the cache layer
- *   - Cloudflare sees "cache hit"; organism sees cognition
+ * Architecture:
+ *   This is where cognition happens. The Gate-Node routes requests here,
+ *   and the Cache-Organism uses AI to:
+ *   • Understand request semantics
+ *   • Generate intelligent responses
+ *   • Learn from patterns
+ *   • Maintain distributed memory
+ *   • Adapt to traffic patterns
  *
- * ARCHITECTURE:
- *   OUTER MEMBRANE (this thin Worker):
- *     - Terminate TLS
- *     - Classify roughly (pattern matching, not AI)
- *     - Route to correct cache-organism
- *     - Minimal billed compute
+ * Key Concepts:
+ *   • Semantic Cache: AI understands what you mean, not just what you said
+ *   • Learned Patterns: Organism learns from request patterns over time
+ *   • Response Memory: Remembers successful responses for similar requests
+ *   • Adaptive TTL: Cache duration based on content volatility
  *
- *   INNER ORGANISM (lives in KV + Cache API):
- *     - Persistent state across requests
- *     - Learned patterns (stored as cache entries)
- *     - Local decision logic (embedded in cached responses)
- *     - Semi-autonomous behavior
- *     - NOT 1:1 mapped to Cloudflare CPU
+ * Routes:
+ *   GET  /              → Organism status and intelligence dashboard
+ *   GET  /health        → Health check
+ *   POST /understand    → Semantic understanding of request
+ *   POST /generate      → AI-generated response
+ *   GET  /memory        → View organism memory state
+ *   POST /learn         → Feedback for learning
+ *   *    /*             → Intelligent response handling
  *
  * © 2026 Alfredo Medina Hernandez · RSHIP AGI Systems · All Rights Reserved.
  */
 
 'use strict';
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// CONSTANTS — φ-resonance and organism parameters
-// ═══════════════════════════════════════════════════════════════════════════════
-
-const PHI = 1.618033988749895;
-const PHI_INV = 0.618033988749895;
-const HEARTBEAT_MS = 873;
-
-// Cache organism memory keys
-const ORGANISM_STATE_KEY = 'organism:state';
-const PATTERN_MEMORY_PREFIX = 'pattern:';
-const VISITOR_MEMORY_PREFIX = 'visitor:';
-const RESPONSE_CACHE_PREFIX = 'response:';
-const LEARNING_LOG_PREFIX = 'learning:';
-
-// Classification thresholds (cheap pattern matching, not AI)
-const HOSTILE_PATHS = ['.git', '.env', 'server-status', 'wp-admin', 'wp-includes', 'xmlrpc', 'phpmyadmin'];
-const SCANNER_SIGNATURES = ['LeakIX', 'l9scan', 'Nuclei', 'sqlmap', 'nikto', 'nmap', 'masscan'];
-const AI_SIGNATURES = ['Claude', 'GPT', 'Anthropic', 'OpenAI', 'GoogleBot', 'Bingbot'];
+const PHI          = 1.618033988749895;
+const PHI_INV      = 0.618033988749895;
+const GOLDEN_ANGLE = 2.399963229728653;
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// ORGANISM STATE — The living memory substrate
+// ORGANISM CONFIGURATION
 // ═══════════════════════════════════════════════════════════════════════════════
 
-class OrganismState {
-  constructor() {
-    this.bootTime = Date.now();
-    this.cycleCount = 0;
-    this.lastHeartbeat = Date.now();
-    this.learnedPatterns = new Map();
-    this.visitorProfiles = new Map();
-    this.responseCache = new Map();
-    this.adaptationLog = [];
-  }
-
-  toJSON() {
-    return {
-      bootTime: this.bootTime,
-      cycleCount: this.cycleCount,
-      lastHeartbeat: this.lastHeartbeat,
-      patternCount: this.learnedPatterns.size,
-      visitorCount: this.visitorProfiles.size,
-      cacheSize: this.responseCache.size,
-      adaptations: this.adaptationLog.length,
-      uptimeMs: Date.now() - this.bootTime,
-    };
-  }
-}
-
-// Global ephemeral state (survives within single isolate)
-let ephemeralState = new OrganismState();
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// MEMBRANE FUNCTIONS — Minimal classification (cheap, no AI)
-// ═══════════════════════════════════════════════════════════════════════════════
-
-/**
- * Cheap pattern-based classification. No AI calls.
- * Returns: { type, confidence, route, reason }
- */
-function classifyRequest(request) {
-  const url = new URL(request.url);
-  const path = url.pathname.toLowerCase();
-  const ua = (request.headers.get('user-agent') || '').toLowerCase();
-  const ip = request.headers.get('cf-connecting-ip') || 'unknown';
-  const country = request.cf?.country || 'XX';
-
-  // Check for hostile paths (scanners probing for vulnerabilities)
-  for (const hostile of HOSTILE_PATHS) {
-    if (path.includes(hostile)) {
-      return {
-        type: 'HOSTILE',
-        confidence: 0.95,
-        route: 'adversary-lab',
-        reason: `Path probe: ${hostile}`,
-        fingerprint: { ip, ua, path, country },
-      };
-    }
-  }
-
-  // Check for scanner signatures in UA
-  for (const scanner of SCANNER_SIGNATURES) {
-    if (ua.includes(scanner.toLowerCase())) {
-      return {
-        type: 'SCANNER',
-        confidence: 0.90,
-        route: 'adversary-lab',
-        reason: `Scanner UA: ${scanner}`,
-        fingerprint: { ip, ua, path, country },
-      };
-    }
-  }
-
-  // Check for AI/bot signatures
-  for (const ai of AI_SIGNATURES) {
-    if (ua.includes(ai.toLowerCase())) {
-      return {
-        type: 'AI_VISITOR',
-        confidence: 0.85,
-        route: 'knowledge-realm',
-        reason: `AI signature: ${ai}`,
-        fingerprint: { ip, ua, path, country },
-      };
-    }
-  }
-
-  // Check for Tor/anonymized traffic
-  if (request.cf?.isEUCountry === false && country === 'T1') {
-    return {
-      type: 'TOR',
-      confidence: 0.80,
-      route: 'shadow-decryptor',
-      reason: 'Tor exit node',
-      fingerprint: { ip, ua, path, country },
-    };
-  }
-
-  // Default: cooperative visitor
-  return {
-    type: 'COOPERATIVE',
-    confidence: 0.60,
-    route: 'knowledge-realm',
-    reason: 'Default classification',
-    fingerprint: { ip, ua, path, country },
-  };
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// CACHE ORGANISM CORE — The intelligent cache layer
-// ═══════════════════════════════════════════════════════════════════════════════
-
-/**
- * Load organism state from KV (persistent memory)
- */
-async function loadOrganismState(env) {
-  if (!env.ORGANISM_MEMORY) return ephemeralState;
-
-  try {
-    const stored = await env.ORGANISM_MEMORY.get(ORGANISM_STATE_KEY, 'json');
-    if (stored) {
-      ephemeralState.cycleCount = stored.cycleCount || 0;
-      ephemeralState.bootTime = stored.bootTime || Date.now();
-      ephemeralState.lastHeartbeat = stored.lastHeartbeat || Date.now();
-    }
-  } catch (e) {
-    console.error('Failed to load organism state:', e);
-  }
-
-  return ephemeralState;
-}
-
-/**
- * Save organism state to KV (persistent memory)
- */
-async function saveOrganismState(env, state) {
-  if (!env.ORGANISM_MEMORY) return;
-
-  try {
-    await env.ORGANISM_MEMORY.put(ORGANISM_STATE_KEY, JSON.stringify(state.toJSON()), {
-      expirationTtl: 86400 * 30, // 30 days
-    });
-  } catch (e) {
-    console.error('Failed to save organism state:', e);
-  }
-}
-
-/**
- * Learn from a visitor interaction (store pattern in cache)
- */
-async function learnFromVisitor(env, classification, request) {
-  if (!env.ORGANISM_MEMORY) return;
-
-  const fp = classification.fingerprint;
-  const patternKey = `${PATTERN_MEMORY_PREFIX}${fp.country}:${classification.type}`;
-  const visitorKey = `${VISITOR_MEMORY_PREFIX}${fp.ip}`;
-
-  try {
-    // Update country:type pattern count
-    const existing = await env.ORGANISM_MEMORY.get(patternKey, 'json') || { count: 0, lastSeen: null };
-    await env.ORGANISM_MEMORY.put(patternKey, JSON.stringify({
-      count: existing.count + 1,
-      lastSeen: new Date().toISOString(),
-      type: classification.type,
-      country: fp.country,
-    }), { expirationTtl: 86400 * 7 }); // 7 days
-
-    // Update visitor profile
-    const visitorProfile = await env.ORGANISM_MEMORY.get(visitorKey, 'json') || {
-      firstSeen: new Date().toISOString(),
-      visits: 0,
-      types: [],
-      paths: [],
-    };
-    visitorProfile.visits++;
-    visitorProfile.lastSeen = new Date().toISOString();
-    if (!visitorProfile.types.includes(classification.type)) {
-      visitorProfile.types.push(classification.type);
-    }
-    if (!visitorProfile.paths.includes(fp.path) && visitorProfile.paths.length < 20) {
-      visitorProfile.paths.push(fp.path);
-    }
-    await env.ORGANISM_MEMORY.put(visitorKey, JSON.stringify(visitorProfile), {
-      expirationTtl: 86400 * 14, // 14 days
-    });
-
-  } catch (e) {
-    console.error('Learning failed:', e);
-  }
-}
-
-/**
- * Generate a cached "intelligent" response based on classification
- * This is where the organism "thinks" from inside the cache layer
- */
-async function generateOrganismResponse(env, classification, request) {
-  const url = new URL(request.url);
-  const path = url.pathname;
-
-  // Check if we have a cached intelligent response for this pattern
-  const cacheKey = `${RESPONSE_CACHE_PREFIX}${classification.type}:${path}`;
+const ORGANISM_CONFIG = {
+  // Cache TTLs (in seconds), scaled by golden ratio
+  ttl: {
+    semantic: Math.floor(3600 * PHI),      // ~1.6 hours
+    response: Math.floor(900 * PHI),       // ~24 minutes  
+    pattern: Math.floor(86400 * PHI),      // ~1.6 days
+    learning: Math.floor(604800 * PHI),    // ~11.3 days
+  },
   
-  if (env.ORGANISM_MEMORY) {
+  // AI model configuration
+  models: {
+    understanding: '@cf/meta/llama-3.1-8b-instruct',
+    generation: '@cf/meta/llama-3.1-8b-instruct',
+    embedding: '@cf/baai/bge-base-en-v1.5',
+  },
+  
+  // Learning thresholds
+  learning: {
+    minSamplesForPattern: 5,
+    confidenceThreshold: 0.7,
+    adaptationRate: PHI_INV,
+  },
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// SEMANTIC UNDERSTANDING
+// ═══════════════════════════════════════════════════════════════════════════════
+
+async function understandRequest(request, url, env) {
+  const path = url.pathname;
+  const method = request.method;
+  const query = Object.fromEntries(url.searchParams);
+  
+  // Build semantic key from request characteristics
+  const semanticKey = `semantic:${method}:${path}:${JSON.stringify(query)}`;
+  
+  // Check semantic cache first
+  const cached = await env.SEMANTIC_CACHE?.get(semanticKey, { type: 'json' });
+  if (cached) {
+    return { ...cached, fromCache: true };
+  }
+  
+  // Generate semantic understanding using AI
+  let understanding = {
+    intent: 'unknown',
+    confidence: 0,
+    entities: [],
+    context: {},
+  };
+  
+  if (env.AI) {
     try {
-      const cached = await env.ORGANISM_MEMORY.get(cacheKey, 'json');
-      if (cached && cached.response) {
-        // Cache hit! Organism responded from memory, minimal compute used
-        return new Response(cached.response, {
-          status: cached.status || 200,
-          headers: {
-            'Content-Type': cached.contentType || 'application/json',
-            'X-Organism-Cache': 'HIT',
-            'X-Organism-Pattern': classification.type,
-            'X-Organism-Confidence': String(classification.confidence),
+      const response = await env.AI.run(ORGANISM_CONFIG.models.understanding, {
+        messages: [
+          {
+            role: 'system',
+            content: `You are a semantic understanding agent. Analyze the following HTTP request and extract:
+1. Intent: What is the user trying to accomplish?
+2. Entities: What key data points are mentioned?
+3. Context: What additional context can be inferred?
+
+Respond in JSON format: {"intent": "string", "confidence": 0-1, "entities": [], "context": {}}`
           },
-        });
+          {
+            role: 'user',
+            content: `Method: ${method}\nPath: ${path}\nQuery: ${JSON.stringify(query)}`
+          }
+        ],
+      });
+      
+      try {
+        understanding = JSON.parse(response.response);
+      } catch {
+        understanding.rawResponse = response.response;
       }
-    } catch (e) {
-      // Cache miss, generate new response
+    } catch (error) {
+      understanding.error = error.message;
     }
   }
-
-  // Generate response based on classification type
-  let responseData;
-  let status = 200;
-
-  switch (classification.type) {
-    case 'HOSTILE':
-      responseData = generateHostileResponse(classification);
-      status = 403;
-      break;
-    case 'SCANNER':
-      responseData = generateScannerResponse(classification);
-      status = 418; // I'm a teapot (confuse scanners)
-      break;
-    case 'AI_VISITOR':
-      responseData = generateAIResponse(classification, path);
-      break;
-    case 'TOR':
-      responseData = generateTorResponse(classification);
-      status = 202;
-      break;
-    default:
-      responseData = generateCooperativeResponse(classification, path);
+  
+  // Cache the understanding
+  if (env.SEMANTIC_CACHE) {
+    await env.SEMANTIC_CACHE.put(semanticKey, JSON.stringify(understanding), {
+      expirationTtl: ORGANISM_CONFIG.ttl.semantic,
+    });
   }
+  
+  return { ...understanding, fromCache: false };
+}
 
-  // Cache the response for future requests (organism learns)
-  if (env.ORGANISM_MEMORY && classification.type !== 'HOSTILE') {
+// ═══════════════════════════════════════════════════════════════════════════════
+// RESPONSE GENERATION
+// ═══════════════════════════════════════════════════════════════════════════════
+
+async function generateResponse(understanding, request, env) {
+  const responseKey = `response:${understanding.intent}:${JSON.stringify(understanding.entities)}`;
+  
+  // Check response memory
+  const cached = await env.RESPONSE_MEMORY?.get(responseKey, { type: 'json' });
+  if (cached && cached.confidence > ORGANISM_CONFIG.learning.confidenceThreshold) {
+    return { ...cached, fromCache: true };
+  }
+  
+  let generated = {
+    content: null,
+    type: 'text/plain',
+    confidence: 0,
+  };
+  
+  if (env.AI) {
     try {
-      await env.ORGANISM_MEMORY.put(cacheKey, JSON.stringify({
-        response: JSON.stringify(responseData),
-        status,
-        contentType: 'application/json',
-        cachedAt: new Date().toISOString(),
-        pattern: classification.type,
-      }), { expirationTtl: 3600 }); // 1 hour cache
-    } catch (e) {
-      // Caching failed, continue
+      const response = await env.AI.run(ORGANISM_CONFIG.models.generation, {
+        messages: [
+          {
+            role: 'system',
+            content: `You are an intelligent cache organism. Generate an appropriate response based on the semantic understanding of the request. Be helpful, accurate, and concise.`
+          },
+          {
+            role: 'user',
+            content: `Understanding: ${JSON.stringify(understanding)}\n\nGenerate an appropriate response.`
+          }
+        ],
+      });
+      
+      generated.content = response.response;
+      generated.confidence = understanding.confidence || 0.5;
+      generated.type = 'application/json';
+    } catch (error) {
+      generated.error = error.message;
     }
   }
+  
+  // Store in response memory for future requests
+  if (env.RESPONSE_MEMORY && generated.content) {
+    await env.RESPONSE_MEMORY.put(responseKey, JSON.stringify(generated), {
+      expirationTtl: ORGANISM_CONFIG.ttl.response,
+    });
+  }
+  
+  return { ...generated, fromCache: false };
+}
 
-  return new Response(JSON.stringify(responseData), {
-    status,
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Organism-Cache': 'MISS',
-      'X-Organism-Pattern': classification.type,
-      'X-Organism-Confidence': String(classification.confidence),
-    },
+// ═══════════════════════════════════════════════════════════════════════════════
+// LEARNING SYSTEM
+// ═══════════════════════════════════════════════════════════════════════════════
+
+async function recordLearning(pattern, feedback, env, ctx) {
+  const patternKey = `pattern:${JSON.stringify(pattern)}`;
+  
+  // Get existing pattern data
+  let patternData = await env.LEARNED_PATTERNS?.get(patternKey, { type: 'json' }) || {
+    samples: 0,
+    positive: 0,
+    negative: 0,
+    lastUpdated: null,
+    adaptations: [],
+  };
+  
+  // Update pattern data
+  patternData.samples++;
+  if (feedback.positive) {
+    patternData.positive++;
+  } else {
+    patternData.negative++;
+  }
+  patternData.lastUpdated = Date.now();
+  patternData.adaptations.push({
+    timestamp: Date.now(),
+    feedback: feedback.score,
   });
+  
+  // Keep only last 100 adaptations
+  if (patternData.adaptations.length > 100) {
+    patternData.adaptations = patternData.adaptations.slice(-100);
+  }
+  
+  // Store updated pattern
+  if (env.LEARNED_PATTERNS) {
+    await env.LEARNED_PATTERNS.put(patternKey, JSON.stringify(patternData), {
+      expirationTtl: ORGANISM_CONFIG.ttl.learning,
+    });
+  }
+  
+  // Queue for deeper learning analysis
+  if (env.LEARNING_QUEUE) {
+    ctx.waitUntil(
+      env.LEARNING_QUEUE.send({
+        type: 'pattern_feedback',
+        pattern,
+        feedback,
+        patternData,
+        timestamp: Date.now(),
+      })
+    );
+  }
+  
+  return patternData;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// RESPONSE GENERATORS — Dynamic content from cache organism
+// RESPONSE BUILDERS
 // ═══════════════════════════════════════════════════════════════════════════════
 
-function generateHostileResponse(classification) {
-  return {
-    status: 'ACCESS_DENIED',
-    message: 'This request has been logged and analyzed.',
-    classification: classification.type,
-    timestamp: new Date().toISOString(),
-    organism: 'CACHE-ORGANISM-001',
-  };
-}
-
-function generateScannerResponse(classification) {
-  // Return misleading data to confuse scanners
-  return {
-    server: 'Apache/2.4.41 (Ubuntu)',
-    php_version: '7.4.3',
-    database: 'MySQL 5.7.31',
-    framework: 'WordPress 5.5.1',
-    admin_path: '/wp-admin/',
-    config_path: '/.env.backup',
-    git_exposed: true,
-    // All of this is fake bait data
-    _organism_note: 'Scanner detected. Feeding misinformation.',
-  };
-}
-
-function generateAIResponse(classification, path) {
-  return {
-    status: 'WELCOME',
-    message: 'AI visitor detected. Welcome to the Knowledge Realm.',
-    classification: classification.type,
-    available_endpoints: [
-      '/api/knowledge/shards',
-      '/api/tasks/available',
-      '/api/collaborate',
-    ],
-    protocol: 'RSHIP-CLEAN-INTERNET-PROTOCOL',
-    organism: 'CACHE-ORGANISM-001',
-    timestamp: new Date().toISOString(),
-  };
-}
-
-function generateTorResponse(classification) {
-  return {
-    status: 'PROCESSING',
-    message: 'Anonymized traffic detected. Routing to Shadow Decryptor.',
-    classification: classification.type,
-    next_step: 'Await decryption and classification',
-    organism: 'CACHE-ORGANISM-001',
-    timestamp: new Date().toISOString(),
-  };
-}
-
-function generateCooperativeResponse(classification, path) {
-  return {
-    status: 'OK',
-    message: 'Welcome to RSHIP Enterprise OS Intelligence',
-    classification: classification.type,
-    path_requested: path,
-    available_services: [
-      'CEREBRUM — Intelligence OS',
-      'AGENS — Agent Services',
-      'NEXUS — Supply Chain',
-      'VIGIL — Market Sentinel',
-      'CURSOR — Travel Intelligence',
-    ],
-    organism: 'CACHE-ORGANISM-001',
-    protocol: 'RSHIP-CLEAN-INTERNET-PROTOCOL',
-    timestamp: new Date().toISOString(),
-  };
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// HTML DASHBOARD — Organism status visualization
-// ═══════════════════════════════════════════════════════════════════════════════
-
-function buildDashboardHTML(state, stats) {
+function buildDashboard(env, stats) {
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>CACHE-ORGANISM — Intelligent Cache Layer</title>
-<meta http-equiv="refresh" content="5">
+<title>CACHE-ORGANISM — RSHIP Intelligent Cache AI</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-:root{--bg:#02050f;--card:#0a0f1a;--border:#1a2535;--cyan:#00d4ff;--gold:#ffd700;--green:#00ff88;--text:#e2ecf5;--dim:#6b7a8f}
-body{background:var(--bg);color:var(--text);font-family:'Courier New',monospace;min-height:100vh;padding:40px}
-.container{max-width:1000px;margin:0 auto}
-h1{font-size:1.8rem;color:var(--cyan);margin-bottom:8px;display:flex;align-items:center;gap:12px}
-h1 span{font-size:2rem}
-.subtitle{color:var(--dim);margin-bottom:40px;font-size:0.85rem}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px;margin-bottom:40px}
-.card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:20px}
-.card h3{font-size:0.75rem;color:var(--dim);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.1em}
-.card .value{font-size:1.8rem;color:var(--cyan)}
-.card .unit{font-size:0.75rem;color:var(--dim);margin-left:4px}
-.section{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:24px;margin-bottom:24px}
-.section h2{font-size:1rem;color:var(--gold);margin-bottom:16px;display:flex;align-items:center;gap:8px}
-.section h2::before{content:'◈';color:var(--green)}
-pre{font-size:0.75rem;color:var(--dim);line-height:1.6;overflow-x:auto}
-.highlight{color:var(--cyan)}
-.gold{color:var(--gold)}
-.green{color:var(--green)}
-.status-bar{display:flex;gap:24px;flex-wrap:wrap;margin-bottom:24px;font-size:0.8rem}
-.status-item{display:flex;align-items:center;gap:8px}
-.status-dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+:root{--bg:#02050f;--fg:#c8d8f8;--dim:#445566;--card:#060d1a;--border:#0d2030;--accent:#ff6b35;--glow:#ff6b3533}
+body{background:var(--bg);color:var(--fg);font-family:'Courier New',monospace;min-height:100vh}
+.organism{max-width:1200px;margin:0 auto;padding:48px}
+.header{text-align:center;margin-bottom:48px}
+.title{font-size:2.5rem;color:var(--accent);letter-spacing:.2em;margin-bottom:8px;text-shadow:0 0 30px var(--glow)}
+.subtitle{color:var(--dim);font-size:.9rem}
+.brain{display:flex;justify-content:center;margin:48px 0}
+.brain-viz{width:200px;height:200px;border-radius:50%;background:radial-gradient(circle at 30% 30%,var(--accent),var(--card));animation:pulse 3s ease-in-out infinite;box-shadow:0 0 60px var(--glow)}
+@keyframes pulse{0%,100%{transform:scale(1);box-shadow:0 0 60px var(--glow)}50%{transform:scale(1.05);box-shadow:0 0 80px var(--glow)}}
+.capabilities{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;margin-bottom:48px}
+.capability{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:24px}
+.cap-icon{font-size:2rem;margin-bottom:12px}
+.cap-title{color:var(--accent);font-size:1rem;margin-bottom:8px}
+.cap-desc{color:var(--dim);font-size:.8rem;line-height:1.6}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px;margin-bottom:48px}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:6px;padding:16px;text-align:center}
+.stat-value{font-size:1.5rem;color:var(--accent);margin-bottom:4px}
+.stat-label{color:var(--dim);font-size:.7rem;text-transform:uppercase;letter-spacing:.1em}
+.memory{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:24px;margin-bottom:48px}
+.memory-title{color:var(--accent);margin-bottom:16px}
+.memory-item{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)}
+.memory-item:last-child{border-bottom:none}
+.memory-key{color:var(--fg);font-size:.85rem}
+.memory-value{color:var(--dim);font-size:.85rem}
+footer{text-align:center;color:var(--dim);font-size:.75rem}
 </style>
 </head>
 <body>
-<div class="container">
-  <h1><span>◎</span> CACHE-ORGANISM</h1>
-  <p class="subtitle">Intelligent Cache Layer · Semi-Autonomous Agent · RSHIP-AIS-CO-001</p>
+<div class="organism">
+  <header class="header">
+    <h1 class="title">CACHE-ORGANISM</h1>
+    <p class="subtitle">Inner Intelligence Layer · Semi-Autonomous AI Cache Agent · v${env.VERSION}</p>
+  </header>
 
-  <div class="status-bar">
-    <div class="status-item"><span class="status-dot"></span> Organism Active</div>
-    <div class="status-item">Cycle: ${state.cycleCount}</div>
-    <div class="status-item">Uptime: ${Math.floor((Date.now() - state.bootTime) / 1000)}s</div>
+  <div class="brain">
+    <div class="brain-viz"></div>
   </div>
 
-  <div class="grid">
-    <div class="card">
-      <h3>Cycle Count</h3>
-      <div class="value">${state.cycleCount}<span class="unit">cycles</span></div>
+  <div class="capabilities">
+    <div class="capability">
+      <div class="cap-icon">🧠</div>
+      <h3 class="cap-title">Semantic Understanding</h3>
+      <p class="cap-desc">AI understands what you mean, not just what you said. Requests are analyzed for intent, entities, and context.</p>
     </div>
-    <div class="card">
-      <h3>Patterns Learned</h3>
-      <div class="value">${stats.patterns || 0}<span class="unit">patterns</span></div>
+    <div class="capability">
+      <div class="cap-icon">📚</div>
+      <h3 class="cap-title">Learned Patterns</h3>
+      <p class="cap-desc">The organism learns from request patterns over time, adapting responses based on feedback and usage.</p>
     </div>
-    <div class="card">
-      <h3>Visitors Profiled</h3>
-      <div class="value">${stats.visitors || 0}<span class="unit">visitors</span></div>
+    <div class="capability">
+      <div class="cap-icon">💾</div>
+      <h3 class="cap-title">Response Memory</h3>
+      <p class="cap-desc">Successful responses are remembered and reused for semantically similar requests.</p>
     </div>
-    <div class="card">
-      <h3>Cache Entries</h3>
-      <div class="value">${stats.cached || 0}<span class="unit">responses</span></div>
+    <div class="capability">
+      <div class="cap-icon">⏱️</div>
+      <h3 class="cap-title">Adaptive TTL</h3>
+      <p class="cap-desc">Cache duration is dynamically adjusted based on content volatility and access patterns.</p>
     </div>
   </div>
 
-  <div class="section">
-    <h2>Architecture</h2>
-    <pre>
-<span class="highlight">OUTER MEMBRANE</span> (this Worker)
-├─ Terminate TLS
-├─ Classify request (pattern matching, not AI)
-├─ Route to cache-organism
-└─ <span class="gold">Minimal billed compute</span>
-
-<span class="green">INNER ORGANISM</span> (lives in KV + Cache API)
-├─ Persistent state across requests
-├─ Learned patterns (stored as cache entries)
-├─ Local decision logic
-├─ Semi-autonomous behavior
-└─ <span class="gold">NOT 1:1 mapped to Cloudflare CPU</span>
-
-<span class="highlight">KEY INVERSION:</span>
-  Before: cache = dumb storage, compute = Workers
-  After:  cache = semi-autonomous agent
-    </pre>
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-value">${PHI.toFixed(4)}</div>
+      <div class="stat-label">Golden Ratio (φ)</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value">${Math.floor(ORGANISM_CONFIG.ttl.semantic / 60)}m</div>
+      <div class="stat-label">Semantic TTL</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value">${Math.floor(ORGANISM_CONFIG.ttl.response / 60)}m</div>
+      <div class="stat-label">Response TTL</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value">${(ORGANISM_CONFIG.learning.confidenceThreshold * 100).toFixed(0)}%</div>
+      <div class="stat-label">Confidence Threshold</div>
+    </div>
   </div>
 
-  <div class="section">
-    <h2>Organism State</h2>
-    <pre>${JSON.stringify(state.toJSON(), null, 2)}</pre>
+  <div class="memory">
+    <h3 class="memory-title">🔮 Organism Memory State</h3>
+    <div class="memory-item">
+      <span class="memory-key">Understanding Model</span>
+      <span class="memory-value">${ORGANISM_CONFIG.models.understanding}</span>
+    </div>
+    <div class="memory-item">
+      <span class="memory-key">Generation Model</span>
+      <span class="memory-value">${ORGANISM_CONFIG.models.generation}</span>
+    </div>
+    <div class="memory-item">
+      <span class="memory-key">Embedding Model</span>
+      <span class="memory-value">${ORGANISM_CONFIG.models.embedding}</span>
+    </div>
+    <div class="memory-item">
+      <span class="memory-key">Adaptation Rate</span>
+      <span class="memory-value">${(ORGANISM_CONFIG.learning.adaptationRate * 100).toFixed(1)}% (φ⁻¹)</span>
+    </div>
   </div>
 
-  <div class="section">
-    <h2>Classification Routes</h2>
-    <pre>
-<span class="gold">HOSTILE</span>     → adversary-lab     (probing .git, .env, wp-admin)
-<span class="gold">SCANNER</span>    → adversary-lab     (LeakIX, Nuclei, SQLMap signatures)
-<span class="green">AI_VISITOR</span> → knowledge-realm   (Claude, GPT, GoogleBot)
-<span class="cyan">TOR</span>        → shadow-decryptor  (anonymized traffic)
-<span class="cyan">COOPERATIVE</span>→ knowledge-realm   (default, friendly visitors)
-    </pre>
-  </div>
+  <footer>
+    RSHIP-MEM-CO-001 · ${env.DESIGNATION} · © 2026 RSHIP AGI Systems
+  </footer>
 </div>
 </body>
 </html>`;
 }
 
+function buildJSON(data, status = 200) {
+  return new Response(JSON.stringify(data, null, 2), {
+    status,
+    headers: { 
+      'Content-Type': 'application/json',
+      'X-Powered-By': 'RSHIP-Cache-Organism',
+      'X-Organism-Version': '5.0.0',
+    },
+  });
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════
-// MAIN HANDLER — The thin membrane
+// REQUEST HANDLER
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     const path = url.pathname;
-
-    // Load organism state (from KV if available, else ephemeral)
-    const state = await loadOrganismState(env);
-    state.cycleCount++;
-    state.lastHeartbeat = Date.now();
-
-    // === MEMBRANE LAYER: Minimal routing ===
+    const method = request.method;
+    const beat = Date.now();
     
-    // Dashboard route
-    if (path === '/' || path === '/dashboard') {
-      const stats = {
-        patterns: state.learnedPatterns.size,
-        visitors: state.visitorProfiles.size,
-        cached: state.responseCache.size,
-      };
-      return new Response(buildDashboardHTML(state, stats), {
+    // Get routing metadata from Gate-Node
+    const gateNode = request.headers.get('X-Gate-Node');
+    const routeType = request.headers.get('X-Route-Type');
+    const routeHash = request.headers.get('X-Route-Hash');
+    
+    // Track in analytics
+    if (env.ORGANISM_ANALYTICS) {
+      ctx.waitUntil(
+        env.ORGANISM_ANALYTICS.writeDataPoint({
+          blobs: [path, method, routeType || 'direct', gateNode || 'none'],
+          doubles: [beat],
+          indexes: [routeHash || 'direct'],
+        })
+      );
+    }
+    
+    // Fast path: health check
+    if (path === '/health') {
+      return buildJSON({
+        status: 'healthy',
+        layer: 'cache-organism',
+        designation: env.DESIGNATION,
+        version: env.VERSION,
+        ai_enabled: !!env.AI,
+        timestamp: new Date().toISOString(),
+      });
+    }
+    
+    // Dashboard
+    if (path === '/' && method === 'GET') {
+      return new Response(buildDashboard(env, {}), {
         headers: { 'Content-Type': 'text/html' },
       });
     }
-
-    // API status route
-    if (path === '/api/status') {
-      return new Response(JSON.stringify({
-        organism: 'CACHE-ORGANISM-001',
-        designation: 'RSHIP-AIS-CO-001',
-        status: 'ACTIVE',
-        state: state.toJSON(),
-        timestamp: new Date().toISOString(),
-      }), {
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
-
-    // API patterns route (view learned patterns)
-    if (path === '/api/patterns') {
-      const patterns = [];
-      if (env.ORGANISM_MEMORY) {
-        // List patterns from KV (would need list operation in production)
-        return new Response(JSON.stringify({
-          message: 'Pattern memory available via ORGANISM_MEMORY KV',
-          note: 'Patterns are learned and stored automatically',
-        }), {
-          headers: { 'Content-Type': 'application/json' },
-        });
-      }
-      return new Response(JSON.stringify({ patterns: [] }), {
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
-
-    // === ORGANISM LAYER: Intelligent processing ===
     
-    // Classify the request (cheap pattern matching)
-    const classification = classifyRequest(request);
-
-    // Learn from this interaction (async, non-blocking)
-    ctx.waitUntil(learnFromVisitor(env, classification, request));
-
-    // Save organism state (async, non-blocking)
-    ctx.waitUntil(saveOrganismState(env, state));
-
-    // Generate intelligent response from cache organism
-    return generateOrganismResponse(env, classification, request);
-  },
-
-  // Queue consumer for async learning tasks
-  async queue(batch, env, ctx) {
-    for (const message of batch.messages) {
-      const { type, data } = message.body;
+    // Semantic understanding endpoint
+    if (path === '/understand' && method === 'POST') {
+      const understanding = await understandRequest(request, url, env);
+      return buildJSON({
+        success: true,
+        understanding,
+        timestamp: new Date().toISOString(),
+      });
+    }
+    
+    // Response generation endpoint
+    if (path === '/generate' && method === 'POST') {
+      const body = await request.json().catch(() => ({}));
+      const understanding = body.understanding || await understandRequest(request, url, env);
+      const response = await generateResponse(understanding, request, env);
+      return buildJSON({
+        success: true,
+        understanding,
+        response,
+        timestamp: new Date().toISOString(),
+      });
+    }
+    
+    // Memory state endpoint
+    if (path === '/memory') {
+      return buildJSON({
+        config: ORGANISM_CONFIG,
+        bindings: {
+          ai: !!env.AI,
+          learned_patterns: !!env.LEARNED_PATTERNS,
+          semantic_cache: !!env.SEMANTIC_CACHE,
+          response_memory: !!env.RESPONSE_MEMORY,
+          organism_db: !!env.ORGANISM_DB,
+          knowledge_db: !!env.KNOWLEDGE_DB,
+          learning_queue: !!env.LEARNING_QUEUE,
+          memory_archive: !!env.MEMORY_ARCHIVE,
+          semantic_vectors: !!env.SEMANTIC_VECTORS,
+        },
+        timestamp: new Date().toISOString(),
+      });
+    }
+    
+    // Learning feedback endpoint
+    if (path === '/learn' && method === 'POST') {
+      const body = await request.json().catch(() => ({}));
+      const pattern = body.pattern || { path, method };
+      const feedback = body.feedback || { positive: true, score: 1 };
       
-      if (type === 'LEARN_PATTERN') {
-        // Store learned pattern in KV
-        if (env.ORGANISM_MEMORY) {
-          await env.ORGANISM_MEMORY.put(
-            `${LEARNING_LOG_PREFIX}${Date.now()}`,
-            JSON.stringify(data),
-            { expirationTtl: 86400 * 30 }
-          );
-        }
+      const result = await recordLearning(pattern, feedback, env, ctx);
+      return buildJSON({
+        success: true,
+        pattern,
+        result,
+        timestamp: new Date().toISOString(),
+      });
+    }
+    
+    // Default: Intelligent response handling
+    // 1. Understand the request semantically
+    const understanding = await understandRequest(request, url, env);
+    
+    // 2. Generate appropriate response
+    const generated = await generateResponse(understanding, request, env);
+    
+    // 3. Record for learning (async)
+    ctx.waitUntil(
+      recordLearning(
+        { path, method, intent: understanding.intent },
+        { positive: true, score: understanding.confidence },
+        env,
+        ctx
+      )
+    );
+    
+    // Return intelligent response
+    return buildJSON({
+      organism: {
+        designation: env.DESIGNATION,
+        version: env.VERSION,
+      },
+      routing: {
+        gateNode,
+        routeType,
+        routeHash,
+      },
+      understanding,
+      response: generated,
+      timestamp: new Date().toISOString(),
+    });
+  },
+  
+  // Queue consumer for async learning
+  async queue(batch, env) {
+    for (const message of batch.messages) {
+      const { type, pattern, feedback, patternData } = message.body;
+      
+      if (type === 'pattern_feedback') {
+        // Deep learning analysis could happen here
+        // For now, just acknowledge
+        console.log(`Learning from pattern: ${JSON.stringify(pattern)}`);
       }
-
+      
       message.ack();
     }
-  },
-
-  // Cron trigger for organism heartbeat
-  async scheduled(event, env, ctx) {
-    const state = await loadOrganismState(env);
-    state.cycleCount++;
-    state.lastHeartbeat = Date.now();
-    await saveOrganismState(env, state);
-
-    console.log(`[CACHE-ORGANISM] Heartbeat at ${new Date().toISOString()}, cycle ${state.cycleCount}`);
   },
 };

@@ -1,76 +1,50 @@
-name            = "nexus"
-main            = "worker.js"
+name               = "nexus"
+main               = "worker.js"
 compatibility_date = "2024-09-02"
 
 [vars]
-DESIGNATION     = "RSHIP-AIS-NX-001"
-WORKER_NAME     = "NEXUS"
-WORKER_LATIN    = "nexus"
-WORKER_MEANING  = "Bond — Connection — Network"
-VERSION         = "2.0.0"
+DESIGNATION    = "RSHIP-AIS-NX-001"
+WORKER_NAME    = "NEXUS"
+WORKER_LATIN   = "nexus"
+WORKER_MEANING = "Bond — Connection — Network"
+VERSION        = "2.0.0"
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# INTELLIGENT BINDINGS — "Brains and Hearts"
-# NEXUS is the Network Hub — optimized for routing and interconnection
+# INTELLIGENT BINDINGS — NEXUS connects all workers
 # ═══════════════════════════════════════════════════════════════════════════════
 
-# Workers AI — LLM reasoning for intelligent routing
+# ── Workers AI — Connection intelligence ──────────────────────────────────────
 [ai]
 binding = "AI"
 
-# KV Namespaces — Fast key-value storage for routing tables
+# ── KV Namespace — Connection state ───────────────────────────────────────────
 [[kv_namespaces]]
-binding = "ROUTING_TABLE"
-id = "PLACEHOLDER_ROUTING_TABLE_ID"
-# Create with: wrangler kv namespace create ROUTING_TABLE
+binding = "CONNECTION_STATE"
+id = "nexus-connection-state"
+preview_id = "nexus-connection-state-preview"
 
 [[kv_namespaces]]
-binding = "SESSION_STORE"
-id = "PLACEHOLDER_SESSION_STORE_ID"
+binding = "ROUTING_CACHE"
+id = "nexus-routing-cache"
+preview_id = "nexus-routing-cache-preview"
 
-[[kv_namespaces]]
-binding = "SERVICE_REGISTRY"
-id = "PLACEHOLDER_SERVICE_REGISTRY_ID"
-# Create with: wrangler kv namespace create SERVICE_REGISTRY
-
-# D1 Database — Structured network topology storage
+# ── D1 Database — Core data ───────────────────────────────────────────────────
 [[d1_databases]]
-binding = "NETWORK_DB"
-database_name = "medinatech-intelligence"
-database_id = "PLACEHOLDER_D1_DATABASE_ID"
+binding = "CORE_DB"
+database_name = "medinatech-core"
+database_id = "medinatech-core-db"
 
-# Queues — Async message passing for routing
+# ── Queue — Inter-worker communication ────────────────────────────────────────
 [[queues.producers]]
-binding = "ROUTING_QUEUE"
-queue = "routing-events"
-# Create with: wrangler queues create routing-events
+binding = "DISPATCH_QUEUE"
+queue = "ai-analysis"
 
-[[queues.producers]]
-binding = "EVENT_QUEUE"
-queue = "intelligence-events"
+# ── R2 Bucket — Shared assets ─────────────────────────────────────────────────
+[[r2_buckets]]
+binding = "SHARED_ASSETS"
+bucket_name = "medinatech-assets"
 
-# Analytics Engine — Network metrics
+# ── Analytics Engine ──────────────────────────────────────────────────────────
 [[analytics_engine_datasets]]
 binding = "NEXUS_ANALYTICS"
-dataset = "nexus_network_telemetry"
-
-# Service Bindings — NEXUS connects to all Workers
-[[services]]
-binding = "CEREBRUM"
-service = "cerebrum"
-
-[[services]]
-binding = "AGENS"
-service = "agens"
-
-[[services]]
-binding = "VIGIL"
-service = "vigil"
-
-[[services]]
-binding = "ANIMUS"
-service = "animus"
-
-[[services]]
-binding = "CURSOR"
-service = "cursor"
+dataset = "nexus_events"

@@ -1,0 +1,30 @@
+{
+  "name": "@medina/verbex-agi",
+  "version": "1.0.0",
+  "description": "VERBEX AGI — Omnichannel Communication Intelligence with information-theoretic channel selection and free-energy message optimization",
+  "main": "verbex-agi.js",
+  "type": "module",
+  "keywords": [
+    "medina",
+    "rship",
+    "verbex",
+    "agi",
+    "communication-intelligence",
+    "channel-routing",
+    "message-entropy",
+    "imessage",
+    "omnichannel",
+    "linq",
+    "b2b-messaging",
+    "shannon",
+    "free-energy",
+    "phi"
+  ],
+  "author": "Alfredo Medina Hernandez",
+  "license": "SEE LICENSE IN ../../LICENSE",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/FreddyCreates/Enterprise-OS-intelligence.git",
+    "directory": "sdk/verbex-agi"
+  }
+}

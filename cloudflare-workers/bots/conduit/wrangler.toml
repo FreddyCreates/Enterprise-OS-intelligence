@@ -1,5 +1,5 @@
-name            = "rship-conduit"
-main            = "worker.js"
+name               = "rship-conduit"
+main               = "worker.js"
 compatibility_date = "2024-09-02"
 
 # Optional secrets:
@@ -8,63 +8,38 @@ compatibility_date = "2024-09-02"
 #   DISCORD_WEBHOOK_URL    — Default Discord webhook
 
 [vars]
-DESIGNATION     = "RSHIP-BOT-CDT-001"
-BOT_NAME        = "CONDUIT"
-BOT_LATIN       = "conduit"
-BOT_MEANING     = "Channel · Pipe · Connector"
-VERSION         = "2.0.0"
+DESIGNATION    = "RSHIP-BOT-CDT-001"
+BOT_NAME       = "CONDUIT"
+BOT_LATIN      = "conduit"
+BOT_MEANING    = "Channel · Pipe · Connector"
+VERSION        = "2.0.0"
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# INTELLIGENT BINDINGS — "Brains and Hearts"
-# CONDUIT is the Connector — optimized for data routing and transformation
+# INTELLIGENT BINDINGS — Give CONDUIT routing intelligence
 # ═══════════════════════════════════════════════════════════════════════════════
 
-# Workers AI — LLM reasoning for data transformation
+# ── Workers AI — Smart routing ────────────────────────────────────────────────
 [ai]
 binding = "AI"
 
-# KV Namespaces — Fast key-value storage for routing state
+# ── KV Namespace — Routing state ──────────────────────────────────────────────
 [[kv_namespaces]]
 binding = "ROUTING_STATE"
-id = "PLACEHOLDER_ROUTING_STATE_ID"
-# Create with: wrangler kv namespace create ROUTING_STATE
+id = "conduit-routing-state"
+preview_id = "conduit-routing-state-preview"
 
-[[kv_namespaces]]
-binding = "TRANSFORM_CACHE"
-id = "PLACEHOLDER_TRANSFORM_CACHE_ID"
-# Create with: wrangler kv namespace create TRANSFORM_CACHE
-
-[[kv_namespaces]]
-binding = "SESSION_STORE"
-id = "PLACEHOLDER_SESSION_STORE_ID"
-
-# D1 Database — Structured routing history
+# ── D1 Database — Core data ───────────────────────────────────────────────────
 [[d1_databases]]
-binding = "ROUTING_DB"
-database_name = "medinatech-intelligence"
-database_id = "PLACEHOLDER_D1_DATABASE_ID"
+binding = "CORE_DB"
+database_name = "medinatech-core"
+database_id = "medinatech-core-db"
 
-# Queues — Async data routing
+# ── Queue — Message routing ───────────────────────────────────────────────────
 [[queues.producers]]
-binding = "DATA_PIPELINE_QUEUE"
-queue = "data-pipeline"
-# Create with: wrangler queues create data-pipeline
+binding = "ROUTE_QUEUE"
+queue = "ai-analysis"
 
 [[queues.consumers]]
-queue = "data-pipeline"
-max_batch_size = 100
-max_retries = 3
-
-# Analytics Engine — Routing metrics
-[[analytics_engine_datasets]]
-binding = "CONDUIT_ANALYTICS"
-dataset = "conduit_routing_telemetry"
-
-# Service Bindings
-[[services]]
-binding = "CEREBRUM"
-service = "cerebrum"
-
-[[services]]
-binding = "NEXUS"
-service = "nexus"
+queue = "ai-analysis"
+max_batch_size = 10
+max_batch_timeout = 30

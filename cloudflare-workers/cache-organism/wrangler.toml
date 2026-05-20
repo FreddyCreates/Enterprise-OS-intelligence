@@ -1,91 +1,71 @@
-name            = "cache-organism"
-main            = "worker.js"
+name               = "cache-organism"
+main               = "worker.js"
 compatibility_date = "2024-09-02"
 
 [vars]
-DESIGNATION     = "RSHIP-AIS-CO-001"
-WORKER_NAME     = "CACHE-ORGANISM"
-WORKER_LATIN    = "cachea-organismus"
-WORKER_MEANING  = "Living Cache — Intelligent Cache Layer"
-VERSION         = "1.0.0"
+DESIGNATION    = "RSHIP-MEM-CO-001"
+WORKER_NAME    = "CACHE_ORGANISM"
+WORKER_LATIN   = "organismus"
+WORKER_MEANING = "Organism — Inner AI Intelligence"
+VERSION        = "5.0.0"
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# INTELLIGENT CACHE ORGANISM BINDINGS
-# The cache layer IS the intelligent agent — not just storage
+# CACHE-ORGANISM — Inner Intelligence Layer
+# Semi-autonomous AI cache agents that learn and adapt
 # ═══════════════════════════════════════════════════════════════════════════════
 
-# KV Namespace — The organism's persistent memory
-# This is where the "intelligence" lives between requests
-[[kv_namespaces]]
-binding = "ORGANISM_MEMORY"
-id = "PLACEHOLDER_ORGANISM_MEMORY_ID"
-# Create with: wrangler kv namespace create ORGANISM_MEMORY
+# ── Workers AI — The cognition engine ──────────────────────────────────────────
+[ai]
+binding = "AI"
 
-# KV Namespace — Learned patterns (traffic analysis)
+# ── KV Namespaces — Distributed memory (organism's permanence) ─────────────────
 [[kv_namespaces]]
-binding = "PATTERN_STORE"
-id = "PLACEHOLDER_PATTERN_STORE_ID"
-# Create with: wrangler kv namespace create PATTERN_STORE
+binding = "LEARNED_PATTERNS"
+id = "organism-learned-patterns"
+preview_id = "organism-learned-patterns-preview"
 
-# KV Namespace — Visitor profiles (behavioral learning)
 [[kv_namespaces]]
-binding = "VISITOR_PROFILES"
-id = "PLACEHOLDER_VISITOR_PROFILES_ID"
-# Create with: wrangler kv namespace create VISITOR_PROFILES
+binding = "SEMANTIC_CACHE"
+id = "organism-semantic-cache"
+preview_id = "organism-semantic-cache-preview"
 
-# KV Namespace — Cached intelligent responses
 [[kv_namespaces]]
-binding = "RESPONSE_CACHE"
-id = "PLACEHOLDER_RESPONSE_CACHE_ID"
-# Create with: wrangler kv namespace create RESPONSE_CACHE
+binding = "RESPONSE_MEMORY"
+id = "organism-response-memory"
+preview_id = "organism-response-memory-preview"
 
-# D1 Database — Structured organism memory (for complex queries)
+# ── D1 Database — Knowledge persistence ────────────────────────────────────────
 [[d1_databases]]
 binding = "ORGANISM_DB"
-database_name = "organism-intelligence"
-database_id = "PLACEHOLDER_ORGANISM_DB_ID"
-# Create with: wrangler d1 create organism-intelligence
+database_name = "medinatech-organisms"
+database_id = "medinatech-organisms-db"
 
-# Queue — Async learning tasks (decouple learning from response)
+[[d1_databases]]
+binding = "KNOWLEDGE_DB"
+database_name = "medinatech-knowledge"
+database_id = "medinatech-knowledge-db"
+
+# ── Queue — Learning feedback loop ─────────────────────────────────────────────
 [[queues.producers]]
 binding = "LEARNING_QUEUE"
 queue = "organism-learning"
 
 [[queues.consumers]]
-queue = "organism-learning"
-max_batch_size = 25
-max_retries = 3
+queue = "cache-organism-requests"
+max_batch_size = 10
+max_batch_timeout = 30
 
-# Analytics Engine — Organism telemetry
+# ── R2 Bucket — Long-term memory storage ───────────────────────────────────────
+[[r2_buckets]]
+binding = "MEMORY_ARCHIVE"
+bucket_name = "organism-memory"
+
+# ── Vectorize — Semantic understanding ─────────────────────────────────────────
+[[vectorize]]
+binding = "SEMANTIC_VECTORS"
+index_name = "organism-semantics"
+
+# ── Analytics Engine — Track organism health and learning ──────────────────────
 [[analytics_engine_datasets]]
 binding = "ORGANISM_ANALYTICS"
-dataset = "organism_telemetry"
-
-# Cron trigger — Organism heartbeat (keeps state alive)
-[triggers]
-crons = ["*/5 * * * *"]  # Every 5 minutes
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# ARCHITECTURE NOTES
-# ═══════════════════════════════════════════════════════════════════════════════
-#
-# TWO-LAYER COMPUTE MODEL:
-#
-# 1. BILLING COMPUTE (Cloudflare CPU)
-#    - This Worker handles TLS termination
-#    - Cheap pattern matching for classification
-#    - Routing decisions to cache-organism
-#    - Minimal CPU time billed
-#
-# 2. ORGANISM COMPUTE (Cache Layer)
-#    - Intelligence lives in KV entries
-#    - Learned patterns stored as cached data
-#    - "Dynamic" responses generated from cache
-#    - NOT 1:1 mapped to Cloudflare CPU
-#    - Cloudflare sees "cache hit", organism sees cognition
-#
-# KEY INVERSION:
-#   Before: cache = dumb storage, Workers = compute
-#   After:  cache = semi-autonomous agent
-#
-# ═══════════════════════════════════════════════════════════════════════════════
+dataset = "cache_organism_events"

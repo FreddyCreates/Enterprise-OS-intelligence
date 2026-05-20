@@ -1,0 +1,59 @@
+# wrangler.toml — Cloudflare Workers Configuration
+# RSHIP Enterprise OS Intelligence
+# Medina Tech · RSHIP-2026 · Dallas, TX
+
+name = "rship-enterprise-os"
+main = "src/index.js"
+compatibility_date = "2024-01-01"
+
+# Account configuration (set via environment or wrangler login)
+# account_id = ""
+
+# Workers configuration
+[build]
+command = ""
+
+# Environment variables
+[vars]
+ORGANISM = "RSHIP"
+VERSION = "2026.1.0"
+PLATFORM = "cloudflare"
+
+# Development settings
+[dev]
+port = 8787
+local_protocol = "http"
+
+# Production environment
+[env.production]
+name = "rship-enterprise-os-prod"
+route = { pattern = "api.rship.medina.tech/*", zone_name = "medina.tech" }
+
+[env.production.vars]
+ENVIRONMENT = "production"
+
+# Staging environment
+[env.staging]
+name = "rship-enterprise-os-staging"
+
+[env.staging.vars]
+ENVIRONMENT = "staging"
+
+# Durable Objects (for persistent agent state)
+# [[durable_objects.bindings]]
+# name = "AXIOM_STATE"
+# class_name = "AxiomState"
+
+# [[durable_objects.bindings]]
+# name = "FORTRESS_STATE"
+# class_name = "FortressState"
+
+# KV Namespaces (for agent memory)
+# [[kv_namespaces]]
+# binding = "AGENT_MEMORY"
+# id = ""
+
+# R2 Buckets (for artifact storage)
+# [[r2_buckets]]
+# binding = "ARTIFACTS"
+# bucket_name = "rship-artifacts"

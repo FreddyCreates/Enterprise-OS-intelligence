@@ -1,5 +1,5 @@
-name            = "rship-nuntius"
-main            = "worker.js"
+name               = "rship-nuntius"
+main               = "worker.js"
 compatibility_date = "2024-09-02"
 
 # Cron: morning briefing + evening summary
@@ -19,64 +19,38 @@ cron = "0 17 * * 1-5"   # 17:00 UTC Mon-Fri — End-of-day summary
 #   NUNTIUS_INTEL_CHANNEL     — #rship-intel channel ID (general)
 
 [vars]
-DESIGNATION     = "RSHIP-BOT-NNT-001"
-BOT_NAME        = "NUNTIUS"
-BOT_LATIN       = "nuntius"
-BOT_MEANING     = "Messenger · Announcer · Voice of the Organism"
-VERSION         = "2.0.0"
+DESIGNATION    = "RSHIP-BOT-NNT-001"
+BOT_NAME       = "NUNTIUS"
+BOT_LATIN      = "nuntius"
+BOT_MEANING    = "Messenger · Announcer · Voice of the Organism"
+VERSION        = "2.0.0"
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# INTELLIGENT BINDINGS — "Brains and Hearts"
-# NUNTIUS is the Voice — optimized for scheduled announcements and briefings
+# INTELLIGENT BINDINGS — Give NUNTIUS reporting intelligence
 # ═══════════════════════════════════════════════════════════════════════════════
 
-# Workers AI — LLM reasoning for briefing generation
+# ── Workers AI — Report generation ────────────────────────────────────────────
 [ai]
 binding = "AI"
 
-# KV Namespaces — Fast key-value storage for briefing state
+# ── KV Namespace — Report cache ───────────────────────────────────────────────
 [[kv_namespaces]]
-binding = "BRIEFING_CACHE"
-id = "PLACEHOLDER_BRIEFING_CACHE_ID"
-# Create with: wrangler kv namespace create BRIEFING_CACHE
+binding = "REPORT_CACHE"
+id = "nuntius-report-cache"
+preview_id = "nuntius-report-cache-preview"
 
-[[kv_namespaces]]
-binding = "INTEL_DIGEST"
-id = "PLACEHOLDER_INTEL_DIGEST_ID"
-# Create with: wrangler kv namespace create INTEL_DIGEST
-
-[[kv_namespaces]]
-binding = "SESSION_STORE"
-id = "PLACEHOLDER_SESSION_STORE_ID"
-
-# D1 Database — Structured briefing history
+# ── D1 Database — Analytics data ──────────────────────────────────────────────
 [[d1_databases]]
-binding = "BRIEFING_DB"
-database_name = "medinatech-intelligence"
-database_id = "PLACEHOLDER_D1_DATABASE_ID"
+binding = "CORE_DB"
+database_name = "medinatech-core"
+database_id = "medinatech-core-db"
 
-# Queues — Async briefing distribution
-[[queues.producers]]
-binding = "BRIEFING_QUEUE"
-queue = "briefings"
-# Create with: wrangler queues create briefings
+[[d1_databases]]
+binding = "KNOWLEDGE_DB"
+database_name = "medinatech-knowledge"
+database_id = "medinatech-knowledge-db"
 
-# Vectorize — Vector search for intelligence synthesis
-[[vectorize]]
-binding = "INTEL_VECTORS"
-index_name = "intel-synthesis-index"
-# Create with: wrangler vectorize create intel-synthesis-index --dimensions=768 --metric=cosine
-
-# Analytics Engine — Briefing metrics
+# ── Analytics Engine ──────────────────────────────────────────────────────────
 [[analytics_engine_datasets]]
 binding = "NUNTIUS_ANALYTICS"
-dataset = "nuntius_briefing_telemetry"
-
-# Service Bindings
-[[services]]
-binding = "CEREBRUM"
-service = "cerebrum"
-
-[[services]]
-binding = "PULSE"
-service = "rship-pulse"
+dataset = "nuntius_events"
