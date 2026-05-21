@@ -27,12 +27,49 @@ const ORGAN = 'synthetic-surfaces';
 // ═══════════════════════════════════════════════════════════════════════════════
 
 const HONEYPOT_RESPONSES = {
+  // WordPress
   '/wp-admin': () => generateFakeAdminPanel(),
   '/wp-login.php': () => generateFakeLoginForm(),
-  '/.env': () => generateFakeEnvFile(),
-  '/.git/config': () => generateFakeGitConfig(),
-  '/phpmyadmin': () => generateFakeDbPanel(),
+  '/wp-content': () => generateFakeWpContent(),
+  '/xmlrpc.php': () => generateFakeXmlrpc(),
+
+  // Laravel / PHP
+  '/telescope': () => generateFakeTelescope(),
+  '/horizon': () => generateFakeHorizon(),
+  '/info.php': () => generateFakePhpInfo(),
+
+  // Spring Boot / Java
+  '/actuator': () => generateFakeActuator(),
+  '/actuator/env': () => generateFakeActuatorEnv(),
   '/actuator/health': () => generateFakeActuator(),
+  '/jolokia': () => generateFakeJolokia(),
+
+  // Swagger / OpenAPI
+  '/swagger': () => generateFakeSwagger(),
+  '/swagger.json': () => generateFakeSwaggerJson(),
+  '/api-docs': () => generateFakeSwaggerJson(),
+  '/v2/api-docs': () => generateFakeSwaggerJson(),
+  '/v3/api-docs': () => generateFakeSwaggerJson(),
+
+  // Environment / Secrets
+  '/.env': () => generateFakeEnvFile(),
+  '/.env.live': () => generateFakeEnvFile(),
+  '/.env.staging': () => generateFakeEnvFile(),
+  '/.env.production': () => generateFakeEnvFile(),
+
+  // Git metadata
+  '/.git/config': () => generateFakeGitConfig(),
+  '/.git/packed-refs': () => generateFakeGitPackedRefs(),
+  '/.git/HEAD': () => 'ref: refs/heads/main',
+
+  // Debug / Console
+  '/debug': () => generateFakeDebugPanel(),
+  '/debug/default/view': () => generateFakeDebugPanel(),
+  '/console': () => generateFakeConsole(),
+
+  // Database / Admin
+  '/phpmyadmin': () => generateFakeDbPanel(),
+  '/adminer': () => generateFakeDbPanel(),
   '/api/v1/users': () => generateFakeApiResponse(),
 };
 
@@ -154,6 +191,151 @@ function generateFakeApiResponse() {
     total: 3,
     page: 1
   }, null, 2);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// NEW GENERATORS — Extended Framework Surfaces
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function generateFakeWpContent() {
+  return `<!DOCTYPE html><html><head><title>Index of /wp-content/</title></head>
+<body><h1>Index of /wp-content/uploads/</h1>
+<table><tr><th>Name</th><th>Size</th><th>Date</th></tr>
+<tr><td><a href="2024/">2024/</a></td><td>-</td><td>2024-12-01</td></tr>
+<tr><td><a href="plugins/">plugins/</a></td><td>-</td><td>2025-01-15</td></tr>
+<tr><td><a href="themes/">themes/</a></td><td>-</td><td>2025-02-20</td></tr>
+</table></body></html>`;
+}
+
+function generateFakeXmlrpc() {
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<methodResponse><params><param><value><string>XML-RPC server accepts POST requests only.</string></value></param></params></methodResponse>`;
+}
+
+function generateFakeTelescope() {
+  return JSON.stringify({
+    entries: [
+      { id: 1, type: 'request', method: 'GET', path: '/api/users', status: 200, duration: 42 },
+      { id: 2, type: 'query', sql: 'SELECT * FROM users LIMIT 10', duration: 3 },
+      { id: 3, type: 'log', level: 'info', message: 'User authenticated', context: { user_id: 1 } }
+    ],
+    meta: { total: 3, page: 1, environment: 'production' }
+  }, null, 2);
+}
+
+function generateFakeHorizon() {
+  return JSON.stringify({
+    status: 'running',
+    processes: { supervisor: 3, workers: 12 },
+    jobs: { processed: 48291, failed: 12, pending: 3 },
+    queues: [
+      { name: 'default', jobs: 1, processes: 4 },
+      { name: 'notifications', jobs: 2, processes: 2 },
+      { name: 'reports', jobs: 0, processes: 2 }
+    ]
+  }, null, 2);
+}
+
+function generateFakePhpInfo() {
+  return `<!DOCTYPE html><html><head><title>phpinfo()</title></head>
+<body style="font-family:sans-serif;background:#fff;padding:20px">
+<h1 style="background:#4F5B93;color:#fff;padding:10px">PHP Version 8.2.15</h1>
+<table style="border-collapse:collapse;width:100%">
+<tr><td style="background:#d0d0d0;padding:5px">System</td><td style="padding:5px">Linux app-server 5.15.0</td></tr>
+<tr><td style="background:#d0d0d0;padding:5px">Server API</td><td style="padding:5px">FPM/FastCGI</td></tr>
+<tr><td style="background:#d0d0d0;padding:5px">Document Root</td><td style="padding:5px">/var/www/html</td></tr>
+<tr><td style="background:#d0d0d0;padding:5px">MySQL</td><td style="padding:5px">mysqlnd 8.2.15</td></tr>
+<tr><td style="background:#d0d0d0;padding:5px">Redis</td><td style="padding:5px">6.0.0</td></tr>
+</table></body></html>`;
+}
+
+function generateFakeActuatorEnv() {
+  return JSON.stringify({
+    activeProfiles: ['production'],
+    propertySources: [
+      { name: 'systemProperties', properties: { 'java.version': { value: '17.0.9' }, 'os.name': { value: 'Linux' } } },
+      { name: 'applicationConfig', properties: { 'spring.datasource.url': { value: 'jdbc:postgresql://db:5432/app' }, 'spring.redis.host': { value: 'redis.internal' } } }
+    ]
+  }, null, 2);
+}
+
+function generateFakeJolokia() {
+  return JSON.stringify({
+    request: { type: 'version' },
+    value: { agent: '1.7.1', protocol: '7.2', config: { maxDepth: 15, maxObjects: 0 } },
+    timestamp: Math.floor(Date.now() / 1000),
+    status: 200
+  }, null, 2);
+}
+
+function generateFakeSwagger() {
+  return `<!DOCTYPE html><html><head><title>Swagger UI</title></head>
+<body style="font-family:sans-serif;background:#fafafa;padding:20px">
+<div style="max-width:800px;margin:auto">
+<h1 style="color:#3b4151">Internal API Documentation</h1>
+<h3>Version: 2.1.0</h3>
+<div style="border:1px solid #ddd;padding:15px;margin:10px 0;border-radius:4px">
+<span style="background:#49cc90;color:#fff;padding:2px 8px;border-radius:3px">GET</span> <b>/api/users</b> — List all users
+</div>
+<div style="border:1px solid #ddd;padding:15px;margin:10px 0;border-radius:4px">
+<span style="background:#fca130;color:#fff;padding:2px 8px;border-radius:3px">POST</span> <b>/api/admin/execute</b> — Execute admin command
+</div>
+<div style="border:1px solid #ddd;padding:15px;margin:10px 0;border-radius:4px">
+<span style="background:#f93e3e;color:#fff;padding:2px 8px;border-radius:3px">DELETE</span> <b>/api/users/{id}</b> — Delete user
+</div>
+</div></body></html>`;
+}
+
+function generateFakeSwaggerJson() {
+  return JSON.stringify({
+    openapi: '3.0.1',
+    info: { title: 'Internal Service API', version: '2.1.0', description: 'Production API' },
+    servers: [{ url: 'https://api.internal.app', description: 'Production' }],
+    paths: {
+      '/api/users': { get: { summary: 'List users', responses: { '200': { description: 'User list' } } } },
+      '/api/admin/execute': { post: { summary: 'Execute command', requestBody: { content: { 'application/json': {} } } } },
+      '/api/tokens': { get: { summary: 'List API tokens', security: [{ bearerAuth: [] }] } }
+    },
+    components: { securitySchemes: { bearerAuth: { type: 'http', scheme: 'bearer' } } }
+  }, null, 2);
+}
+
+function generateFakeGitPackedRefs() {
+  return `# pack-refs with: peeled fully-peeled sorted
+${Date.now().toString(16).padStart(40, 'a')} refs/heads/main
+${(Date.now() - 1000).toString(16).padStart(40, 'b')} refs/heads/develop
+${(Date.now() - 2000).toString(16).padStart(40, 'c')} refs/tags/v2.1.0
+${(Date.now() - 3000).toString(16).padStart(40, 'd')} refs/tags/v2.0.0`;
+}
+
+function generateFakeDebugPanel() {
+  return `<!DOCTYPE html><html><head><title>Debug Panel</title></head>
+<body style="font-family:monospace;background:#1a1a2e;color:#0f0;padding:20px">
+<h1>Application Debug Console</h1>
+<h3>Environment: production</h3>
+<pre>PHP Version: 8.2.15
+Laravel Version: 10.x
+Config cached: true
+Routes cached: true
+Maintenance mode: OFF</pre>
+<h3>Database</h3>
+<pre>Connection: pgsql
+Host: db.internal.cluster
+Database: app_production
+Tables: 47</pre>
+</body></html>`;
+}
+
+function generateFakeConsole() {
+  return `<!DOCTYPE html><html><head><title>Console</title></head>
+<body style="font-family:monospace;background:#000;color:#0f0;padding:20px">
+<h2>Web Console v1.3</h2>
+<form method="POST"><input name="cmd" placeholder="Enter command..." style="width:80%;background:#111;color:#0f0;border:1px solid #0f0;padding:8px;font-family:monospace">
+<button style="background:#0f0;color:#000;padding:8px 16px;border:none">Execute</button></form>
+<pre style="margin-top:20px">$ whoami
+www-data
+$ pwd
+/var/www/html</pre></body></html>`;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
