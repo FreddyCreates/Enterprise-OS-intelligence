@@ -1,0 +1,150 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Universal Transformer Protocol",
+  "description": "Language-agnostic specification for transformer architectures in the RSHIP framework",
+  "version": "1.0.0",
+  "type": "object",
+  "required": ["version", "transformer"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "description": "Protocol version",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "transformer": {
+      "type": "object",
+      "required": ["id", "name", "domain", "dimension", "tensor_spec", "operations"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique transformer identifier",
+          "pattern": "^[a-z][a-z0-9_-]*$"
+        },
+        "name": {
+          "type": "string",
+          "description": "Human-readable transformer name"
+        },
+        "domain": {
+          "type": "string",
+          "description": "Mathematical domain of operation",
+          "enum": ["ratio", "info", "phase", "pattern", "shape", "symmetry", "flow", "dynamics", "invariance", "frequency", "space", "wave", "scale", "field", "quantum", "emergent"]
+        },
+        "dimension": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Dimensionality of transformation space"
+        },
+        "phi_order": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Order in φ-hierarchy (lower = more fundamental)"
+        },
+        "tensor_spec": {
+          "type": "object",
+          "required": ["input_shape", "output_shape", "dtype"],
+          "properties": {
+            "input_shape": {
+              "type": "array",
+              "items": { "type": ["integer", "string"] },
+              "description": "Input tensor shape (integers or symbolic dims like 'batch', 'seq')"
+            },
+            "output_shape": {
+              "type": "array",
+              "items": { "type": ["integer", "string"] },
+              "description": "Output tensor shape"
+            },
+            "dtype": {
+              "type": "string",
+              "enum": ["float16", "float32", "float64", "complex64", "complex128"],
+              "description": "Data type for tensor elements"
+            },
+            "memory_layout": {
+              "type": "string",
+              "enum": ["row_major", "column_major", "strided"],
+              "default": "row_major"
+            }
+          }
+        },
+        "operations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "type"],
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Operation name"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "linear", "nonlinear", "attention", "convolution", "transform",
+                  "normalization", "pooling", "embedding", "activation", "dropout",
+                  "phi_scale", "phi_rotate", "phi_modulate", "entropy", "gradient",
+                  "fft", "wavelet", "fractal", "field", "resonance", "emergence"
+                ]
+              },
+              "parameters": {
+                "type": "object",
+                "description": "Operation-specific parameters"
+              },
+              "phi_weight": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1,
+                "description": "Weight of φ-influence in this operation"
+              }
+            }
+          }
+        },
+        "phi_properties": {
+          "type": "object",
+          "properties": {
+            "resonance": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "description": "How strongly the transformer resonates with φ"
+            },
+            "coherence": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "description": "Phase coherence of the transformer"
+            },
+            "emergence_potential": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "description": "Potential for emergent behavior"
+            },
+            "entropy_flow": {
+              "type": "string",
+              "enum": ["conserving", "increasing", "decreasing", "oscillating"],
+              "description": "How the transformer affects information entropy"
+            }
+          }
+        },
+        "mixing_affinity": {
+          "type": "object",
+          "description": "Affinity scores for mixing with other transformer types",
+          "additionalProperties": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          }
+        },
+        "metadata": {
+          "type": "object",
+          "properties": {
+            "author": { "type": "string" },
+            "version": { "type": "string" },
+            "created": { "type": "string", "format": "date-time" },
+            "language_origin": { "type": "string" },
+            "paper_reference": { "type": "string" }
+          }
+        }
+      }
+    }
+  }
+}

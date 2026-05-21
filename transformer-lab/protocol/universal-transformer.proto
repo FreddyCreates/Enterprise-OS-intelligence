@@ -1,0 +1,271 @@
+// ════════════════════════════════════════════════════════════════════════════════
+// UNIVERSAL TRANSFORMER PROTOCOL v1.0.0
+// Language-Agnostic Transformer Specification for the New AI World
+// φ-Resonant Architecture Discovery System
+// ════════════════════════════════════════════════════════════════════════════════
+
+syntax = "proto3";
+package transformer_lab;
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// CORE TRANSFORMER TENSOR TYPES
+// ═══════════════════════════════════════════════════════════════════════════════
+
+message Tensor {
+  repeated int64 shape = 1;
+  repeated float data = 2;
+  string dtype = 3;  // float32, float64, bfloat16, complex64
+  string device = 4; // cpu, cuda, mps, tpu, quantum
+}
+
+message ComplexTensor {
+  Tensor real = 1;
+  Tensor imag = 2;
+}
+
+message QuantumTensor {
+  ComplexTensor amplitudes = 1;
+  int32 num_qubits = 2;
+  repeated string basis_states = 3;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ATTENTION MECHANISMS - THE HEART OF TRANSFORMERS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+message AttentionConfig {
+  int32 num_heads = 1;
+  int32 head_dim = 2;
+  int32 embed_dim = 3;
+  float dropout = 4;
+  bool causal = 5;
+  string attention_type = 6;  // scaled_dot, multi_query, grouped_query, flash, linear, phi_resonant
+  
+  // φ-Resonant Extensions
+  bool phi_scaling = 7;       // Use golden ratio in attention scaling
+  float phi_temperature = 8;  // Temperature modulated by φ
+  bool harmonic_positional = 9;
+}
+
+message AttentionOutput {
+  Tensor output = 1;
+  Tensor attention_weights = 2;
+  map<string, float> metrics = 3;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// TRANSFORMER LAYER SPECIFICATIONS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+message FeedForwardConfig {
+  int32 hidden_dim = 1;
+  int32 intermediate_dim = 2;
+  string activation = 3;  // gelu, swiglu, geglu, relu, phi_wave
+  float dropout = 4;
+  bool gated = 5;
+}
+
+message NormalizationConfig {
+  string type = 1;  // layer_norm, rms_norm, group_norm, phi_norm
+  float epsilon = 2;
+  bool affine = 3;
+}
+
+message TransformerLayerConfig {
+  AttentionConfig attention = 1;
+  FeedForwardConfig feedforward = 2;
+  NormalizationConfig pre_norm = 3;
+  NormalizationConfig post_norm = 4;
+  bool residual = 5;
+  float residual_scale = 6;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// TRANSFORMER MIXING - COMBINING ARCHITECTURES
+// ═══════════════════════════════════════════════════════════════════════════════
+
+enum MixingStrategy {
+  LAYER_INTERLEAVE = 0;      // Alternate layers from different transformers
+  ATTENTION_BLEND = 1;       // Blend attention mechanisms
+  FFN_HYBRID = 2;            // Hybrid feed-forward networks
+  PARALLEL_ENSEMBLE = 3;     // Run transformers in parallel, merge outputs
+  HIERARCHICAL = 4;          // Nested transformer architectures
+  PHI_SPIRAL = 5;            // Golden ratio spiral mixing
+  QUANTUM_SUPERPOSITION = 6; // Quantum-inspired superposition of architectures
+  EMERGENT = 7;              // Let the architecture emerge from training
+}
+
+message TransformerMixConfig {
+  repeated TransformerArchetype archetypes = 1;
+  MixingStrategy strategy = 2;
+  map<string, float> mixing_weights = 3;
+  bool dynamic_mixing = 4;
+  float emergence_threshold = 5;
+}
+
+message TransformerArchetype {
+  string name = 1;
+  string family = 2;  // gpt, llama, mamba, rwkv, retnet, hyena, phi_resonant
+  TransformerLayerConfig layer_config = 3;
+  int32 num_layers = 4;
+  map<string, string> special_features = 5;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// NEW WORLD: EMERGENT ARCHITECTURE DISCOVERY
+// ═══════════════════════════════════════════════════════════════════════════════
+
+message ArchitectureSearchSpace {
+  repeated string attention_types = 1;
+  repeated string activation_functions = 2;
+  repeated int32 possible_head_counts = 3;
+  repeated int32 possible_embed_dims = 4;
+  repeated float possible_dropout_rates = 5;
+  
+  // Constraints
+  int64 max_parameters = 6;
+  int64 max_flops_per_forward = 7;
+  float min_efficiency_score = 8;
+}
+
+message EmergentArchitecture {
+  string id = 1;
+  TransformerLayerConfig discovered_config = 2;
+  float fitness_score = 3;
+  map<string, float> benchmark_results = 4;
+  int64 parameters = 5;
+  string discovered_at = 6;
+  string language_origin = 7;
+}
+
+message EvolutionConfig {
+  int32 population_size = 1;
+  int32 generations = 2;
+  float mutation_rate = 3;
+  float crossover_rate = 4;
+  string fitness_metric = 5;
+  bool phi_guided = 6;  // Use golden ratio in evolution
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// CROSS-LANGUAGE TENSOR BRIDGE
+// ═══════════════════════════════════════════════════════════════════════════════
+
+message TensorBridgeConfig {
+  string source_language = 1;
+  string target_language = 2;
+  string serialization_format = 3;  // safetensors, msgpack, arrow, protobuf
+  bool zero_copy = 4;
+  string shared_memory_path = 5;
+}
+
+message TensorTransfer {
+  string tensor_id = 1;
+  Tensor tensor = 2;
+  TensorBridgeConfig bridge_config = 3;
+  map<string, string> metadata = 4;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// LAB EXPERIMENT DEFINITIONS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+message Experiment {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  
+  oneof experiment_type {
+    AttentionExperiment attention = 4;
+    MixingExperiment mixing = 5;
+    ArchitectureSearchExperiment search = 6;
+    CrossLanguageExperiment cross_lang = 7;
+  }
+  
+  repeated string languages = 8;
+  map<string, string> config = 9;
+}
+
+message AttentionExperiment {
+  repeated AttentionConfig attention_variants = 1;
+  Tensor test_input = 2;
+  repeated string metrics_to_collect = 3;
+}
+
+message MixingExperiment {
+  TransformerMixConfig mix_config = 1;
+  string training_task = 2;
+  int32 training_steps = 3;
+}
+
+message ArchitectureSearchExperiment {
+  ArchitectureSearchSpace search_space = 1;
+  EvolutionConfig evolution = 2;
+  string evaluation_dataset = 3;
+}
+
+message CrossLanguageExperiment {
+  repeated string source_languages = 1;
+  string target_language = 2;
+  TensorBridgeConfig bridge = 3;
+  string benchmark_task = 4;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// LAB SERVICES - UNIVERSAL API
+// ═══════════════════════════════════════════════════════════════════════════════
+
+service TransformerLab {
+  // Core Operations
+  rpc CreateTensor(Tensor) returns (TensorTransfer);
+  rpc TransformTensor(TensorTransfer) returns (TensorTransfer);
+  rpc ComputeAttention(AttentionRequest) returns (AttentionOutput);
+  
+  // Mixing Operations
+  rpc MixTransformers(TransformerMixConfig) returns (EmergentArchitecture);
+  rpc BlendAttention(BlendAttentionRequest) returns (AttentionOutput);
+  
+  // Architecture Discovery
+  rpc SearchArchitecture(ArchitectureSearchExperiment) returns (stream EmergentArchitecture);
+  rpc EvolveArchitecture(EvolutionConfig) returns (stream EmergentArchitecture);
+  
+  // Cross-Language Bridge
+  rpc TransferTensor(TensorTransfer) returns (TensorTransfer);
+  rpc SyncModels(stream TensorTransfer) returns (stream TensorTransfer);
+  
+  // Experiments
+  rpc RunExperiment(Experiment) returns (ExperimentResult);
+  rpc StreamExperiment(Experiment) returns (stream ExperimentUpdate);
+}
+
+message AttentionRequest {
+  Tensor query = 1;
+  Tensor key = 2;
+  Tensor value = 3;
+  AttentionConfig config = 4;
+  Tensor mask = 5;
+}
+
+message BlendAttentionRequest {
+  repeated AttentionConfig configs = 1;
+  repeated float weights = 2;
+  Tensor query = 3;
+  Tensor key = 4;
+  Tensor value = 5;
+}
+
+message ExperimentResult {
+  string experiment_id = 1;
+  bool success = 2;
+  map<string, float> metrics = 3;
+  repeated EmergentArchitecture discovered_architectures = 4;
+  map<string, string> artifacts = 5;
+}
+
+message ExperimentUpdate {
+  string experiment_id = 1;
+  int32 step = 2;
+  float progress = 3;
+  map<string, float> current_metrics = 4;
+  string message = 5;
+}
