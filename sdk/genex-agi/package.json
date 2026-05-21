@@ -1,0 +1,23 @@
+{
+  "name": "@rship/genex-agi",
+  "version": "1.0.0",
+  "description": "GENEX AGI — Generative Transformer Intelligence. Creates new transformers through evolution and specification.",
+  "main": "genex-agi.js",
+  "type": "module",
+  "keywords": [
+    "agi",
+    "transformer",
+    "generative",
+    "evolution",
+    "genetic-algorithm",
+    "rship",
+    "phi"
+  ],
+  "author": "Alfredo Medina Hernandez",
+  "license": "Proprietary",
+  "dependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/FreddyCreates/Enterprise-OS-intelligence"
+  }
+}

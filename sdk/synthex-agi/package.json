@@ -1,0 +1,23 @@
+{
+  "name": "@rship/synthex-agi",
+  "version": "1.0.0",
+  "description": "SYNTHEX AGI — Transformer Synthesis Intelligence. Combines all transformers into optimal processing pipelines.",
+  "main": "synthex-agi.js",
+  "type": "module",
+  "keywords": [
+    "agi",
+    "transformer",
+    "synthesis",
+    "pipeline",
+    "signal-processing",
+    "rship",
+    "phi"
+  ],
+  "author": "Alfredo Medina Hernandez",
+  "license": "Proprietary",
+  "dependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/FreddyCreates/Enterprise-OS-intelligence"
+  }
+}
