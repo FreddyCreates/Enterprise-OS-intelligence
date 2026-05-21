@@ -1,0 +1,9 @@
+{
+  "name": "policy.optimize",
+  "julia": "optimize_policy(policy_id::String, objective::Symbol, constraints::Dict, history::Vector{Dict})",
+  "motoko": "policy_optimize(policy_id: Text, objective: Text, constraints: PolicyConstraints, history: [HistoryEntry]) : async OptimizationResult",
+  "candid": "policy_optimize : (text, text, record { max_fpr: float64; min_dr: float64 }, vec record { ts: nat64; outcome: text }) -> (record { params: vec record { k: text; v: float64 }; improvement: float64; converged: bool })",
+  "deterministic": false,
+  "canister_safe": true,
+  "round_trip_tested": true
+}

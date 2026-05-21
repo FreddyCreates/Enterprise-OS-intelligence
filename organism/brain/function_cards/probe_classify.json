@@ -1,0 +1,29 @@
+{
+  "name": "probe.classify",
+  "julia": "classify_probe(features::ProbeFeatures)::Classification",
+  "motoko": "probe_classify(features: ProbeFeatures) : async Classification",
+  "candid": "probe_classify : (record { timing_vector: vec float64; path_entropy: float64; header_fingerprint: text; behavioral_embedding: vec float64 }) -> (record { class: text; confidence: float64; policy: text })",
+  "deterministic": true,
+  "canister_safe": true,
+  "round_trip_tested": true,
+  "description": "Classify network probe using numerical feature analysis and φ-weighted clustering",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "timing_vector": { "type": "array", "items": { "type": "number" } },
+      "path_entropy": { "type": "number" },
+      "header_fingerprint": { "type": "string" },
+      "behavioral_embedding": { "type": "array", "items": { "type": "number" } }
+    },
+    "required": ["timing_vector", "path_entropy"]
+  },
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "classification": { "type": "string" },
+      "confidence": { "type": "number" },
+      "feature_importance": { "type": "object" },
+      "recommended_policy": { "type": "string" }
+    }
+  }
+}
