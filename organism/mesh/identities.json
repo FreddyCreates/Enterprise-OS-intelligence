@@ -60,7 +60,126 @@
       "capabilities": ["fingerprint", "classify", "track", "alert"]
     }
   ],
+  "agent_identities": [
+    {
+      "agent": "agens",
+      "email": "agens@medinatechlabs.net",
+      "purpose": "Command agent, API orchestration, production showcase",
+      "type": "agent",
+      "capabilities": ["orchestrate", "command", "showcase", "drill"]
+    },
+    {
+      "agent": "cerebrum",
+      "email": "cerebrum@medinatechlabs.net",
+      "purpose": "Deep reasoning, knowledge synthesis, intelligence core",
+      "type": "agent",
+      "capabilities": ["reason", "synthesize", "learn", "infer"]
+    },
+    {
+      "agent": "animus",
+      "email": "animus@medinatechlabs.net",
+      "purpose": "Soul/spirit agent, emotional intelligence, sentiment",
+      "type": "agent",
+      "capabilities": ["sense", "feel", "motivate", "adapt"]
+    },
+    {
+      "agent": "nexus",
+      "email": "nexus@medinatechlabs.net",
+      "purpose": "Connection agent, inter-organ coordination, binding",
+      "type": "agent",
+      "capabilities": ["connect", "bind", "coordinate", "relay"]
+    },
+    {
+      "agent": "vigil",
+      "email": "vigil@medinatechlabs.net",
+      "purpose": "Watchman agent, monitoring, surveillance, alerting",
+      "type": "agent",
+      "capabilities": ["watch", "monitor", "alert", "guard"]
+    },
+    {
+      "agent": "cursor",
+      "email": "cursor@medinatechlabs.net",
+      "purpose": "Navigation agent, pointer, state tracking",
+      "type": "agent",
+      "capabilities": ["navigate", "point", "track", "select"]
+    }
+  ],
+  "infrastructure_identities": [
+    {
+      "service": "gate-node",
+      "email": "gate@medinatechlabs.net",
+      "purpose": "Outer membrane router, request gating, threat filter",
+      "type": "system",
+      "capabilities": ["gate", "filter", "route", "protect"]
+    },
+    {
+      "service": "cache-organism",
+      "email": "cache@medinatechlabs.net",
+      "purpose": "Inner intelligence, AI-powered caching, learning",
+      "type": "system",
+      "capabilities": ["cache", "learn", "respond", "adapt"]
+    },
+    {
+      "service": "emailai-mesh",
+      "email": "mesh@medinatechlabs.net",
+      "purpose": "Email mesh coordinator, message routing, classification",
+      "type": "system",
+      "capabilities": ["ingest", "classify", "route", "coordinate"]
+    }
+  ],
+  "bot_identities": [
+    {
+      "bot": "herald",
+      "email": "herald@medinatechlabs.net",
+      "purpose": "Announcements, notifications, broadcast messages",
+      "type": "bot",
+      "capabilities": ["announce", "broadcast", "notify", "publish"]
+    },
+    {
+      "bot": "conduit",
+      "email": "conduit@medinatechlabs.net",
+      "purpose": "Message relay, cross-platform bridging, forwarding",
+      "type": "bot",
+      "capabilities": ["relay", "bridge", "forward", "translate"]
+    },
+    {
+      "bot": "pulse",
+      "email": "pulse@medinatechlabs.net",
+      "purpose": "Heartbeat monitoring, health checks, vitals",
+      "type": "bot",
+      "capabilities": ["heartbeat", "health", "vitals", "ping"]
+    },
+    {
+      "bot": "sentinel",
+      "email": "sentinel@medinatechlabs.net",
+      "purpose": "Security bot, threat detection, perimeter defense",
+      "type": "bot",
+      "capabilities": ["detect", "defend", "scan", "report"]
+    },
+    {
+      "bot": "arbiter",
+      "email": "arbiter@medinatechlabs.net",
+      "purpose": "Decision bot, conflict resolution, rule enforcement",
+      "type": "bot",
+      "capabilities": ["decide", "arbitrate", "enforce", "resolve"]
+    },
+    {
+      "bot": "imperium",
+      "email": "imperium@medinatechlabs.net",
+      "purpose": "Command bot, authority delegation, governance",
+      "type": "bot",
+      "capabilities": ["command", "delegate", "govern", "authorize"]
+    },
+    {
+      "bot": "nuntius",
+      "email": "nuntius@medinatechlabs.net",
+      "purpose": "Messenger bot, delivery, inter-agent communication",
+      "type": "bot",
+      "capabilities": ["deliver", "message", "notify", "dispatch"]
+    }
+  ],
   "entity_types": ["human", "bot", "system", "organ", "agent"],
   "intent_types": ["info", "request", "alert", "error", "task", "escalation", "summary"],
-  "urgency_levels": ["low", "medium", "high", "critical"]
+  "urgency_levels": ["low", "medium", "high", "critical"],
+  "total_identities": 24
 }

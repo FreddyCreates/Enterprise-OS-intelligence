@@ -81,6 +81,8 @@ The Email Agent Protocol v1 defines standard headers for inter-agent SMTP commun
 
 ## IV. IDENTITATES ORGANORUM
 
+### Core Organs (8)
+
 | Organum | Epistula | Munus |
 |---------|----------|-------|
 | Membrane | membrane@medinatechlabs.net | Probe alerts, routing decisions, edge defense |
@@ -91,6 +93,46 @@ The Email Agent Protocol v1 defines standard headers for inter-agent SMTP commun
 | Nova | nova@medinatechlabs.net | User-facing communication, public interface |
 | Research | research@medinatechlabs.net | Reports, insights, knowledge generation |
 | Probe | probe@medinatechlabs.net | Scanner fingerprints, threat intel, recon |
+
+### Agent Workers (6)
+
+| Agens | Epistula | Munus |
+|-------|----------|-------|
+| Agens | agens@medinatechlabs.net | Command orchestration, API showcase, drills |
+| Cerebrum | cerebrum@medinatechlabs.net | Deep reasoning, knowledge synthesis, intelligence |
+| Animus | animus@medinatechlabs.net | Emotional intelligence, sentiment, adaptation |
+| Nexus | nexus@medinatechlabs.net | Inter-organ coordination, binding, relay |
+| Vigil | vigil@medinatechlabs.net | Monitoring, surveillance, watchman alerting |
+| Cursor | cursor@medinatechlabs.net | Navigation, state tracking, pointer |
+
+### Infrastructure Services (3)
+
+| Servitium | Epistula | Munus |
+|-----------|----------|-------|
+| Gate-Node | gate@medinatechlabs.net | Outer membrane routing, threat filtering |
+| Cache-Organism | cache@medinatechlabs.net | Inner intelligence, AI caching, learning |
+| EmailAI Mesh | mesh@medinatechlabs.net | Message coordination, classification |
+
+### Bots (7)
+
+| Automaton | Epistula | Munus |
+|-----------|----------|-------|
+| Herald | herald@medinatechlabs.net | Announcements, broadcasts, notifications |
+| Conduit | conduit@medinatechlabs.net | Cross-platform relay, bridging, forwarding |
+| Pulse | pulse@medinatechlabs.net | Heartbeat monitoring, health checks, vitals |
+| Sentinel | sentinel@medinatechlabs.net | Security detection, perimeter defense |
+| Arbiter | arbiter@medinatechlabs.net | Decision-making, conflict resolution, rules |
+| Imperium | imperium@medinatechlabs.net | Command authority, governance, delegation |
+| Nuntius | nuntius@medinatechlabs.net | Message delivery, inter-agent dispatch |
+
+### Summary
+
+**Total sovereign email identities: 24**
+
+- 8 Core Organs
+- 6 Agent Workers
+- 3 Infrastructure Services
+- 7 Bots
 
 ---
 

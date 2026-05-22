@@ -140,6 +140,7 @@ CREATE INDEX IF NOT EXISTS idx_telemetry_organ ON telemetry(organ);
 -- SEED DATA — Register organ identities
 -- ═══════════════════════════════════════════════════════════════════════════════
 
+-- Core Organs
 INSERT OR IGNORE INTO identities (email, entity_type, name, domain, capabilities) VALUES
     ('membrane@medinatechlabs.net', 'organ', 'Membrane', 'medinatechlabs.net', '["alert","route","block","escalate"]'),
     ('julia@medinatechlabs.net', 'organ', 'Julia Brain', 'medinatechlabs.net', '["classify","predict","analyze","summarize"]'),
@@ -149,3 +150,28 @@ INSERT OR IGNORE INTO identities (email, entity_type, name, domain, capabilities
     ('nova@medinatechlabs.net', 'organ', 'Nova', 'medinatechlabs.net', '["reply","notify","report","communicate"]'),
     ('research@medinatechlabs.net', 'organ', 'Research', 'medinatechlabs.net', '["report","insight","synthesize","publish"]'),
     ('probe@medinatechlabs.net', 'organ', 'Probe', 'medinatechlabs.net', '["fingerprint","classify","track","alert"]');
+
+-- Agent Workers
+INSERT OR IGNORE INTO identities (email, entity_type, name, domain, capabilities) VALUES
+    ('agens@medinatechlabs.net', 'agent', 'Agens', 'medinatechlabs.net', '["orchestrate","command","showcase","drill"]'),
+    ('cerebrum@medinatechlabs.net', 'agent', 'Cerebrum', 'medinatechlabs.net', '["reason","synthesize","learn","infer"]'),
+    ('animus@medinatechlabs.net', 'agent', 'Animus', 'medinatechlabs.net', '["sense","feel","motivate","adapt"]'),
+    ('nexus@medinatechlabs.net', 'agent', 'Nexus', 'medinatechlabs.net', '["connect","bind","coordinate","relay"]'),
+    ('vigil@medinatechlabs.net', 'agent', 'Vigil', 'medinatechlabs.net', '["watch","monitor","alert","guard"]'),
+    ('cursor@medinatechlabs.net', 'agent', 'Cursor', 'medinatechlabs.net', '["navigate","point","track","select"]');
+
+-- Infrastructure Services
+INSERT OR IGNORE INTO identities (email, entity_type, name, domain, capabilities) VALUES
+    ('gate@medinatechlabs.net', 'system', 'Gate-Node', 'medinatechlabs.net', '["gate","filter","route","protect"]'),
+    ('cache@medinatechlabs.net', 'system', 'Cache-Organism', 'medinatechlabs.net', '["cache","learn","respond","adapt"]'),
+    ('mesh@medinatechlabs.net', 'system', 'EmailAI Mesh', 'medinatechlabs.net', '["ingest","classify","route","coordinate"]');
+
+-- Bots
+INSERT OR IGNORE INTO identities (email, entity_type, name, domain, capabilities) VALUES
+    ('herald@medinatechlabs.net', 'bot', 'Herald', 'medinatechlabs.net', '["announce","broadcast","notify","publish"]'),
+    ('conduit@medinatechlabs.net', 'bot', 'Conduit', 'medinatechlabs.net', '["relay","bridge","forward","translate"]'),
+    ('pulse@medinatechlabs.net', 'bot', 'Pulse', 'medinatechlabs.net', '["heartbeat","health","vitals","ping"]'),
+    ('sentinel@medinatechlabs.net', 'bot', 'Sentinel', 'medinatechlabs.net', '["detect","defend","scan","report"]'),
+    ('arbiter@medinatechlabs.net', 'bot', 'Arbiter', 'medinatechlabs.net', '["decide","arbitrate","enforce","resolve"]'),
+    ('imperium@medinatechlabs.net', 'bot', 'Imperium', 'medinatechlabs.net', '["command","delegate","govern","authorize"]'),
+    ('nuntius@medinatechlabs.net', 'bot', 'Nuntius', 'medinatechlabs.net', '["deliver","message","notify","dispatch"]');

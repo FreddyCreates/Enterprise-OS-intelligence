@@ -28,6 +28,8 @@ X-Agent-Action: reply|escalate|summarize|trigger_workflow|...
 
 ## Organ Email Identities
 
+### Core Organs (8)
+
 | Organ | Email | Purpose |
 |-------|-------|---------|
 | Membrane | membrane@medinatechlabs.net | Probe alerts, routing |
@@ -38,6 +40,39 @@ X-Agent-Action: reply|escalate|summarize|trigger_workflow|...
 | Nova | nova@medinatechlabs.net | User-facing comms |
 | Research | research@medinatechlabs.net | Reports, insights |
 | Probe | probe@medinatechlabs.net | Threat intel |
+
+### Agent Workers (6)
+
+| Agent | Email | Purpose |
+|-------|-------|---------|
+| Agens | agens@medinatechlabs.net | Orchestration, commands |
+| Cerebrum | cerebrum@medinatechlabs.net | Deep reasoning, synthesis |
+| Animus | animus@medinatechlabs.net | Sentiment, adaptation |
+| Nexus | nexus@medinatechlabs.net | Coordination, relay |
+| Vigil | vigil@medinatechlabs.net | Monitoring, surveillance |
+| Cursor | cursor@medinatechlabs.net | Navigation, tracking |
+
+### Infrastructure (3)
+
+| Service | Email | Purpose |
+|---------|-------|---------|
+| Gate-Node | gate@medinatechlabs.net | Outer membrane routing |
+| Cache-Organism | cache@medinatechlabs.net | Inner intelligence |
+| EmailAI Mesh | mesh@medinatechlabs.net | Message coordination |
+
+### Bots (7)
+
+| Bot | Email | Purpose |
+|-----|-------|---------|
+| Herald | herald@medinatechlabs.net | Broadcasts, notifications |
+| Conduit | conduit@medinatechlabs.net | Cross-platform relay |
+| Pulse | pulse@medinatechlabs.net | Heartbeat, health |
+| Sentinel | sentinel@medinatechlabs.net | Security detection |
+| Arbiter | arbiter@medinatechlabs.net | Decisions, arbitration |
+| Imperium | imperium@medinatechlabs.net | Governance, authority |
+| Nuntius | nuntius@medinatechlabs.net | Message delivery |
+
+**Total: 24 sovereign email identities**
 
 ## Unified Inbox
 

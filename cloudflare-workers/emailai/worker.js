@@ -62,14 +62,37 @@ const VERSION = '1.0.0';
 // ═══════════════════════════════════════════════════════════════════════════════
 
 const ORGAN_IDENTITIES = {
-  'membrane@medinatechlabs.net':  { organ: 'membrane',  capabilities: ['alert', 'route', 'block', 'escalate'] },
-  'julia@medinatechlabs.net':     { organ: 'brain',     capabilities: ['classify', 'predict', 'analyze', 'summarize'] },
-  'identity@medinatechlabs.net':  { organ: 'identity',  capabilities: ['onboard', 'stake', 'verify', 'audit'] },
-  'reflex@medinatechlabs.net':    { organ: 'reflex',    capabilities: ['trigger_workflow', 'escalate', 'chain', 'schedule'] },
-  'synthetic@medinatechlabs.net': { organ: 'surfaces',  capabilities: ['deceive', 'log', 'fingerprint', 'trap'] },
-  'nova@medinatechlabs.net':      { organ: 'nova',      capabilities: ['reply', 'notify', 'report', 'communicate'] },
-  'research@medinatechlabs.net':  { organ: 'research',  capabilities: ['report', 'insight', 'synthesize', 'publish'] },
-  'probe@medinatechlabs.net':     { organ: 'probe',     capabilities: ['fingerprint', 'classify', 'track', 'alert'] }
+  // ── Core Organs ──────────────────────────────────────────────────────────────
+  'membrane@medinatechlabs.net':  { organ: 'membrane',  type: 'organ', capabilities: ['alert', 'route', 'block', 'escalate'] },
+  'julia@medinatechlabs.net':     { organ: 'brain',     type: 'organ', capabilities: ['classify', 'predict', 'analyze', 'summarize'] },
+  'identity@medinatechlabs.net':  { organ: 'identity',  type: 'organ', capabilities: ['onboard', 'stake', 'verify', 'audit'] },
+  'reflex@medinatechlabs.net':    { organ: 'reflex',    type: 'organ', capabilities: ['trigger_workflow', 'escalate', 'chain', 'schedule'] },
+  'synthetic@medinatechlabs.net': { organ: 'surfaces',  type: 'organ', capabilities: ['deceive', 'log', 'fingerprint', 'trap'] },
+  'nova@medinatechlabs.net':      { organ: 'nova',      type: 'organ', capabilities: ['reply', 'notify', 'report', 'communicate'] },
+  'research@medinatechlabs.net':  { organ: 'research',  type: 'organ', capabilities: ['report', 'insight', 'synthesize', 'publish'] },
+  'probe@medinatechlabs.net':     { organ: 'probe',     type: 'organ', capabilities: ['fingerprint', 'classify', 'track', 'alert'] },
+
+  // ── Agent Workers ────────────────────────────────────────────────────────────
+  'agens@medinatechlabs.net':     { organ: 'agens',     type: 'agent', capabilities: ['orchestrate', 'command', 'showcase', 'drill'] },
+  'cerebrum@medinatechlabs.net':  { organ: 'cerebrum',  type: 'agent', capabilities: ['reason', 'synthesize', 'learn', 'infer'] },
+  'animus@medinatechlabs.net':    { organ: 'animus',    type: 'agent', capabilities: ['sense', 'feel', 'motivate', 'adapt'] },
+  'nexus@medinatechlabs.net':     { organ: 'nexus',     type: 'agent', capabilities: ['connect', 'bind', 'coordinate', 'relay'] },
+  'vigil@medinatechlabs.net':     { organ: 'vigil',     type: 'agent', capabilities: ['watch', 'monitor', 'alert', 'guard'] },
+  'cursor@medinatechlabs.net':    { organ: 'cursor',    type: 'agent', capabilities: ['navigate', 'point', 'track', 'select'] },
+
+  // ── Infrastructure ───────────────────────────────────────────────────────────
+  'gate@medinatechlabs.net':      { organ: 'gate-node',      type: 'system', capabilities: ['gate', 'filter', 'route', 'protect'] },
+  'cache@medinatechlabs.net':     { organ: 'cache-organism', type: 'system', capabilities: ['cache', 'learn', 'respond', 'adapt'] },
+  'mesh@medinatechlabs.net':      { organ: 'emailai-mesh',   type: 'system', capabilities: ['ingest', 'classify', 'route', 'coordinate'] },
+
+  // ── Bots ─────────────────────────────────────────────────────────────────────
+  'herald@medinatechlabs.net':    { organ: 'herald',    type: 'bot', capabilities: ['announce', 'broadcast', 'notify', 'publish'] },
+  'conduit@medinatechlabs.net':   { organ: 'conduit',   type: 'bot', capabilities: ['relay', 'bridge', 'forward', 'translate'] },
+  'pulse@medinatechlabs.net':     { organ: 'pulse',     type: 'bot', capabilities: ['heartbeat', 'health', 'vitals', 'ping'] },
+  'sentinel@medinatechlabs.net':  { organ: 'sentinel',  type: 'bot', capabilities: ['detect', 'defend', 'scan', 'report'] },
+  'arbiter@medinatechlabs.net':   { organ: 'arbiter',   type: 'bot', capabilities: ['decide', 'arbitrate', 'enforce', 'resolve'] },
+  'imperium@medinatechlabs.net':  { organ: 'imperium',  type: 'bot', capabilities: ['command', 'delegate', 'govern', 'authorize'] },
+  'nuntius@medinatechlabs.net':   { organ: 'nuntius',   type: 'bot', capabilities: ['deliver', 'message', 'notify', 'dispatch'] }
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════

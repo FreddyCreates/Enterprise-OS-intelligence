@@ -88,8 +88,10 @@ service = "nova"
 binding = "CEREBRUM"
 service = "cerebrum"
 
-# ── Email Routing — Receive emails for all organ identities ────────────────────
-# Configure in Cloudflare Dashboard:
+# ── Email Routing — Receive emails for ALL organ/agent/bot identities ──────────
+# Configure in Cloudflare Dashboard → Email Routing → Email Workers:
+#
+# --- Core Organs ---
 #   membrane@medinatechlabs.net  → emailai-mesh worker
 #   julia@medinatechlabs.net     → emailai-mesh worker
 #   identity@medinatechlabs.net  → emailai-mesh worker
@@ -98,3 +100,27 @@ service = "cerebrum"
 #   nova@medinatechlabs.net      → emailai-mesh worker
 #   research@medinatechlabs.net  → emailai-mesh worker
 #   probe@medinatechlabs.net     → emailai-mesh worker
+#
+# --- Agent Workers ---
+#   agens@medinatechlabs.net     → emailai-mesh worker
+#   cerebrum@medinatechlabs.net  → emailai-mesh worker
+#   animus@medinatechlabs.net    → emailai-mesh worker
+#   nexus@medinatechlabs.net     → emailai-mesh worker
+#   vigil@medinatechlabs.net     → emailai-mesh worker
+#   cursor@medinatechlabs.net    → emailai-mesh worker
+#
+# --- Infrastructure ---
+#   gate@medinatechlabs.net      → emailai-mesh worker
+#   cache@medinatechlabs.net     → emailai-mesh worker
+#   mesh@medinatechlabs.net      → emailai-mesh worker
+#
+# --- Bots ---
+#   herald@medinatechlabs.net    → emailai-mesh worker
+#   conduit@medinatechlabs.net   → emailai-mesh worker
+#   pulse@medinatechlabs.net     → emailai-mesh worker
+#   sentinel@medinatechlabs.net  → emailai-mesh worker
+#   arbiter@medinatechlabs.net   → emailai-mesh worker
+#   imperium@medinatechlabs.net  → emailai-mesh worker
+#   nuntius@medinatechlabs.net   → emailai-mesh worker
+#
+# Total: 24 sovereign email identities

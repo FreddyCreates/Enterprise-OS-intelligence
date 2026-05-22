@@ -11,6 +11,7 @@
     "dev:vigil":    "cd vigil    && wrangler dev",
     "dev:cursor":   "cd cursor   && wrangler dev",
     "dev:nova":     "cd nova     && wrangler dev",
+    "dev:emailai":  "cd emailai  && wrangler dev",
 
     "deploy:cerebrum": "cd cerebrum && wrangler deploy",
     "deploy:animus":   "cd animus   && wrangler deploy",
@@ -19,6 +20,7 @@
     "deploy:vigil":    "cd vigil    && wrangler deploy",
     "deploy:cursor":   "cd cursor   && wrangler deploy",
     "deploy:nova":     "cd nova     && wrangler deploy",
+    "deploy:emailai":  "cd emailai  && wrangler deploy",
 
     "dev:gate-node":      "cd gate-node      && wrangler dev",
     "dev:cache-organism": "cd cache-organism && wrangler dev",
@@ -50,9 +52,10 @@
 
     "deploy:membrane": "npm run deploy:cache-organism && npm run deploy:gate-node",
     "deploy:agents":   "npm run deploy:cerebrum && npm run deploy:animus && npm run deploy:agens && npm run deploy:nexus && npm run deploy:vigil && npm run deploy:cursor && npm run deploy:nova",
+    "deploy:mesh":     "npm run deploy:emailai",
     "deploy:bots":     "npm run deploy:herald && npm run deploy:conduit && npm run deploy:pulse && npm run deploy:sentinel && npm run deploy:imperium && npm run deploy:nuntius",
     "deploy:slack":    "npm run deploy:herald && npm run deploy:imperium && npm run deploy:nuntius",
-    "deploy:all":      "npm run deploy:membrane && npm run deploy:agents && npm run deploy:bots"
+    "deploy:all":      "npm run deploy:membrane && npm run deploy:agents && npm run deploy:mesh && npm run deploy:bots"
   },
   "devDependencies": {
     "wrangler": "^3.0.0"
