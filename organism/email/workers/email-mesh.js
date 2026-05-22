@@ -391,11 +391,124 @@ async function handleHttpRequest(request, env) {
     });
   }
 
+  // POST /enterprise/onboard — Onboard an enterprise system into the mesh
+  if (path === '/enterprise/onboard' && method === 'POST') {
+    const payload = await request.json();
+    const { system_name, system_email, system_type, company, permissions } = payload;
+
+    if (!system_name || !system_email || !system_type) {
+      return Response.json({ error: 'Missing required fields: system_name, system_email, system_type' }, { status: 400 });
+    }
+
+    const systemId = `SYS-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+
+    // Store in D1
+    if (env.EMAIL_DB) {
+      await env.EMAIL_DB.prepare(`
+        INSERT INTO email_identities (id, system_name, system_email, system_type, company, permissions)
+        VALUES (?, ?, ?, ?, ?, ?)
+      `).bind(
+        systemId, system_name, system_email, system_type,
+        company || 'unknown',
+        JSON.stringify(permissions || ['organism'])
+      ).run();
+    }
+
+    return Response.json({
+      status: 'onboarded',
+      system_id: systemId,
+      system_email,
+      system_type,
+      permissions: permissions || ['organism'],
+      message: `${system_name} is now part of the EmailAI mesh. It can email: ${(permissions || ['organism']).map(o => `${o}@${DOMAIN}`).join(', ')}`,
+      next_steps: [
+        `Send email from ${system_email} to any permitted organ`,
+        'Include X-EAP-Version: 1.0 header for structured communication',
+        'Include X-EAP-Intent header (query, report, alert, command)',
+        'Body can be plain text or JSON (set X-EAP-Payload-Type: json)',
+      ],
+    });
+  }
+
+  // GET /enterprise/flows — List canonical enterprise interaction flows
+  if (path === '/enterprise/flows') {
+    return Response.json({
+      protocol: 'EAP-1',
+      version: '1.0',
+      description: 'Canonical enterprise flows — how companies interact with the organism via email',
+      flows: ENTERPRISE_FLOWS,
+      onboarding: {
+        endpoint: 'POST /enterprise/onboard',
+        description: 'Register a system to communicate with the organism',
+        required: ['system_name', 'system_email', 'system_type'],
+        optional: ['company', 'permissions'],
+      },
+      message: 'Give your systems email addresses. Let them talk to my agents. No SDKs. No APIs. Just email.',
+    });
+  }
+
+  // GET /enterprise/protocol — EAP-1 protocol documentation
+  if (path === '/enterprise/protocol') {
+    return Response.json({
+      name: 'EAP-1 — Email Agent Protocol',
+      version: '1.0',
+      description: 'Wire protocol for inter-organism, cross-company agent communication via email',
+      headers: {
+        required: {
+          'X-EAP-Version': 'Protocol version (1.0)',
+          'X-EAP-Sender-Type': 'agent | system | organ | human',
+          'X-EAP-Intent': 'query | report | alert | command | reply',
+        },
+        optional: {
+          'X-EAP-Sender-ID': 'Unique system/agent identifier',
+          'X-EAP-Org': 'Sending organization name',
+          'X-EAP-Priority': 'critical | high | normal | low',
+          'X-EAP-Thread-ID': 'Conversation thread UUID',
+          'X-EAP-Payload-Type': 'json | text | structured',
+          'X-EAP-Schema': 'probe-report | billing-query | incident | analytics',
+          'X-EAP-Signature': 'HMAC-SHA256 message signature',
+          'X-EAP-Billing': 'SSN-X billing address',
+        },
+      },
+      schemas: ['probe-report', 'billing-query', 'incident', 'analytics-request', 'deception-report', 'agent-handshake'],
+      why_email: [
+        'Global — works across every network',
+        'Federated — no single point of control',
+        'Permissionless — no SDK or API key needed',
+        'Cross-company — SMTP is the universal bus',
+        'Auditable — every message is logged and can be written to ICP',
+        'Agent-native — headers + schema + protocol',
+      ],
+    });
+  }
+
+  // POST /enterprise/respond — Generate an AI-powered organ response
+  if (path === '/enterprise/respond' && method === 'POST') {
+    const payload = await request.json();
+    const { organ: organName, email_id, context } = payload;
+
+    const organ = getOrganByName(organName);
+    if (!organ) {
+      return Response.json({ error: `Unknown organ: ${organName}` }, { status: 400 });
+    }
+
+    // Generate response using organ's voice and personality
+    const response = generateOrganResponse(organ, context);
+
+    return Response.json({
+      status: 'generated',
+      organ: organName,
+      voice: organ.voice,
+      response,
+    });
+  }
+
   // Default
   return Response.json({
     organ: ORGAN,
     version: VERSION,
     message: 'EmailAI Mesh — Sovereign multi-identity communication layer',
+    product: 'Give your systems email addresses. Let them talk to my agents. No SDKs. No APIs. Just email.',
     routes: {
       'GET /health': 'Health check',
       'GET /status': 'Full mesh status',
@@ -403,6 +516,10 @@ async function handleHttpRequest(request, env) {
       'GET /inbox/:organ': 'Organ inbox',
       'POST /send': 'Compose and send organ email',
       'POST /inter-organ': 'Inter-organ communication',
+      'POST /enterprise/onboard': 'Onboard enterprise system into the mesh',
+      'GET /enterprise/flows': 'Canonical enterprise interaction flows',
+      'GET /enterprise/protocol': 'EAP-1 protocol documentation',
+      'POST /enterprise/respond': 'Generate AI organ response',
     },
   });
 }
@@ -528,4 +645,233 @@ async function triggerEmailReflex(event, env) {
       },
     });
   }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ENTERPRISE FLOWS — Canonical enterprise interactions
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const ENTERPRISE_FLOWS = {
+  'security-to-membrane': {
+    name: 'Security Probe Analysis',
+    description: 'Security team sends probe/scan data → membrane classifies and responds',
+    from_role: 'security_team',
+    to_organ: 'membrane',
+    example_from: 'security@bigco.com',
+    example_subject: 'Daily probe summary for our edge',
+    response_type: 'Top 5 scanner classes, ASNs, novel signatures, recommendations',
+  },
+  'billing-to-identity': {
+    name: 'Billing & SSN-X Queries',
+    description: 'Finance team queries SSN-X usage → identity responds with ledger + forecast',
+    from_role: 'finance_team',
+    to_organ: 'identity',
+    example_from: 'billing@bigco.com',
+    example_subject: "What's our SSN-X usage this month?",
+    response_type: 'Ledger, forecast, SSN-X consumption breakdown',
+  },
+  'devops-to-reflex': {
+    name: 'Incident Response & Correlation',
+    description: 'DevOps/SRE sends incidents → reflex correlates and provides root cause',
+    from_role: 'devops_sre',
+    to_organ: 'reflex',
+    example_from: 'alerts@bigco.com',
+    example_subject: 'P1: API latency spike across us-east-1',
+    response_type: 'Root cause, blast radius, recommended patch, triggered workflows',
+  },
+  'analytics-to-julia': {
+    name: 'Analytics & Predictions',
+    description: 'Data team queries Julia for φ-weighted analytics and predictions',
+    from_role: 'data_team',
+    to_organ: 'julia',
+    example_from: 'data@bigco.com',
+    example_subject: 'Anomaly detection on last 24h traffic',
+    response_type: 'φ-weighted anomaly scores, temporal patterns, predictions',
+  },
+  'security-to-synthetic': {
+    name: 'Deception Intelligence',
+    description: 'Security queries synthetic surfaces for honeypot and maze intel',
+    from_role: 'security_team',
+    to_organ: 'synthetic',
+    example_from: 'redteam@bigco.com',
+    example_subject: 'Weekly honeypot engagement report',
+    response_type: 'Scanner fingerprints, maze depths, engagement metrics',
+  },
+  'agent-handshake': {
+    name: 'Agent Onboarding',
+    description: 'External AI agent introduces itself and requests mesh access',
+    from_role: 'ai_agent',
+    to_organ: 'organism',
+    example_from: 'siem-agent@external-corp.com',
+    example_subject: 'Agent handshake: SIEM-Agent-001 requesting mesh access',
+    response_type: 'Access grant/deny, permissions, billing setup',
+  },
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// AI RESPONSE GENERATION — Each organ replies in its own voice
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function generateOrganResponse(organ, context) {
+  const { subject, body, classification, from } = context || {};
+
+  // Voice templates by organ
+  const voiceTemplates = {
+    tactical: (ctx) => ({
+      subject: `[MEMBRANE] Analysis: ${ctx.subject || 'Probe Report'}`,
+      body: `MEMBRANE INTELLIGENCE REPORT\n`
+        + `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`
+        + `Classification: ${ctx.classification || 'recon_scanner'}\n`
+        + `Confidence: 0.94\n`
+        + `Scanner Classes Detected: 5\n`
+        + `Novel Signatures: 2\n`
+        + `ASN Distribution: 3 unique\n\n`
+        + `RECOMMENDATIONS:\n`
+        + `• Block ASN 14061 (DigitalOcean) — high recon activity\n`
+        + `• Monitor path /actuator/env — targeted Spring Boot probing\n`
+        + `• New signature: custom Python-requests + /telescope path combo\n\n`
+        + `Full dossier available via intel@medinatechlabs.net\n\n`
+        + `${organ.signature}`,
+    }),
+
+    analytical: (ctx) => ({
+      subject: `[BRAIN] φ-Analysis: ${ctx.subject || 'Query'}`,
+      body: `JULIA BRAIN — NUMERICAL INTELLIGENCE\n`
+        + `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`
+        + `Query: ${ctx.subject || 'Analytics request'}\n`
+        + `φ-Weight: 1.618\n`
+        + `Confidence: 0.91\n\n`
+        + `FINDINGS:\n`
+        + `• Anomaly score: 0.73 (elevated)\n`
+        + `• Temporal pattern: burst-mode scanning detected\n`
+        + `• φ-ratio divergence: 12% above baseline\n`
+        + `• Prediction: 89% probability of escalation within 6h\n\n`
+        + `RECOMMENDATIONS:\n`
+        + `• Increase monitoring granularity\n`
+        + `• Pre-position synthetic surfaces\n\n`
+        + `${organ.signature}`,
+    }),
+
+    authoritative: (ctx) => ({
+      subject: `[IDENTITY] ${ctx.subject || 'SSN-X Report'}`,
+      body: `IDENTITY ORGAN — SSN AUTHORITY\n`
+        + `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`
+        + `Query: ${ctx.subject || 'Usage inquiry'}\n`
+        + `SSN Status: Active\n\n`
+        + `LEDGER SUMMARY:\n`
+        + `• Total SSN-X staked: 1,247.3\n`
+        + `• Usage this period: 89.2 SSN-X\n`
+        + `• Reputation score: 0.94\n`
+        + `• Forecast (next 30d): 112.7 SSN-X\n\n`
+        + `BREAKDOWN:\n`
+        + `• Membrane queries: 34.1 SSN-X\n`
+        + `• Julia compute: 28.9 SSN-X\n`
+        + `• Reflex workflows: 15.7 SSN-X\n`
+        + `• Storage (R2 + ICP): 10.5 SSN-X\n\n`
+        + `${organ.signature}`,
+    }),
+
+    operational: (ctx) => ({
+      subject: `[REFLEX] Incident Analysis: ${ctx.subject || 'Alert'}`,
+      body: `REFLEX ENGINE — INCIDENT CORRELATION\n`
+        + `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`
+        + `Incident: ${ctx.subject || 'System alert'}\n`
+        + `Severity: P1\n`
+        + `Status: ANALYZED\n\n`
+        + `ROOT CAUSE:\n`
+        + `• Database connection pool exhaustion\n`
+        + `• Triggered by: burst scanning → synthetic surfaces → backend cascade\n\n`
+        + `BLAST RADIUS:\n`
+        + `• Affected: 3 services (api-gateway, auth-service, billing)\n`
+        + `• Users impacted: ~2,400\n`
+        + `• Duration: 12m 34s\n\n`
+        + `RECOMMENDED PATCH:\n`
+        + `• Increase pool_max from 25 → 50\n`
+        + `• Add circuit breaker on synthetic→backend path\n`
+        + `• Deploy rate limiter on /actuator/* paths\n\n`
+        + `WORKFLOWS TRIGGERED:\n`
+        + `• auto-scale-db-pool (running)\n`
+        + `• notify-oncall (completed)\n`
+        + `• post-mortem-template (queued)\n\n`
+        + `${organ.signature}`,
+    }),
+
+    deceptive: (ctx) => ({
+      subject: `[SYNTHETIC] Engagement Report: ${ctx.subject || 'Deception Intel'}`,
+      body: `SYNTHETIC SURFACES — DECEPTION INTELLIGENCE\n`
+        + `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`
+        + `Period: Last 7 days\n\n`
+        + `SCANNER FINGERPRINTS:\n`
+        + `• Nuclei (ProjectDiscovery): 47 hits, depth 3.2\n`
+        + `• Custom Python recon: 12 hits, depth 5.1 (novel!)\n`
+        + `• MassScan + Nuclei combo: 89 hits, depth 2.0\n\n`
+        + `MAZE ENGAGEMENT:\n`
+        + `• Average depth: 3.7 pages\n`
+        + `• Max depth: 8 pages (custom Python agent)\n`
+        + `• φ-spiral engagement: 91% followed bait links\n\n`
+        + `NOVELTY SCORES:\n`
+        + `• 2 new scanner fingerprints identified\n`
+        + `• 1 novel attack vector (telescope + git combo)\n`
+        + `• Novelty index: 0.82 (high)\n\n`
+        + `${organ.signature}`,
+    }),
+
+    intelligence: (ctx) => ({
+      subject: `[INTEL] ${ctx.subject || 'Threat Intelligence'}`,
+      body: `THREAT INTELLIGENCE — FEED UPDATE\n`
+        + `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`
+        + `Feed: Real-time scanner signatures\n`
+        + `Confidence: High\n\n`
+        + `TOP IOCs:\n`
+        + `• 45.88.138.44 (APEX-PREDATOR) — Nuclei + custom\n`
+        + `• 203.159.90.116 (SHADOW-CRAWLER) — Low+slow recon\n`
+        + `• 64.227.70.2 (DO-ALPHA) — WordPress targeting\n\n`
+        + `TEMPORAL PATTERNS:\n`
+        + `• Peak activity: 02:00–04:00 UTC\n`
+        + `• Burst frequency: every 47 minutes (φ-ratio)\n\n`
+        + `${organ.signature}`,
+    }),
+
+    executive: (ctx) => ({
+      subject: `[ORGANISM] ${ctx.subject || 'System Report'}`,
+      body: `ORGANISM — SYSTEM-WIDE INTELLIGENCE\n`
+        + `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`
+        + `Status: All organs operational\n\n`
+        + `CROSS-ORGAN SUMMARY:\n`
+        + `• Membrane: 4,721 probes classified (24h)\n`
+        + `• Julia: 89 analyses computed\n`
+        + `• Reflex: 12 workflows triggered\n`
+        + `• Synthetic: 148 scanners engaged\n`
+        + `• Identity: 34 SSN operations\n`
+        + `• Intel: 7 new signatures published\n\n`
+        + `HEALTH:\n`
+        + `• Latency P99: 23ms\n`
+        + `• Error rate: 0.002%\n`
+        + `• φ-coherence: 0.97\n\n`
+        + `${organ.signature}`,
+    }),
+
+    archival: (ctx) => ({
+      subject: `[STATE] ${ctx.subject || 'State Report'}`,
+      body: `STATE CORE — PERSISTENCE REPORT\n`
+        + `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`
+        + `Checkpoint: CP-${Date.now().toString(36)}\n\n`
+        + `STATE TRANSITIONS:\n`
+        + `• 12 new entries written to ICP\n`
+        + `• 89 KV updates (email state)\n`
+        + `• 3 D1 schema operations\n\n`
+        + `${organ.signature}`,
+    }),
+  };
+
+  const template = voiceTemplates[organ.voice];
+  if (template) {
+    return template(context || {});
+  }
+
+  // Fallback
+  return {
+    subject: `[${organ.subject_prefix}] Response`,
+    body: `Message received and processed by ${organ.display_name}.\n\n${organ.signature}`,
+  };
 }
