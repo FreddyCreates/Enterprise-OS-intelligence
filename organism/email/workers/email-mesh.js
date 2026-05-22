@@ -42,7 +42,7 @@
 
 'use strict';
 
-import { ORGAN_IDENTITIES, getOrganByAddress, getOrganByName } from '../identities/registry.js';
+import { ORGAN_IDENTITIES, CLIENT_IDENTITIES, getOrganByAddress, getOrganByName } from '../identities/registry.js';
 
 const PHI = 1.618033988749895;
 const VERSION = '1.0.0';
@@ -60,6 +60,9 @@ const EMAIL_CLASSES = {
   system_alert:     { priority: 'high',   organ: 'organism',  action: 'escalate' },
   identity_request: { priority: 'medium', organ: 'identity',  action: 'process_identity' },
   analytics_query:  { priority: 'low',    organ: 'julia',     action: 'compute' },
+  customer_query:   { priority: 'medium', organ: 'nova',      action: 'analyze_customer' },
+  compliance_query: { priority: 'medium', organ: 'identity',  action: 'scan_compliance' },
+  finops_query:     { priority: 'low',    organ: 'julia',     action: 'optimize_cost' },
   general:          { priority: 'low',    organ: 'organism',  action: 'triage' },
   spam:             { priority: 'none',   organ: null,        action: 'discard' },
 };
@@ -190,6 +193,27 @@ function classifyInboundEmail(from, to, subject, body, targetOrgan) {
   if (subjectLower.includes('analytics') || subjectLower.includes('metrics') ||
       subjectLower.includes('report') || subjectLower.includes('dashboard')) {
     return { class: 'analytics_query', priority: 'low', action: 'compute' };
+  }
+
+  // Customer queries (sales, CS, complaints, churn)
+  if (subjectLower.includes('customer') || subjectLower.includes('complaint') ||
+      subjectLower.includes('churn') || subjectLower.includes('sentiment') ||
+      subjectLower.includes('satisfaction') || bodyLower.includes('customer health')) {
+    return { class: 'customer_query', priority: 'medium', action: 'analyze_customer' };
+  }
+
+  // Compliance & legal queries
+  if (subjectLower.includes('compliance') || subjectLower.includes('contract') ||
+      subjectLower.includes('obligation') || subjectLower.includes('risk clause') ||
+      subjectLower.includes('legal')) {
+    return { class: 'compliance_query', priority: 'medium', action: 'scan_compliance' };
+  }
+
+  // FinOps / cost optimization queries
+  if (subjectLower.includes('spend') || subjectLower.includes('cost') ||
+      subjectLower.includes('optimization') || subjectLower.includes('finops') ||
+      subjectLower.includes('budget') || bodyLower.includes('cloud spend')) {
+    return { class: 'finops_query', priority: 'low', action: 'optimize_cost' };
   }
 
   // Spam detection
@@ -706,6 +730,52 @@ const ENTERPRISE_FLOWS = {
     example_subject: 'Agent handshake: SIEM-Agent-001 requesting mesh access',
     response_type: 'Access grant/deny, permissions, billing setup',
   },
+  'sales-to-nova': {
+    name: 'Customer Intelligence',
+    description: 'Sales/CS team queries nova for customer health, complaints, and churn risks',
+    from_role: 'customer_success',
+    to_organ: 'nova',
+    example_from: 'cs@bigco.com',
+    example_subject: 'Summarize all customer complaints from the last 7 days',
+    response_type: 'Complaint clusters, churn risks, customer health report, sentiment scores',
+  },
+  'finops-to-julia': {
+    name: 'FinOps Cost Optimization',
+    description: 'Finance team sends cloud spend CSVs → Julia optimizes and recommends cuts',
+    from_role: 'finance_team',
+    to_organ: 'julia',
+    example_from: 'finops@bigco.com',
+    example_subject: 'Analyze Q2 spend across AWS, Azure, and Cloudflare. Recommend optimizations.',
+    response_type: 'Cost-reduction plan, optimization recommendations, charts + projections',
+  },
+  'legal-to-identity': {
+    name: 'Legal & Compliance',
+    description: 'Legal team sends contracts → identity scans for risk clauses and obligations',
+    from_role: 'legal_team',
+    to_organ: 'identity',
+    example_from: 'legal@bigco.com',
+    example_subject: 'Scan these contracts for risk clauses and summarize obligations',
+    response_type: 'Compliance summary, flagged risks, obligation timeline',
+  },
+  'monitoring-to-membrane': {
+    name: 'System Monitoring → Analysis',
+    description: 'Monitoring systems email membrane with traffic spikes and ASN analysis requests',
+    from_role: 'monitoring_system',
+    to_organ: 'membrane',
+    example_from: 'monitoring@bigco.com',
+    example_subject: 'Seeing spikes in traffic from AS12345. Can you analyze?',
+    response_type: 'Scanner classes, risk scores, recommended firewall rules',
+  },
+  'system-onboarding': {
+    name: 'Enterprise System Onboarding',
+    description: 'Company onboards their CRM, ERP, monitoring, security, HR, finance, support systems',
+    from_role: 'enterprise_admin',
+    to_organ: 'organism',
+    example_from: 'admin@bigco.com',
+    example_subject: 'Onboard our systems: crm@bigco.com, monitoring@bigco.com, security@bigco.com',
+    response_type: 'Onboarding confirmation, assigned organs, permissions, billing',
+    systems: ['CRM', 'ERP', 'Monitoring', 'Security scanners', 'HR', 'Finance', 'Customer support'],
+  },
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -829,6 +899,31 @@ function generateOrganResponse(organ, context) {
         + `TEMPORAL PATTERNS:\n`
         + `• Peak activity: 02:00–04:00 UTC\n`
         + `• Burst frequency: every 47 minutes (φ-ratio)\n\n`
+        + `${organ.signature}`,
+    }),
+
+    investigative: (ctx) => ({
+      subject: `[NOVA] Customer Intelligence: ${ctx.subject || 'Health Report'}`,
+      body: `NOVA INTELLIGENCE — CUSTOMER HEALTH REPORT\n`
+        + `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`
+        + `Period: Last 7 days\n`
+        + `Confidence: 0.92\n\n`
+        + `COMPLAINT CLUSTERS:\n`
+        + `• API latency (34% of complaints) — churn risk HIGH\n`
+        + `• Billing discrepancies (21%) — churn risk MEDIUM\n`
+        + `• Missing documentation (18%) — churn risk LOW\n`
+        + `• Feature requests (27%) — retention positive\n\n`
+        + `CHURN RISK ACCOUNTS:\n`
+        + `• Account A-2847: Score 0.89 (critical) — 3 escalations in 5 days\n`
+        + `• Account A-1293: Score 0.71 (elevated) — API latency complaints\n`
+        + `• Account A-0934: Score 0.63 (watch) — billing dispute open\n\n`
+        + `SENTIMENT ANALYSIS:\n`
+        + `• Overall: -0.23 (trending negative, was -0.11 last week)\n`
+        + `• Top driver: response time degradation\n\n`
+        + `RECOMMENDATIONS:\n`
+        + `• Immediate: Proactive outreach to A-2847 (CSM escalation)\n`
+        + `• This week: API latency post-mortem + client notification\n`
+        + `• Systemic: Billing audit for Q2 reconciliation\n\n`
         + `${organ.signature}`,
     }),
 

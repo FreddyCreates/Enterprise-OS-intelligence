@@ -229,6 +229,72 @@ export const ORGAN_IDENTITIES = {
     ],
     forward_to: null,
   },
+
+  nova: {
+    name: 'nova',
+    address: `nova@${DOMAIN}`,
+    display_name: 'Nova Intelligence',
+    subject_prefix: 'NOVA',
+    role: 'Customer intelligence, complaint analysis, churn detection, health scoring',
+    voice: 'investigative',
+    personality: 'Customer intelligence specialist. Speaks in customer health scores, churn risk factors, '
+      + 'and theme clusters. Provides actionable customer insights with sentiment analysis.',
+    signature: '— Nova Intelligence\n'
+      + '  Customer Health & Churn Detection\n'
+      + '  Door 4 Architecture | medinatechlabs.net',
+    custom_headers: {
+      'X-Organ-Role': 'customer-intelligence',
+      'X-Organ-Substrate': 'cloudflare-workers+ai',
+    },
+    capabilities: [
+      'complaint_clustering',
+      'churn_detection',
+      'customer_health_scoring',
+      'theme_analysis',
+      'sentiment_summarization',
+      'escalation_prioritization',
+    ],
+    forward_to: null,
+  },
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// CLIENT-FACING IDENTITIES — Enterprise & client interaction layer
+// ═══════════════════════════════════════════════════════════════════════════════
+
+export const CLIENT_IDENTITIES = {
+  analysis: {
+    name: 'analysis',
+    address: `analysis@${DOMAIN}`,
+    display_name: 'Analysis Service',
+    routes_to: 'julia',
+    role: 'Client-facing analytics — routes to Julia Brain for computation',
+    description: 'Clients email for data analysis, anomaly detection, cost optimization',
+  },
+  research: {
+    name: 'research',
+    address: `research@${DOMAIN}`,
+    display_name: 'Research Service',
+    routes_to: 'intel',
+    role: 'Client-facing research — routes to Intel for threat research & intelligence',
+    description: 'Clients email for threat research, scanner intelligence, IOC lookups',
+  },
+  support: {
+    name: 'support',
+    address: `support@${DOMAIN}`,
+    display_name: 'Support Service',
+    routes_to: 'organism',
+    role: 'Client-facing support — routes to Organism for triage and coordination',
+    description: 'Clients email for general support, system status, health reports',
+  },
+  automation: {
+    name: 'automation',
+    address: `automation@${DOMAIN}`,
+    display_name: 'Automation Service',
+    routes_to: 'reflex',
+    role: 'Client-facing automation — routes to Reflex for workflow triggers',
+    description: 'Clients email to trigger workflows, schedule automations, request actions',
+  },
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -240,7 +306,14 @@ export const ORGAN_IDENTITIES = {
  */
 export function getOrganByAddress(address) {
   const local = (address || '').split('@')[0]?.toLowerCase();
-  return ORGAN_IDENTITIES[local] || null;
+  // Check organ identities first
+  if (ORGAN_IDENTITIES[local]) return ORGAN_IDENTITIES[local];
+  // Check client-facing identities (route to underlying organ)
+  if (CLIENT_IDENTITIES[local]) {
+    const routesTo = CLIENT_IDENTITIES[local].routes_to;
+    return { ...ORGAN_IDENTITIES[routesTo], _client_identity: CLIENT_IDENTITIES[local] };
+  }
+  return null;
 }
 
 /**
@@ -251,10 +324,19 @@ export function getOrganByName(name) {
 }
 
 /**
+ * Get client identity by name
+ */
+export function getClientIdentity(name) {
+  return CLIENT_IDENTITIES[name?.toLowerCase()] || null;
+}
+
+/**
  * Get all organ addresses
  */
 export function getAllAddresses() {
-  return Object.values(ORGAN_IDENTITIES).map(o => o.address);
+  const organAddresses = Object.values(ORGAN_IDENTITIES).map(o => o.address);
+  const clientAddresses = Object.values(CLIENT_IDENTITIES).map(c => c.address);
+  return [...organAddresses, ...clientAddresses];
 }
 
 /**

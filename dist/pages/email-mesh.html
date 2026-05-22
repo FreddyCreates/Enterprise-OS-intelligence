@@ -129,6 +129,7 @@
     .voice-deceptive { background: rgba(255,215,0,0.15); color: var(--gold); }
     .voice-intelligence { background: rgba(59,130,246,0.15); color: var(--blue); }
     .voice-executive { background: rgba(255,215,0,0.15); color: var(--gold); }
+    .voice-investigative { background: rgba(255,77,109,0.15); color: #ff6b9d; }
 
     .flows-grid {
       display: grid;
@@ -289,6 +290,11 @@
         <div class="role">Threat intel feeds, scanner signatures, temporal patterns</div>
         <span class="voice voice-intelligence">intelligence voice</span>
       </div>
+      <div class="identity-card">
+        <div class="address">nova@medinatechlabs.net</div>
+        <div class="role">Customer intelligence, complaint analysis, churn detection, health scoring</div>
+        <span class="voice voice-investigative">investigative voice</span>
+      </div>
     </div>
   </section>
 
@@ -343,6 +349,108 @@
         <div class="flow-response">
           <strong>Organism replies:</strong> Access granted, permissions, billing setup
         </div>
+      </div>
+      <div class="flow-card">
+        <h3>Sales/CS → Nova</h3>
+        <div class="flow-route">cs@bigco.com → nova@medinatechlabs.net</div>
+        <div class="flow-desc">"Summarize all customer complaints from the last 7 days"</div>
+        <div class="flow-response">
+          <strong>Nova replies:</strong> Complaint clusters, churn risks, customer health report, sentiment scores
+        </div>
+      </div>
+      <div class="flow-card">
+        <h3>FinOps → Julia</h3>
+        <div class="flow-route">finops@bigco.com → julia@medinatechlabs.net</div>
+        <div class="flow-desc">"Analyze Q2 spend across AWS, Azure, Cloudflare. Recommend optimizations."</div>
+        <div class="flow-response">
+          <strong>Julia replies:</strong> Cost-reduction plan, optimization recommendations, projections
+        </div>
+      </div>
+      <div class="flow-card">
+        <h3>Legal → Identity</h3>
+        <div class="flow-route">legal@bigco.com → identity@medinatechlabs.net</div>
+        <div class="flow-desc">"Scan these contracts for risk clauses and summarize obligations"</div>
+        <div class="flow-response">
+          <strong>Identity replies:</strong> Compliance summary, flagged risks, obligation timeline
+        </div>
+      </div>
+      <div class="flow-card">
+        <h3>Monitoring → Membrane</h3>
+        <div class="flow-route">monitoring@bigco.com → membrane@medinatechlabs.net</div>
+        <div class="flow-desc">"Seeing spikes in traffic from AS12345. Can you analyze?"</div>
+        <div class="flow-response">
+          <strong>Membrane replies:</strong> Scanner classes, risk scores, recommended firewall rules
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="clients">
+    <h2>Client-Facing Identities</h2>
+    <p class="subtitle">Clients email your agents like departments. No portals, no tickets, no new apps.</p>
+    <div class="identities-grid">
+      <div class="identity-card">
+        <div class="address">analysis@medinatechlabs.net</div>
+        <div class="role">Data analysis, anomaly detection, cost optimization → routes to Julia Brain</div>
+        <span class="voice voice-analytical">analytical</span>
+      </div>
+      <div class="identity-card">
+        <div class="address">research@medinatechlabs.net</div>
+        <div class="role">Threat research, scanner intelligence, IOC lookups → routes to Intel</div>
+        <span class="voice voice-intelligence">intelligence</span>
+      </div>
+      <div class="identity-card">
+        <div class="address">support@medinatechlabs.net</div>
+        <div class="role">System status, health reports, general triage → routes to Organism</div>
+        <span class="voice voice-executive">executive</span>
+      </div>
+      <div class="identity-card">
+        <div class="address">automation@medinatechlabs.net</div>
+        <div class="role">Trigger workflows, schedule automations, request actions → routes to Reflex</div>
+        <span class="voice voice-operational">operational</span>
+      </div>
+    </div>
+    <div class="protocol-section" style="margin-top: 32px;">
+      <h3>Enterprise System Onboarding</h3>
+      <p style="color: var(--dim); margin-bottom: 16px;">Companies onboard their entire stack — each system gets an email identity:</p>
+      <pre>
+crm@company.com       → talks to nova@medinatechlabs.net
+monitoring@company.com → talks to membrane@medinatechlabs.net
+security@company.com  → talks to membrane@medinatechlabs.net
+billing@company.com   → talks to identity@medinatechlabs.net
+support@company.com   → talks to support@medinatechlabs.net
+alerts@company.com    → talks to reflex@medinatechlabs.net
+analytics@company.com → talks to analysis@medinatechlabs.net</pre>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>What This Replaces</h2>
+    <p class="subtitle">One protocol-native communication layer replaces entire tool categories.</p>
+    <div class="flows-grid">
+      <div class="flow-card">
+        <h3>🔒 Security</h3>
+        <div class="flow-desc">Replaces: Splunk, CrowdStrike, Palo Alto dashboards, manual log correlation</div>
+      </div>
+      <div class="flow-card">
+        <h3>🚨 DevOps/SRE</h3>
+        <div class="flow-desc">Replaces: PagerDuty, OpsGenie, Slack war rooms, manual incident triage</div>
+      </div>
+      <div class="flow-card">
+        <h3>💰 Finance/FinOps</h3>
+        <div class="flow-desc">Replaces: Cloudability, FinOps dashboards, manual spreadsheet analysis</div>
+      </div>
+      <div class="flow-card">
+        <h3>🤝 Sales/CS</h3>
+        <div class="flow-desc">Replaces: Zendesk, Salesforce Einstein, noisy Slack channels</div>
+      </div>
+      <div class="flow-card">
+        <h3>⚖️ Legal</h3>
+        <div class="flow-desc">Replaces: Contract review teams, legal AI tools, manual redlining</div>
+      </div>
+      <div class="flow-card">
+        <h3>📊 Analytics</h3>
+        <div class="flow-desc">Replaces: Custom dashboards, BI tools, manual report generation</div>
       </div>
     </div>
   </section>

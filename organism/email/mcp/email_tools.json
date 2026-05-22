@@ -11,8 +11,8 @@
         "properties": {
           "organ": {
             "type": "string",
-            "description": "Source organ name (membrane, julia, identity, reflex, synthetic, intel, organism, state)",
-            "enum": ["membrane", "julia", "identity", "reflex", "synthetic", "intel", "organism", "state"]
+            "description": "Source organ name (membrane, julia, identity, reflex, synthetic, intel, organism, state, nova)",
+            "enum": ["membrane", "julia", "identity", "reflex", "synthetic", "intel", "organism", "state", "nova"]
           },
           "to": {
             "type": "string",
@@ -44,12 +44,12 @@
           "source": {
             "type": "string",
             "description": "Source organ name",
-            "enum": ["membrane", "julia", "identity", "reflex", "synthetic", "intel", "organism", "state"]
+            "enum": ["membrane", "julia", "identity", "reflex", "synthetic", "intel", "organism", "state", "nova"]
           },
           "target": {
             "type": "string",
             "description": "Target organ name",
-            "enum": ["membrane", "julia", "identity", "reflex", "synthetic", "intel", "organism", "state"]
+            "enum": ["membrane", "julia", "identity", "reflex", "synthetic", "intel", "organism", "state", "nova"]
           },
           "message": {
             "type": "object",
@@ -94,7 +94,7 @@
         "properties": {
           "organ": {
             "type": "string",
-            "enum": ["membrane", "julia", "identity", "reflex", "synthetic", "intel", "organism", "state"]
+            "enum": ["membrane", "julia", "identity", "reflex", "synthetic", "intel", "organism", "state", "nova"]
           },
           "limit": {
             "type": "number",
