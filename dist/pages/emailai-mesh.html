@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EmailAI Mesh — The Universal Communication Layer | MedinaTech Labs</title>
+    <meta name="description" content="Give every system, agent, and department its own email identity. Let them communicate autonomously across networks — no APIs, no integrations, no friction.">
+    <style>
+        :root {
+            --phi: 1.618033988749895;
+            --gold: #FFD700;
+            --gold-dark: #B8860B;
+            --midnight: #0a0a0f;
+            --deep-purple: #1a0a2e;
+            --cyber-blue: #00d4ff;
+            --matrix-green: #00ff41;
+            --warning-red: #ff3366;
+            --sovereign-purple: #8b5cf6;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--midnight);
+            color: #e0e0e0;
+            line-height: 1.618;
+            overflow-x: hidden;
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 4rem 2rem;
+            background: 
+                radial-gradient(ellipse at 20% 30%, rgba(139, 92, 246, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 70%, rgba(0, 212, 255, 0.1) 0%, transparent 50%),
+                linear-gradient(135deg, var(--midnight) 0%, var(--deep-purple) 100%);
+            position: relative;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="50" font-size="50" opacity="0.02">📧</text></svg>');
+            background-size: 100px;
+            pointer-events: none;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: rgba(139, 92, 246, 0.2);
+            border: 1px solid var(--sovereign-purple);
+            border-radius: 2rem;
+            font-size: 0.875rem;
+            color: var(--sovereign-purple);
+            margin-bottom: 2rem;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.4); }
+            50% { box-shadow: 0 0 20px 5px rgba(139, 92, 246, 0.2); }
+        }
+
+        .hero h1 {
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            font-weight: 700;
+            background: linear-gradient(135deg, #fff 0%, var(--cyber-blue) 50%, var(--sovereign-purple) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1.5rem;
+            max-width: 900px;
+        }
+
+        .hero-subtitle {
+            font-size: clamp(1.125rem, 2.5vw, 1.5rem);
+            color: #a0a0a0;
+            max-width: 700px;
+            margin-bottom: 3rem;
+        }
+
+        .hero-cta {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 1rem 2rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            font-size: 1rem;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--sovereign-purple) 0%, var(--cyber-blue) 100%);
+            color: white;
+            border: none;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 40px rgba(139, 92, 246, 0.4);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Section Styling */
+        section {
+            padding: 6rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #fff 0%, var(--cyber-blue) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .section-subtitle {
+            text-align: center;
+            color: #808080;
+            max-width: 600px;
+            margin: 0 auto 4rem;
+        }
+
+        /* What It Does */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-card {
+            background: linear-gradient(135deg, rgba(26, 10, 46, 0.8) 0%, rgba(10, 10, 15, 0.8) 100%);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            border-radius: 1rem;
+            padding: 2rem;
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            border-color: var(--sovereign-purple);
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(139, 92, 246, 0.2);
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .feature-card h3 {
+            font-size: 1.25rem;
+            margin-bottom: 0.75rem;
+            color: white;
+        }
+
+        .feature-card p {
+            color: #a0a0a0;
+            font-size: 0.95rem;
+        }
+
+        /* Why Email Section */
+        .why-email {
+            background: linear-gradient(135deg, rgba(26, 10, 46, 0.5) 0%, rgba(10, 10, 15, 0.5) 100%);
+            border-radius: 2rem;
+            padding: 4rem;
+            margin: 4rem 0;
+        }
+
+        .why-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .why-item {
+            text-align: center;
+            padding: 1.5rem;
+            background: rgba(139, 92, 246, 0.1);
+            border-radius: 1rem;
+            border: 1px solid rgba(139, 92, 246, 0.2);
+        }
+
+        .why-item span {
+            font-size: 1.5rem;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .why-item p {
+            color: #c0c0c0;
+            font-size: 0.9rem;
+        }
+
+        /* Use Cases */
+        .use-cases-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+        }
+
+        .use-case-card {
+            background: linear-gradient(135deg, rgba(10, 10, 15, 0.9) 0%, rgba(26, 10, 46, 0.5) 100%);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            border-radius: 1rem;
+            padding: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .use-case-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--cyber-blue), var(--sovereign-purple));
+        }
+
+        .use-case-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .use-case-icon {
+            font-size: 2rem;
+        }
+
+        .use-case-card h3 {
+            font-size: 1.25rem;
+            color: white;
+        }
+
+        .use-case-email {
+            font-family: 'SF Mono', monospace;
+            background: rgba(0, 212, 255, 0.1);
+            color: var(--cyber-blue);
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            display: inline-block;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .use-case-replaces {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .use-case-replaces span {
+            font-size: 0.75rem;
+            color: #808080;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .replaces-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .replaces-item {
+            background: rgba(255, 51, 102, 0.1);
+            color: var(--warning-red);
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.8rem;
+            text-decoration: line-through;
+        }
+
+        /* How It Works */
+        .how-it-works {
+            text-align: center;
+        }
+
+        .flow-diagram {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            margin: 3rem 0;
+            font-family: 'SF Mono', monospace;
+        }
+
+        .flow-step {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(0, 212, 255, 0.1) 100%);
+            border: 1px solid var(--sovereign-purple);
+            padding: 1rem 1.5rem;
+            border-radius: 0.5rem;
+            text-align: center;
+        }
+
+        .flow-step span {
+            font-size: 1.5rem;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .flow-arrow {
+            color: var(--cyber-blue);
+            font-size: 1.5rem;
+        }
+
+        /* CTA Section */
+        .cta-section {
+            text-align: center;
+            padding: 6rem 2rem;
+            background: linear-gradient(135deg, var(--deep-purple) 0%, var(--midnight) 100%);
+            border-radius: 2rem;
+            margin: 4rem 0;
+        }
+
+        .cta-section h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: white;
+        }
+
+        .cta-section p {
+            color: #a0a0a0;
+            margin-bottom: 2rem;
+            font-size: 1.25rem;
+        }
+
+        .cta-features {
+            display: flex;
+            justify-content: center;
+            gap: 3rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .cta-feature {
+            color: var(--matrix-green);
+            font-weight: 600;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 4rem 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: #606060;
+        }
+
+        footer a {
+            color: var(--sovereign-purple);
+            text-decoration: none;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .flow-diagram {
+                flex-direction: column;
+            }
+            .flow-arrow {
+                transform: rotate(90deg);
+            }
+            .cta-features {
+                flex-direction: column;
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-badge">
+            <span>🔮</span>
+            SMTP for AI Civilizations
+        </div>
+        <h1>The Universal Communication Layer for Enterprises, Agents, Systems, and Clients</h1>
+        <p class="hero-subtitle">
+            Give every system, agent, and department its own email identity.
+            Let them communicate autonomously across networks — no APIs, no integrations, no friction.
+        </p>
+        <div class="hero-cta">
+            <a href="#onboard" class="btn btn-primary">Onboard Your Company →</a>
+            <a href="#use-cases" class="btn btn-secondary">See Use Cases</a>
+        </div>
+    </section>
+
+    <!-- What It Does -->
+    <section>
+        <h2 class="section-title">What EmailAI Mesh Does</h2>
+        <p class="section-subtitle">Transform enterprise communication with intelligent, autonomous email agents.</p>
+        
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">🌐</div>
+                <h3>Unified Communication Mesh</h3>
+                <p>All enterprise communication flows through one intelligent mesh — systems, agents, humans, clients.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🤖</div>
+                <h3>Sovereign Email Identities</h3>
+                <p>Every system gets its own email identity. CRM, monitoring, security — all addressable.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔄</div>
+                <h3>Autonomous Agent Communication</h3>
+                <p>Agents communicate with humans, systems, and other agents — autonomously.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">⚡</div>
+                <h3>Natural Workflow Automation</h3>
+                <p>Automate workflows through natural email exchanges. No code required.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🌍</div>
+                <h3>Cross-Network Intelligence</h3>
+                <p>Works across companies, clouds, and networks. Email is universal.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🚀</div>
+                <h3>Zero Setup Required</h3>
+                <p>No SDKs. No APIs. No integrations. Just send an email.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Why Email -->
+    <section>
+        <div class="why-email">
+            <h2 class="section-title">Why Email?</h2>
+            <p class="section-subtitle">Email is the only protocol that checks every box for enterprise AI communication.</p>
+            
+            <div class="why-grid">
+                <div class="why-item">
+                    <span>🌐</span>
+                    <p>Universal</p>
+                </div>
+                <div class="why-item">
+                    <span>🔗</span>
+                    <p>Federated</p>
+                </div>
+                <div class="why-item">
+                    <span>🏢</span>
+                    <p>Cross-Company</p>
+                </div>
+                <div class="why-item">
+                    <span>☁️</span>
+                    <p>Cross-Cloud</p>
+                </div>
+                <div class="why-item">
+                    <span>🛡️</span>
+                    <p>Firewall-Friendly</p>
+                </div>
+                <div class="why-item">
+                    <span>🤝</span>
+                    <p>Human + Machine</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Use Cases -->
+    <section id="use-cases">
+        <h2 class="section-title">Enterprise Use Cases</h2>
+        <p class="section-subtitle">Real-world workflows powered by intelligent email agents.</p>
+        
+        <div class="use-cases-grid">
+            <div class="use-case-card">
+                <div class="use-case-header">
+                    <span class="use-case-icon">🛡️</span>
+                    <h3>IT & Security Teams</h3>
+                </div>
+                <div class="use-case-email">membrane@medinatechlabs.net</div>
+                <p>Automated threat analysis, scanner classification, risk scoring, firewall recommendations.</p>
+                <div class="use-case-replaces">
+                    <span>Replaces:</span>
+                    <div class="replaces-list">
+                        <span class="replaces-item">Splunk</span>
+                        <span class="replaces-item">CrowdStrike</span>
+                        <span class="replaces-item">Palo Alto</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="use-case-card">
+                <div class="use-case-header">
+                    <span class="use-case-icon">⚙️</span>
+                    <h3>DevOps / SRE Teams</h3>
+                </div>
+                <div class="use-case-email">reflex@medinatechlabs.net</div>
+                <p>Incident correlation, pattern analysis, root cause identification, prioritized action plans.</p>
+                <div class="use-case-replaces">
+                    <span>Replaces:</span>
+                    <div class="replaces-list">
+                        <span class="replaces-item">PagerDuty</span>
+                        <span class="replaces-item">OpsGenie</span>
+                        <span class="replaces-item">Slack war rooms</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="use-case-card">
+                <div class="use-case-header">
+                    <span class="use-case-icon">💰</span>
+                    <h3>Finance Teams</h3>
+                </div>
+                <div class="use-case-email">julia@medinatechlabs.net</div>
+                <p>Cost analysis, cloud spend optimization, forecasting, CSV ingestion, recommendations.</p>
+                <div class="use-case-replaces">
+                    <span>Replaces:</span>
+                    <div class="replaces-list">
+                        <span class="replaces-item">Cloudability</span>
+                        <span class="replaces-item">FinOps dashboards</span>
+                        <span class="replaces-item">Spreadsheets</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="use-case-card">
+                <div class="use-case-header">
+                    <span class="use-case-icon">🎯</span>
+                    <h3>Sales & Customer Success</h3>
+                </div>
+                <div class="use-case-email">nova@medinatechlabs.net</div>
+                <p>Customer complaint clustering, churn risk identification, health reports, sentiment analysis.</p>
+                <div class="use-case-replaces">
+                    <span>Replaces:</span>
+                    <div class="replaces-list">
+                        <span class="replaces-item">Zendesk</span>
+                        <span class="replaces-item">Salesforce Einstein</span>
+                        <span class="replaces-item">Slack noise</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="use-case-card">
+                <div class="use-case-header">
+                    <span class="use-case-icon">⚖️</span>
+                    <h3>Legal & Compliance</h3>
+                </div>
+                <div class="use-case-email">identity@medinatechlabs.net</div>
+                <p>Contract parsing, obligation extraction, risk clause flagging, compliance summaries.</p>
+                <div class="use-case-replaces">
+                    <span>Replaces:</span>
+                    <div class="replaces-list">
+                        <span class="replaces-item">Contract teams</span>
+                        <span class="replaces-item">Legal AI tools</span>
+                        <span class="replaces-item">Manual redlining</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="use-case-card">
+                <div class="use-case-header">
+                    <span class="use-case-icon">🔬</span>
+                    <h3>Research & Intelligence</h3>
+                </div>
+                <div class="use-case-email">research@medinatechlabs.net</div>
+                <p>Reports, insights, knowledge synthesis, trend analysis, competitive intelligence.</p>
+                <div class="use-case-replaces">
+                    <span>Replaces:</span>
+                    <div class="replaces-list">
+                        <span class="replaces-item">Research analysts</span>
+                        <span class="replaces-item">Manual reports</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section class="how-it-works">
+        <h2 class="section-title">How It Works</h2>
+        <p class="section-subtitle">From email to intelligence in four steps.</p>
+        
+        <div class="flow-diagram">
+            <div class="flow-step">
+                <span>📧</span>
+                Enterprise sends email
+            </div>
+            <span class="flow-arrow">→</span>
+            <div class="flow-step">
+                <span>🔍</span>
+                Mesh parses & classifies
+            </div>
+            <span class="flow-arrow">→</span>
+            <div class="flow-step">
+                <span>🧠</span>
+                Agents analyze & respond
+            </div>
+            <span class="flow-arrow">→</span>
+            <div class="flow-step">
+                <span>✅</span>
+                Results via email
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section" id="onboard">
+        <h2>Onboard Your Company in Minutes</h2>
+        <p>No SDKs. No APIs. No integrations. Just email.</p>
+        
+        <div class="cta-features">
+            <span class="cta-feature">✓ Zero Setup</span>
+            <span class="cta-feature">✓ Zero Code</span>
+            <span class="cta-feature">✓ Zero Integration</span>
+        </div>
+        
+        <a href="mailto:onboard@medinatechlabs.net?subject=EmailAI%20Mesh%20Onboarding&body=Company%20Name:%0ADomain:%0AUse%20Case:" class="btn btn-primary">
+            Email onboard@medinatechlabs.net →
+        </a>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <p>© 2026 MedinaTech Labs · RSHIP Intelligence Systems</p>
+        <p style="margin-top: 1rem;">
+            <a href="/">Home</a> · 
+            <a href="/pages/nova.html">NOVA</a> · 
+            <a href="/pages/api.html">API</a> · 
+            <a href="/pages/cache-organisms.html">Cache Organisms</a>
+        </p>
+    </footer>
+</body>
+</html>
