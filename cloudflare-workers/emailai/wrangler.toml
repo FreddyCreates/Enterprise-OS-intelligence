@@ -123,4 +123,11 @@ service = "cerebrum"
 #   imperium@medinatechlabs.net  → emailai-mesh worker
 #   nuntius@medinatechlabs.net   → emailai-mesh worker
 #
-# Total: 24 sovereign email identities
+# --- Client-Facing (Enterprises & Clients email these) ---
+#   analysis@medinatechlabs.net     → emailai-mesh worker (→ brain)
+#   support@medinatechlabs.net      → emailai-mesh worker (→ nova)
+#   automation@medinatechlabs.net   → emailai-mesh worker (→ reflex)
+#   security@medinatechlabs.net     → emailai-mesh worker (→ membrane)
+#   intelligence@medinatechlabs.net → emailai-mesh worker (→ probe)
+#
+# Total: 29 sovereign email identities

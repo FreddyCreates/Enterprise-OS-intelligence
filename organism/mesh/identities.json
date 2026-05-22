@@ -178,8 +178,64 @@
       "capabilities": ["deliver", "message", "notify", "dispatch"]
     }
   ],
-  "entity_types": ["human", "bot", "system", "organ", "agent"],
+  "client_facing_identities": [
+    {
+      "service": "analysis",
+      "email": "analysis@medinatechlabs.net",
+      "purpose": "Client-facing analytics — cost analysis, optimization, predictions",
+      "type": "client-facing",
+      "routes_to": "brain",
+      "domain": "Finance & Analytics",
+      "capabilities": ["analyze", "report", "predict", "optimize"]
+    },
+    {
+      "service": "support",
+      "email": "support@medinatechlabs.net",
+      "purpose": "Client-facing support — queries, issues, escalations",
+      "type": "client-facing",
+      "routes_to": "nova",
+      "domain": "Sales & Customer Success",
+      "capabilities": ["reply", "resolve", "escalate", "summarize"]
+    },
+    {
+      "service": "automation",
+      "email": "automation@medinatechlabs.net",
+      "purpose": "Client-facing automation — workflow triggers, scheduling",
+      "type": "client-facing",
+      "routes_to": "reflex",
+      "domain": "DevOps / SRE",
+      "capabilities": ["automate", "trigger", "schedule", "chain"]
+    },
+    {
+      "service": "security",
+      "email": "security@medinatechlabs.net",
+      "purpose": "Client-facing security — threat analysis, scanning, defense",
+      "type": "client-facing",
+      "routes_to": "membrane",
+      "domain": "IT & Security",
+      "capabilities": ["scan", "detect", "report", "defend"]
+    },
+    {
+      "service": "intelligence",
+      "email": "intelligence@medinatechlabs.net",
+      "purpose": "Client-facing intel — reconnaissance, threat briefings",
+      "type": "client-facing",
+      "routes_to": "probe",
+      "domain": "Threat Intelligence",
+      "capabilities": ["recon", "fingerprint", "track", "brief"]
+    }
+  ],
+  "entity_types": ["human", "bot", "system", "organ", "agent", "client-facing"],
   "intent_types": ["info", "request", "alert", "error", "task", "escalation", "summary"],
   "urgency_levels": ["low", "medium", "high", "critical"],
-  "total_identities": 24
+  "total_identities": 29,
+  "enterprise_use_cases": {
+    "IT & Security": { "organ": "membrane", "email": "membrane@medinatechlabs.net", "replaces": ["Splunk", "CrowdStrike", "Palo Alto"] },
+    "DevOps / SRE": { "organ": "reflex", "email": "reflex@medinatechlabs.net", "replaces": ["PagerDuty", "OpsGenie", "Slack war rooms"] },
+    "Finance": { "organ": "brain", "email": "julia@medinatechlabs.net", "replaces": ["Cloudability", "FinOps dashboards"] },
+    "Sales & CS": { "organ": "nova", "email": "nova@medinatechlabs.net", "replaces": ["Zendesk", "Salesforce Einstein"] },
+    "Legal & Compliance": { "organ": "identity", "email": "identity@medinatechlabs.net", "replaces": ["Contract review teams", "Legal AI"] },
+    "Research": { "organ": "research", "email": "research@medinatechlabs.net", "replaces": ["Research analysts", "Manual reports"] },
+    "Threat Intel": { "organ": "probe", "email": "probe@medinatechlabs.net", "replaces": ["Recorded Future", "Shodan"] }
+  }
 }

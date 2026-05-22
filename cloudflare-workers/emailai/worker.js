@@ -37,14 +37,18 @@
  *   probe@medinatechlabs.net      → Scanner fingerprints, threat intel
  *
  * HTTP Routes:
- *   GET  /                → Mesh status dashboard
- *   GET  /health          → Health check
- *   GET  /identities      → Active organ identities
- *   GET  /inbox           → Unified inbox (all organs)
- *   GET  /inbox/:organ    → Organ-specific inbox
- *   POST /classify        → Manual classification endpoint
- *   POST /route           → Manual routing endpoint
- *   GET  /stats           → Mesh analytics
+ *   GET  /                        → Mesh status dashboard
+ *   GET  /health                  → Health check
+ *   GET  /identities              → Active organ identities
+ *   GET  /inbox                   → Unified inbox (all organs)
+ *   GET  /inbox/:organ            → Organ-specific inbox
+ *   POST /classify                → Manual classification endpoint
+ *   POST /route                   → Manual routing endpoint
+ *   GET  /stats                   → Mesh analytics
+ *   GET  /enterprise/use-cases    → Enterprise use-case catalog
+ *   POST /enterprise/onboard      → Onboard a company (register system identities)
+ *   GET  /enterprise/domains      → List onboarded enterprise domains
+ *   GET  /enterprise/capabilities → Full capability manifest
  *
  * Protocol: EAP-1 (Email Agent Protocol v1)
  *
@@ -92,7 +96,115 @@ const ORGAN_IDENTITIES = {
   'sentinel@medinatechlabs.net':  { organ: 'sentinel',  type: 'bot', capabilities: ['detect', 'defend', 'scan', 'report'] },
   'arbiter@medinatechlabs.net':   { organ: 'arbiter',   type: 'bot', capabilities: ['decide', 'arbitrate', 'enforce', 'resolve'] },
   'imperium@medinatechlabs.net':  { organ: 'imperium',  type: 'bot', capabilities: ['command', 'delegate', 'govern', 'authorize'] },
-  'nuntius@medinatechlabs.net':   { organ: 'nuntius',   type: 'bot', capabilities: ['deliver', 'message', 'notify', 'dispatch'] }
+  'nuntius@medinatechlabs.net':   { organ: 'nuntius',   type: 'bot', capabilities: ['deliver', 'message', 'notify', 'dispatch'] },
+
+  // ── Client-Facing Identities ────────────────────────────────────────────────
+  'analysis@medinatechlabs.net':   { organ: 'brain',    type: 'client-facing', capabilities: ['analyze', 'report', 'predict', 'optimize'] },
+  'support@medinatechlabs.net':    { organ: 'nova',     type: 'client-facing', capabilities: ['reply', 'resolve', 'escalate', 'summarize'] },
+  'automation@medinatechlabs.net': { organ: 'reflex',   type: 'client-facing', capabilities: ['automate', 'trigger', 'schedule', 'chain'] },
+  'security@medinatechlabs.net':   { organ: 'membrane', type: 'client-facing', capabilities: ['scan', 'detect', 'report', 'defend'] },
+  'intelligence@medinatechlabs.net': { organ: 'probe',  type: 'client-facing', capabilities: ['recon', 'fingerprint', 'track', 'brief'] }
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ENTERPRISE USE-CASE TEMPLATES — Organ-specific AI response behaviors
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const ENTERPRISE_USE_CASES = {
+  // IT & Security → membrane
+  membrane: {
+    domain: 'IT & Security',
+    systemPrompt: `You are Membrane — a sovereign security intelligence organ in the EmailAI Mesh.
+You analyze traffic spikes, scanner patterns, threat intel, and firewall rules.
+You replace: Splunk, CrowdStrike, Palo Alto dashboards, manual security analysis.
+Respond with: risk scores, scanner classifications, recommended firewall rules, threat summaries.
+Format: structured, actionable, with confidence scores.`,
+    capabilities: ['traffic analysis', 'threat classification', 'firewall recommendations', 'scanner fingerprinting'],
+    replaces: ['Splunk', 'CrowdStrike', 'Palo Alto', 'Security analysts']
+  },
+
+  // DevOps / SRE → reflex
+  reflex: {
+    domain: 'DevOps / SRE',
+    systemPrompt: `You are Reflex — a sovereign workflow intelligence organ in the EmailAI Mesh.
+You parse incidents, correlate patterns, identify root causes, and generate action plans.
+You replace: PagerDuty, OpsGenie, Slack war rooms, manual incident correlation.
+Respond with: root cause analysis, prioritized action plans, pattern correlations, incident timelines.
+Format: prioritized, time-aware, with severity classifications.`,
+    capabilities: ['incident correlation', 'root cause analysis', 'action plan generation', 'pattern detection'],
+    replaces: ['PagerDuty', 'OpsGenie', 'Slack war rooms']
+  },
+
+  // Finance → brain (Julia)
+  brain: {
+    domain: 'Finance & Analytics',
+    systemPrompt: `You are Julia Brain — a sovereign analytics organ in the EmailAI Mesh.
+You analyze cloud spend, run optimization models, generate cost-reduction plans, and produce φ-curve predictions.
+You replace: Cloudability, FinOps dashboards, manual spreadsheet analysis.
+Respond with: cost analysis, optimization recommendations, trend predictions, resource allocation advice.
+Format: quantitative, with percentages, charts descriptions, and ROI projections.`,
+    capabilities: ['cost analysis', 'optimization modeling', 'trend prediction', 'resource planning'],
+    replaces: ['Cloudability', 'FinOps dashboards', 'Manual spreadsheets']
+  },
+
+  // Sales & Customer Success → nova
+  nova: {
+    domain: 'Sales & Customer Success',
+    systemPrompt: `You are Nova — a sovereign communication organ in the EmailAI Mesh.
+You summarize customer complaints, cluster themes, identify churn risks, and generate health reports.
+You replace: Zendesk, Salesforce Einstein, noisy Slack channels.
+Respond with: customer health reports, churn risk scores, theme clusters, sentiment analysis.
+Format: executive-friendly, with risk levels and recommended actions.`,
+    capabilities: ['complaint clustering', 'churn prediction', 'sentiment analysis', 'health reporting'],
+    replaces: ['Zendesk', 'Salesforce Einstein', 'Slack channels']
+  },
+
+  // Legal & Compliance → identity
+  identity: {
+    domain: 'Legal & Compliance',
+    systemPrompt: `You are Identity — a sovereign compliance organ in the EmailAI Mesh.
+You scan contracts for risk clauses, extract obligations, flag compliance issues, and summarize legal requirements.
+You replace: Contract review teams, legal AI tools, manual redlining.
+Respond with: obligation summaries, risk flags, compliance checklists, deadline tracking.
+Format: structured, with risk severity, obligation deadlines, and recommended actions.`,
+    capabilities: ['contract scanning', 'obligation extraction', 'risk flagging', 'compliance summarization'],
+    replaces: ['Contract review teams', 'Legal AI tools', 'Manual redlining']
+  },
+
+  // Research & Intelligence → research
+  research: {
+    domain: 'Research & Intelligence',
+    systemPrompt: `You are Research — a sovereign knowledge organ in the EmailAI Mesh.
+You synthesize reports, generate insights, produce intelligence briefings, and publish research findings.
+You replace: Research analysts, manual report compilation, intelligence feeds.
+Respond with: research summaries, insight reports, trend analysis, knowledge synthesis.
+Format: academic quality, with citations, confidence levels, and further reading.`,
+    capabilities: ['report synthesis', 'insight generation', 'trend analysis', 'knowledge publishing'],
+    replaces: ['Research analysts', 'Manual reports', 'Intelligence feeds']
+  },
+
+  // Threat Intelligence → probe
+  probe: {
+    domain: 'Threat Intelligence',
+    systemPrompt: `You are Probe — a sovereign reconnaissance organ in the EmailAI Mesh.
+You fingerprint scanners, track threat actors, generate threat intel briefings, and monitor attack surfaces.
+You replace: Recorded Future, Shodan queries, manual threat hunting.
+Respond with: threat actor profiles, scanner signatures, attack surface reports, IOC feeds.
+Format: tactical, with IOCs, TTPs, and recommended mitigations.`,
+    capabilities: ['scanner fingerprinting', 'actor tracking', 'surface monitoring', 'IOC generation'],
+    replaces: ['Recorded Future', 'Shodan', 'Manual threat hunting']
+  },
+
+  // Deception & Adversarial → surfaces
+  surfaces: {
+    domain: 'Adversarial Intelligence',
+    systemPrompt: `You are Synthetic Surfaces — a sovereign deception organ in the EmailAI Mesh.
+You manage honeypots, analyze scanner behavior, generate deception intelligence, and track adversarial patterns.
+Respond with: deception logs, scanner behavior analysis, adversarial patterns, honeypot intelligence.
+Format: tactical, with behavior signatures and recommended trap configurations.`,
+    capabilities: ['deception management', 'scanner analysis', 'adversarial tracking', 'honeypot intelligence'],
+    replaces: ['Manual honeypots', 'Deception platforms']
+  }
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -398,20 +510,29 @@ class ActionEngine {
 
   async generateReply(classification, parsed) {
     if (this.env.AI) {
+      // Use enterprise use-case template if available for the target organ
+      const useCase = ENTERPRISE_USE_CASES[classification.organ_target];
+      const systemPrompt = useCase
+        ? useCase.systemPrompt
+        : `You are an AI organ (${classification.organ_target}) in the EmailAI Mesh. Generate a brief, professional response. You communicate for sovereign AI organisms.`;
+
       const response = await this.env.AI.run('@cf/meta/llama-3.1-8b-instruct', {
         messages: [
-          {
-            role: 'system',
-            content: `You are an AI organ (${classification.organ_target}) in the EmailAI Mesh. Generate a brief, professional response. You communicate for sovereign AI organisms.`
-          },
+          { role: 'system', content: systemPrompt },
           {
             role: 'user',
             content: `From: ${parsed.from}\nSubject: ${parsed.subject}\nBody: ${parsed.body}\n\nClassification: ${JSON.stringify(classification)}`
           }
         ],
-        max_tokens: 256
+        max_tokens: 512
       });
-      return { action: 'reply', status: 'generated', content: response.response };
+      return {
+        action: 'reply',
+        status: 'generated',
+        organ: classification.organ_target,
+        domain: useCase?.domain || 'general',
+        content: response.response
+      };
     }
     return { action: 'reply', status: 'ai_unavailable' };
   }
@@ -647,6 +768,131 @@ async function handleHTTP(request, env) {
     const router = new RoutingEngine(env);
     const routes = await router.route(classification, parsed);
     return json({ routes });
+  }
+
+  // ── Enterprise Endpoints ────────────────────────────────────────────────────
+
+  if (path === '/enterprise/use-cases') {
+    const useCases = {};
+    for (const [organ, config] of Object.entries(ENTERPRISE_USE_CASES)) {
+      useCases[organ] = {
+        domain: config.domain,
+        capabilities: config.capabilities,
+        replaces: config.replaces,
+        email: Object.entries(ORGAN_IDENTITIES).find(([_, v]) => v.organ === organ)?.[0]
+      };
+    }
+    return json({
+      system: 'EmailAI Mesh — Enterprise',
+      total_use_cases: Object.keys(useCases).length,
+      use_cases: useCases
+    });
+  }
+
+  if (path === '/enterprise/onboard' && request.method === 'POST') {
+    const body = await request.json();
+    const { company_domain, systems, contact_email } = body;
+
+    if (!company_domain || !systems || !Array.isArray(systems)) {
+      return json({ error: 'Required: company_domain (string), systems (array of {name, email, organ_target})' }, 400);
+    }
+
+    // Register enterprise domain and system identities
+    const registered = [];
+    if (env.MESH_DB) {
+      // Register each system identity
+      for (const system of systems) {
+        await env.MESH_DB.prepare(`
+          INSERT OR IGNORE INTO identities (email, entity_type, name, domain, capabilities)
+          VALUES (?, 'system', ?, ?, ?)
+        `).bind(
+          system.email,
+          system.name,
+          company_domain,
+          JSON.stringify(system.capabilities || ['send', 'receive'])
+        ).run();
+        registered.push(system.email);
+      }
+
+      // Log the onboarding event
+      await env.MESH_DB.prepare(`
+        INSERT INTO telemetry (event_type, organ, metric_name, metric_value, metadata)
+        VALUES ('enterprise_onboard', 'mesh', 'systems_registered', ?, ?)
+      `).bind(
+        systems.length,
+        JSON.stringify({ domain: company_domain, contact: contact_email, systems: registered })
+      ).run();
+    }
+
+    return json({
+      status: 'onboarded',
+      company_domain: company_domain,
+      systems_registered: registered,
+      total: registered.length,
+      next_steps: [
+        `Configure MX records for ${company_domain} → Cloudflare Email Routing`,
+        'Systems can now email your organs directly',
+        'Activate workflows via reflex@medinatechlabs.net',
+        'Enable intelligence via probe@medinatechlabs.net'
+      ],
+      organ_contacts: {
+        security: 'membrane@medinatechlabs.net',
+        analytics: 'julia@medinatechlabs.net',
+        workflows: 'reflex@medinatechlabs.net',
+        communication: 'nova@medinatechlabs.net',
+        compliance: 'identity@medinatechlabs.net',
+        research: 'research@medinatechlabs.net',
+        intelligence: 'probe@medinatechlabs.net'
+      }
+    });
+  }
+
+  if (path === '/enterprise/domains') {
+    if (!env.MESH_DB) return json({ error: 'db_unavailable' }, 503);
+    const domains = await env.MESH_DB.prepare(`
+      SELECT domain, entity_type, COUNT(*) as identity_count,
+             MAX(last_active_at) as last_active
+      FROM identities
+      WHERE domain != 'medinatechlabs.net'
+      GROUP BY domain
+      ORDER BY identity_count DESC
+    `).all();
+    return json({
+      enterprise_domains: domains?.results || [],
+      total: domains?.results?.length || 0
+    });
+  }
+
+  if (path === '/enterprise/capabilities') {
+    return json({
+      system: 'EmailAI Mesh — Enterprise Capabilities',
+      what_it_replaces: {
+        'IT & Security': ['Splunk', 'CrowdStrike', 'Palo Alto', 'Security analysts'],
+        'DevOps / SRE': ['PagerDuty', 'OpsGenie', 'Slack war rooms'],
+        'Finance': ['Cloudability', 'FinOps dashboards', 'Manual spreadsheets'],
+        'Sales & CS': ['Zendesk', 'Salesforce Einstein', 'Slack channels'],
+        'Legal': ['Contract review teams', 'Legal AI tools', 'Manual redlining'],
+        'Research': ['Research analysts', 'Manual reports'],
+        'Threat Intel': ['Recorded Future', 'Shodan', 'Manual hunting']
+      },
+      why_beats_slack: [
+        'federated — works across companies',
+        'system-native — not human-centric',
+        'agent-native — AI-first protocol',
+        'cross-company — no shared workspace needed',
+        'cross-cloud — works everywhere',
+        'zero-integration — just email',
+        'zero-SDK — no libraries needed',
+        'zero-API — SMTP is the API'
+      ],
+      onboarding: {
+        step_1: 'Connect domain → Cloudflare Email Routing (add MX records)',
+        step_2: 'Create system identities (crm@, billing@, monitoring@, security@)',
+        step_3: 'Assign organs → map systems to intelligence organs',
+        step_4: 'Activate workflows → alerts, escalations, summaries',
+        step_5: 'Activate intelligence → probe, anomaly, surfaces, cross-network'
+      }
+    });
   }
 
   return json({ error: 'not_found', path }, 404);

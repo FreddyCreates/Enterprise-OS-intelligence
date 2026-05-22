@@ -72,7 +72,60 @@ X-Agent-Action: reply|escalate|summarize|trigger_workflow|...
 | Imperium | imperium@medinatechlabs.net | Governance, authority |
 | Nuntius | nuntius@medinatechlabs.net | Message delivery |
 
-**Total: 24 sovereign email identities**
+**Total: 29 sovereign email identities**
+
+## Enterprise Use Cases
+
+Enterprises email your organs directly — no SDK, no API, no integration. Just SMTP.
+
+| Team | Emails | Organ | Replaces |
+|------|--------|-------|----------|
+| IT & Security | membrane@ / security@ | Membrane | Splunk, CrowdStrike, Palo Alto |
+| DevOps / SRE | reflex@ / automation@ | Reflex | PagerDuty, OpsGenie, Slack war rooms |
+| Finance | julia@ / analysis@ | Brain | Cloudability, FinOps dashboards |
+| Sales & CS | nova@ / support@ | Nova | Zendesk, Salesforce Einstein |
+| Legal | identity@ | Identity | Contract review teams, Legal AI |
+| Research | research@ | Research | Research analysts, manual reports |
+| Threat Intel | probe@ / intelligence@ | Probe | Recorded Future, Shodan |
+
+### Client-Facing Identities (5)
+
+| Service | Email | Routes To | Purpose |
+|---------|-------|-----------|---------|
+| Analysis | analysis@medinatechlabs.net | Brain | Cost analysis, optimization |
+| Support | support@medinatechlabs.net | Nova | Customer queries, issues |
+| Automation | automation@medinatechlabs.net | Reflex | Workflow triggers |
+| Security | security@medinatechlabs.net | Membrane | Threat analysis |
+| Intelligence | intelligence@medinatechlabs.net | Probe | Threat briefings |
+
+### Enterprise Onboarding
+
+```bash
+# Step 1: Connect domain (MX → Cloudflare Email Routing)
+# Step 2: Create system identities
+curl -X POST https://emailai-mesh.medinatechlabs.net/enterprise/onboard \
+  -H "Content-Type: application/json" \
+  -d '{
+    "company_domain": "acme.com",
+    "contact_email": "admin@acme.com",
+    "systems": [
+      {"name": "CRM", "email": "crm@acme.com", "organ_target": "nova"},
+      {"name": "Monitoring", "email": "monitoring@acme.com", "organ_target": "membrane"},
+      {"name": "Billing", "email": "billing@acme.com", "organ_target": "brain"},
+      {"name": "Security", "email": "security@acme.com", "organ_target": "membrane"}
+    ]
+  }'
+```
+
+### Why This Beats Slack & Discord
+
+- **Federated** — works across companies
+- **System-native** — not human-centric
+- **Agent-native** — AI-first protocol
+- **Cross-company** — no shared workspace needed
+- **Zero-integration** — just email
+- **Zero-SDK** — no libraries needed
+- **Zero-API** — SMTP is the API
 
 ## Unified Inbox
 

@@ -175,3 +175,48 @@ INSERT OR IGNORE INTO identities (email, entity_type, name, domain, capabilities
     ('arbiter@medinatechlabs.net', 'bot', 'Arbiter', 'medinatechlabs.net', '["decide","arbitrate","enforce","resolve"]'),
     ('imperium@medinatechlabs.net', 'bot', 'Imperium', 'medinatechlabs.net', '["command","delegate","govern","authorize"]'),
     ('nuntius@medinatechlabs.net', 'bot', 'Nuntius', 'medinatechlabs.net', '["deliver","message","notify","dispatch"]');
+
+-- Client-Facing Identities (enterprises and clients email these)
+INSERT OR IGNORE INTO identities (email, entity_type, name, domain, capabilities) VALUES
+    ('analysis@medinatechlabs.net', 'organ', 'Analysis (Client-Facing)', 'medinatechlabs.net', '["analyze","report","predict","optimize"]'),
+    ('support@medinatechlabs.net', 'organ', 'Support (Client-Facing)', 'medinatechlabs.net', '["reply","resolve","escalate","summarize"]'),
+    ('automation@medinatechlabs.net', 'organ', 'Automation (Client-Facing)', 'medinatechlabs.net', '["automate","trigger","schedule","chain"]'),
+    ('security@medinatechlabs.net', 'organ', 'Security (Client-Facing)', 'medinatechlabs.net', '["scan","detect","report","defend"]'),
+    ('intelligence@medinatechlabs.net', 'organ', 'Intelligence (Client-Facing)', 'medinatechlabs.net', '["recon","fingerprint","track","brief"]');
+
+-- ═══════════════════════════════════════════════════════════════════════════════
+-- ENTERPRISE ONBOARDING — Client domain registrations
+-- ═══════════════════════════════════════════════════════════════════════════════
+
+CREATE TABLE IF NOT EXISTS enterprise_domains (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    domain TEXT UNIQUE NOT NULL,
+    company_name TEXT,
+    contact_email TEXT,
+    tier TEXT DEFAULT 'standard' CHECK (tier IN ('standard', 'pro', 'enterprise', 'sovereign')),
+    systems_count INTEGER DEFAULT 0,
+    active BOOLEAN DEFAULT TRUE,
+    onboarded_at TEXT DEFAULT (datetime('now')),
+    last_active_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_enterprise_domain ON enterprise_domains(domain);
+CREATE INDEX IF NOT EXISTS idx_enterprise_tier ON enterprise_domains(tier);
+
+CREATE TABLE IF NOT EXISTS system_identities (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    email TEXT UNIQUE NOT NULL,
+    enterprise_domain_id INTEGER REFERENCES enterprise_domains(id),
+    system_name TEXT NOT NULL,
+    organ_target TEXT,
+    system_type TEXT CHECK (system_type IN ('crm', 'erp', 'monitoring', 'security', 'hr', 'finance', 'support', 'billing', 'custom')),
+    capabilities TEXT,  -- JSON array
+    messages_sent INTEGER DEFAULT 0,
+    messages_received INTEGER DEFAULT 0,
+    registered_at TEXT DEFAULT (datetime('now')),
+    active BOOLEAN DEFAULT TRUE
+);
+
+CREATE INDEX IF NOT EXISTS idx_system_email ON system_identities(email);
+CREATE INDEX IF NOT EXISTS idx_system_enterprise ON system_identities(enterprise_domain_id);
+CREATE INDEX IF NOT EXISTS idx_system_organ ON system_identities(organ_target);
