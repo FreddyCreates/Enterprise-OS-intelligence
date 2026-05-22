@@ -1,0 +1,66 @@
+{
+  "mesh_version": "1.0.0",
+  "domain": "medinatechlabs.net",
+  "protocol": "EAP-1",
+  "organ_identities": [
+    {
+      "organ": "membrane",
+      "email": "membrane@medinatechlabs.net",
+      "purpose": "Probe alerts, routing decisions, edge defense",
+      "type": "organ",
+      "capabilities": ["alert", "route", "block", "escalate"]
+    },
+    {
+      "organ": "brain",
+      "email": "julia@medinatechlabs.net",
+      "purpose": "Analytics, φ-curves, predictions, classification",
+      "type": "organ",
+      "capabilities": ["classify", "predict", "analyze", "summarize"]
+    },
+    {
+      "organ": "identity",
+      "email": "identity@medinatechlabs.net",
+      "purpose": "SSN onboarding, staking, reputation management",
+      "type": "organ",
+      "capabilities": ["onboard", "stake", "verify", "audit"]
+    },
+    {
+      "organ": "reflex",
+      "email": "reflex@medinatechlabs.net",
+      "purpose": "Workflow summaries, event chains, automation",
+      "type": "organ",
+      "capabilities": ["trigger_workflow", "escalate", "chain", "schedule"]
+    },
+    {
+      "organ": "surfaces",
+      "email": "synthetic@medinatechlabs.net",
+      "purpose": "Deception logs, scanner intel, adversarial data",
+      "type": "organ",
+      "capabilities": ["deceive", "log", "fingerprint", "trap"]
+    },
+    {
+      "organ": "nova",
+      "email": "nova@medinatechlabs.net",
+      "purpose": "User-facing communication, public interface",
+      "type": "organ",
+      "capabilities": ["reply", "notify", "report", "communicate"]
+    },
+    {
+      "organ": "research",
+      "email": "research@medinatechlabs.net",
+      "purpose": "Reports, insights, knowledge generation",
+      "type": "organ",
+      "capabilities": ["report", "insight", "synthesize", "publish"]
+    },
+    {
+      "organ": "probe",
+      "email": "probe@medinatechlabs.net",
+      "purpose": "Scanner fingerprints, threat intel, reconnaissance",
+      "type": "organ",
+      "capabilities": ["fingerprint", "classify", "track", "alert"]
+    }
+  ],
+  "entity_types": ["human", "bot", "system", "organ", "agent"],
+  "intent_types": ["info", "request", "alert", "error", "task", "escalation", "summary"],
+  "urgency_levels": ["low", "medium", "high", "critical"]
+}
