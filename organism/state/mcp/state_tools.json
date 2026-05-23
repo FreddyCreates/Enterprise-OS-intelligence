@@ -1,0 +1,105 @@
+{
+  "organ": "state",
+  "version": "1.0.0",
+  "substrate": "icp-canisters+durable-objects",
+  "description": "State / Memory Organ — SSN state, probe fingerprints, policy tables, logs, metrics, Julia results",
+  "tools": [
+    {
+      "name": "state.get",
+      "description": "Retrieve state from the memory organ by key and namespace",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "namespace": { "type": "string", "enum": ["ssn", "probes", "policies", "julia_results", "metrics", "sessions"] },
+          "key": { "type": "string" },
+          "consistency": { "type": "string", "enum": ["strong", "eventual"], "default": "eventual" }
+        },
+        "required": ["namespace", "key"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "value": { "type": "object" },
+          "version": { "type": "number" },
+          "last_modified": { "type": "number" },
+          "substrate": { "type": "string", "enum": ["icp", "durable_object", "kv"] }
+        }
+      }
+    },
+    {
+      "name": "state.put",
+      "description": "Write state to the memory organ",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "namespace": { "type": "string", "enum": ["ssn", "probes", "policies", "julia_results", "metrics", "sessions"] },
+          "key": { "type": "string" },
+          "value": { "type": "object" },
+          "ttl_seconds": { "type": "number" },
+          "substrate_preference": { "type": "string", "enum": ["icp", "durable_object", "kv", "auto"], "default": "auto" }
+        },
+        "required": ["namespace", "key", "value"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "version": { "type": "number" },
+          "stored_at": { "type": "number" },
+          "substrate_used": { "type": "string" },
+          "replicated": { "type": "boolean" }
+        }
+      }
+    },
+    {
+      "name": "state.append_log",
+      "description": "Append an entry to an immutable log stream",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "log_stream": { "type": "string", "enum": ["probe_events", "identity_events", "policy_changes", "brain_computations", "workflow_events", "system_events"] },
+          "entry": { "type": "object" },
+          "severity": { "type": "string", "enum": ["debug", "info", "warn", "error", "critical"], "default": "info" }
+        },
+        "required": ["log_stream", "entry"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "log_id": { "type": "string" },
+          "sequence": { "type": "number" },
+          "timestamp": { "type": "number" }
+        }
+      }
+    },
+    {
+      "name": "state.query",
+      "description": "Query state across namespaces with filtering",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "namespace": { "type": "string" },
+          "filter": { "type": "object", "description": "Key-value filter predicates" },
+          "time_range": {
+            "type": "object",
+            "properties": {
+              "from": { "type": "number" },
+              "to": { "type": "number" }
+            }
+          },
+          "limit": { "type": "number", "default": 100 },
+          "order": { "type": "string", "enum": ["asc", "desc"], "default": "desc" }
+        },
+        "required": ["namespace"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "results": { "type": "array", "items": { "type": "object" } },
+          "total": { "type": "number" },
+          "has_more": { "type": "boolean" },
+          "cursor": { "type": "string" }
+        }
+      }
+    }
+  ]
+}

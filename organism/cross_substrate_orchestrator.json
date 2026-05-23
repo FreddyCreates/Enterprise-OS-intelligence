@@ -1,0 +1,97 @@
+{
+  "name": "cross_substrate_orchestrator",
+  "version": "1.0.0",
+  "description": "Cross-Substrate Computation Orchestrator — Routes MCP tool calls between Cloudflare, ICP, and Julia substrates",
+  "architecture": "door-4-five-organ",
+  "substrate_map": {
+    "cloudflare": {
+      "type": "edge-compute",
+      "role": ["membrane", "router", "compute-mesh", "firewall"],
+      "capabilities": ["workers", "durable-objects", "kv", "d1", "queues", "workflows", "r2", "ai"],
+      "organs": ["membrane", "reflex", "surfaces"]
+    },
+    "icp": {
+      "type": "autonomous-compute",
+      "role": ["identity", "state", "execution"],
+      "capabilities": ["canisters", "stable-memory", "http-outcalls", "timers", "cycles"],
+      "organs": ["identity", "state"]
+    },
+    "julia": {
+      "type": "numerical-intelligence",
+      "role": ["brain", "optimizer", "classifier", "reward-engine"],
+      "capabilities": ["linear-algebra", "optimization", "statistics", "wasm-compilation"],
+      "organs": ["brain"]
+    }
+  },
+  "cross_substrate_routes": [
+    {
+      "path": "cloudflare->julia",
+      "description": "Membrane invokes brain computations via WASM bridge",
+      "protocol": "function_card_invocation",
+      "tools": ["julia.compute", "julia.classify_probe", "julia.optimize_policy", "julia.reward_curve"]
+    },
+    {
+      "path": "julia->icp",
+      "description": "Brain writes computation results to ICP state",
+      "protocol": "candid_call",
+      "tools": ["state.put", "icp.ssn.reputation.update"]
+    },
+    {
+      "path": "icp->cloudflare",
+      "description": "Identity triggers membrane reflexes via http outcalls",
+      "protocol": "http_outcall",
+      "tools": ["membrane.route", "workflow.start", "workflow.emit_event"]
+    },
+    {
+      "path": "cloudflare->icp",
+      "description": "Membrane resolves identity and reads state directly",
+      "protocol": "agent_call",
+      "tools": ["icp.ssn.get", "icp.ssn.register", "state.get", "state.query"]
+    },
+    {
+      "path": "icp->julia",
+      "description": "Identity triggers policy optimization via brain",
+      "protocol": "function_card_invocation",
+      "tools": ["julia.optimize_policy", "julia.reward_curve"]
+    }
+  ],
+  "organ_registry": {
+    "membrane": {
+      "substrate": "cloudflare",
+      "worker": "organism-gateway",
+      "mcp_namespace": "membrane.*",
+      "manifest": "organism/membrane/mcp/membrane_tools.json"
+    },
+    "identity": {
+      "substrate": "icp",
+      "canister": "ssn_canister",
+      "mcp_namespace": "icp.ssn.* | icp.ssn_x.*",
+      "manifest": "organism/identity/mcp/identity_tools.json"
+    },
+    "brain": {
+      "substrate": "julia",
+      "bridge": "julia_motoko_bridge",
+      "mcp_namespace": "julia.*",
+      "manifest": "organism/brain/mcp/brain_tools.json",
+      "function_cards": "julia/ai/function_cards/"
+    },
+    "reflex": {
+      "substrate": "cloudflare",
+      "type": "workflows",
+      "mcp_namespace": "workflow.*",
+      "manifest": "organism/reflex/mcp/reflex_tools.json"
+    },
+    "state": {
+      "substrate": "icp+cloudflare",
+      "components": ["icp-canisters", "durable-objects", "kv"],
+      "mcp_namespace": "state.*",
+      "manifest": "organism/state/mcp/state_tools.json"
+    },
+    "surfaces": {
+      "substrate": "cloudflare",
+      "worker": "organism-surfaces",
+      "mcp_namespace": "surfaces.*",
+      "manifest": "organism/surfaces/mcp/surfaces_tools.json"
+    }
+  }
+}

@@ -1,0 +1,162 @@
+{
+  "name": "email_mesh",
+  "version": "1.0.0",
+  "description": "EmailAI Mesh — Sovereign multi-identity communication layer for organs, agents, and systems",
+  "tools": [
+    {
+      "name": "email.send",
+      "description": "Send email from an organ identity to any recipient",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "organ": {
+            "type": "string",
+            "description": "Source organ name (membrane, julia, identity, reflex, synthetic, intel, organism, state, nova)",
+            "enum": ["membrane", "julia", "identity", "reflex", "synthetic", "intel", "organism", "state", "nova"]
+          },
+          "to": {
+            "type": "string",
+            "description": "Recipient email address"
+          },
+          "subject": {
+            "type": "string",
+            "description": "Email subject line"
+          },
+          "body": {
+            "type": "string",
+            "description": "Email body content"
+          },
+          "priority": {
+            "type": "string",
+            "enum": ["high", "normal", "low"],
+            "default": "normal"
+          }
+        },
+        "required": ["organ", "to", "subject", "body"]
+      }
+    },
+    {
+      "name": "email.inter_organ",
+      "description": "Send inter-organ message (organ-to-organ communication via email protocol)",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "string",
+            "description": "Source organ name",
+            "enum": ["membrane", "julia", "identity", "reflex", "synthetic", "intel", "organism", "state", "nova"]
+          },
+          "target": {
+            "type": "string",
+            "description": "Target organ name",
+            "enum": ["membrane", "julia", "identity", "reflex", "synthetic", "intel", "organism", "state", "nova"]
+          },
+          "message": {
+            "type": "object",
+            "description": "Payload to send between organs",
+            "properties": {
+              "type": { "type": "string" },
+              "data": { "type": "object" }
+            },
+            "required": ["type"]
+          }
+        },
+        "required": ["source", "target", "message"]
+      }
+    },
+    {
+      "name": "email.classify",
+      "description": "Classify an inbound email (determine organ routing, priority, and action)",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "from": { "type": "string" },
+          "to": { "type": "string" },
+          "subject": { "type": "string" },
+          "body": { "type": "string" }
+        },
+        "required": ["from", "to", "subject"]
+      }
+    },
+    {
+      "name": "email.identities",
+      "description": "List all organ email identities in the mesh",
+      "inputSchema": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "email.inbox",
+      "description": "Get recent emails for a specific organ inbox",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "organ": {
+            "type": "string",
+            "enum": ["membrane", "julia", "identity", "reflex", "synthetic", "intel", "organism", "state", "nova"]
+          },
+          "limit": {
+            "type": "number",
+            "default": 20
+          }
+        },
+        "required": ["organ"]
+      }
+    },
+    {
+      "name": "email.probe_alert",
+      "description": "Send a probe alert email from membrane organ (triggered by probe detection)",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "probe_data": {
+            "type": "object",
+            "description": "Probe classification data from membrane",
+            "properties": {
+              "classification": { "type": "string" },
+              "toolchain": { "type": "string" },
+              "confidence": { "type": "number" },
+              "path": { "type": "string" },
+              "ip": { "type": "string" },
+              "asn": { "type": "number" },
+              "novelty_score": { "type": "number" }
+            }
+          },
+          "recipient": {
+            "type": "string",
+            "description": "Alert recipient (defaults to organism@medinatechlabs.net)"
+          }
+        },
+        "required": ["probe_data"]
+      }
+    },
+    {
+      "name": "email.onboard_system",
+      "description": "Onboard an external system into the EmailAI mesh (cross-company agent communication)",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "system_name": {
+            "type": "string",
+            "description": "Name of the external system"
+          },
+          "system_email": {
+            "type": "string",
+            "description": "Email address of the external system"
+          },
+          "system_type": {
+            "type": "string",
+            "enum": ["crm", "erp", "ai_agent", "bot", "monitoring", "security_scanner", "custom"]
+          },
+          "permissions": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Organs this system can communicate with"
+          }
+        },
+        "required": ["system_name", "system_email", "system_type"]
+      }
+    }
+  ]
+}

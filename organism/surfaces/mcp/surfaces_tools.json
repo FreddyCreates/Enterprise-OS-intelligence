@@ -1,0 +1,84 @@
+{
+  "organ": "surfaces",
+  "version": "1.0.0",
+  "substrate": "cloudflare-workers",
+  "description": "Synthetic Surfaces Organ — Honeypots, mazes, bot gyms, probe sandboxes",
+  "tools": [
+    {
+      "name": "surfaces.deploy_honeypot",
+      "description": "Deploy a synthetic honeypot surface tailored to a probe classification",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "template": { "type": "string", "enum": ["admin_panel", "api_endpoint", "login_form", "database_leak", "config_file", "git_repo"] },
+          "target_classification": { "type": "string" },
+          "intelligence_objectives": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "duration_hours": { "type": "number", "default": 24 }
+        },
+        "required": ["template", "target_classification"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "surface_id": { "type": "string" },
+          "endpoint": { "type": "string" },
+          "deployed_at": { "type": "number" },
+          "expires_at": { "type": "number" }
+        }
+      }
+    },
+    {
+      "name": "surfaces.create_maze",
+      "description": "Create an engagement maze to waste attacker time and extract intelligence",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "depth": { "type": "number", "minimum": 1, "maximum": 100, "description": "Number of maze steps" },
+          "complexity": { "type": "string", "enum": ["low", "medium", "high", "adaptive"] },
+          "bait_type": { "type": "string", "enum": ["credentials", "tokens", "configs", "source_code", "database_dumps"] },
+          "intelligence_hooks": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Points in the maze where we extract intelligence"
+          }
+        },
+        "required": ["depth", "complexity", "bait_type"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "maze_id": { "type": "string" },
+          "entry_point": { "type": "string" },
+          "estimated_engagement_minutes": { "type": "number" },
+          "hooks_placed": { "type": "number" }
+        }
+      }
+    },
+    {
+      "name": "surfaces.bot_gym_session",
+      "description": "Start a bot gym session for training defensive models against real probes",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "gym_type": { "type": "string", "enum": ["scanner_response", "credential_stuffing", "path_traversal", "sqli_defense", "xss_defense"] },
+          "difficulty": { "type": "string", "enum": ["easy", "medium", "hard", "adversarial"] },
+          "rounds": { "type": "number", "default": 10 },
+          "record_telemetry": { "type": "boolean", "default": true }
+        },
+        "required": ["gym_type"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "session_id": { "type": "string" },
+          "status": { "type": "string" },
+          "model_accuracy_before": { "type": "number" },
+          "model_accuracy_after": { "type": "number" }
+        }
+      }
+    }
+  ]
+}

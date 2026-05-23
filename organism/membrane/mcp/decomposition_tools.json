@@ -1,0 +1,136 @@
+{
+  "organ": "membrane",
+  "module": "decomposition",
+  "version": "1.0.0",
+  "description": "Probe Decomposition Engine — Extracts 5 intelligence categories from every recon scanner that touches the membrane",
+  "scanner_type": "Framework-Agnostic Recon Scanner (Multi-Framework Enumeration Bot)",
+  "intelligence_categories": {
+    "A": {
+      "name": "Attacker Capability",
+      "extracts": ["frameworks_targeted", "enumeration_depth", "enumeration_breadth", "skill_level", "capabilities"],
+      "reveals": "Whether it's a kiddie script, professional recon suite, or distributed recon mesh"
+    },
+    "B": {
+      "name": "Attacker Fingerprint",
+      "extracts": ["header_order", "tls_signature", "http_version", "asn_origin", "ua_spoofing", "concurrency_pattern"],
+      "reveals": "Unique signature per toolchain — deduplicate and track across sessions"
+    },
+    "C": {
+      "name": "Attacker Intent",
+      "extracts": ["primary_intent", "severity", "attack_class", "all_intents"],
+      "reveals": "Is it looking for RCE, misconfig, admin panels, secrets, or mapping tech stack"
+    },
+    "D": {
+      "name": "Attacker Toolchain",
+      "extracts": ["primary_tool", "version", "combo_tools", "configuration", "signature_strength"],
+      "reveals": "Nuclei, Nikto, WhatWeb, MassScan, Burp Suite, ZAP, RustScan, custom scripts"
+    },
+    "E": {
+      "name": "Attacker Scanning Graph",
+      "extracts": ["current_node", "decision_branch", "predicted_next_paths", "scanner_logic"],
+      "reveals": "The scanner's internal decision tree — you can literally map the scanner's brain"
+    }
+  },
+  "tools": [
+    {
+      "name": "membrane.decompose_probe",
+      "description": "Fully decompose a probe into 5 intelligence categories (capability, fingerprint, intent, toolchain, scanning graph)",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "request": {
+            "type": "object",
+            "properties": {
+              "path": { "type": "string" },
+              "method": { "type": "string" },
+              "headers": { "type": "object" },
+              "ip": { "type": "string" },
+              "cf": { "type": "object" }
+            },
+            "required": ["path", "method"]
+          }
+        },
+        "required": ["request"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "probe_id": { "type": "string" },
+          "capability": {
+            "type": "object",
+            "properties": {
+              "frameworks_targeted": { "type": "array", "items": { "type": "string" } },
+              "enumeration_depth": { "type": "number" },
+              "enumeration_breadth": { "type": "number" },
+              "skill_level": { "type": "string", "enum": ["script_kiddie", "professional_recon", "distributed_recon_mesh"] },
+              "is_professional": { "type": "boolean" }
+            }
+          },
+          "fingerprint": {
+            "type": "object",
+            "properties": {
+              "header_order": { "type": "array" },
+              "tls_version": { "type": "string" },
+              "http_version": { "type": "string" },
+              "asn": { "type": "number" },
+              "ua_spoofing": { "type": "object" },
+              "signature": { "type": "string" }
+            }
+          },
+          "intent": {
+            "type": "object",
+            "properties": {
+              "primary_intent": { "type": "string" },
+              "primary_severity": { "type": "string", "enum": ["critical", "high", "medium", "low"] },
+              "attack_class": { "type": "string" },
+              "intent_count": { "type": "number" }
+            }
+          },
+          "toolchain": {
+            "type": "object",
+            "properties": {
+              "primary_tool": { "type": "string" },
+              "version": { "type": "string" },
+              "combo": { "type": "array" },
+              "signature_strength": { "type": "number" }
+            }
+          },
+          "scanning_graph": {
+            "type": "object",
+            "properties": {
+              "current_node": { "type": "object" },
+              "path_category": { "type": "string" },
+              "decision_branch": { "type": "string" },
+              "expected_next_paths": { "type": "array" },
+              "scanner_logic": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "membrane.get_dossier",
+      "description": "Retrieve a previously stored probe decomposition dossier by probe ID",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "probe_id": { "type": "string" }
+        },
+        "required": ["probe_id"]
+      }
+    },
+    {
+      "name": "membrane.correlate_graph",
+      "description": "Correlate multiple probes from same IP to reconstruct full scanning graph (decision tree)",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "ip": { "type": "string" },
+          "time_window_minutes": { "type": "number", "default": 5 },
+          "include_predictions": { "type": "boolean", "default": true }
+        },
+        "required": ["ip"]
+      }
+    }
+  ]
+}

@@ -1,0 +1,95 @@
+{
+  "organ": "membrane",
+  "version": "1.0.0",
+  "substrate": "cloudflare-workers",
+  "description": "Membrane Gateway Organ — Edge routing, probe classification, policy enforcement",
+  "tools": [
+    {
+      "name": "membrane.route",
+      "description": "Route incoming request to appropriate organ based on classification",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "request": {
+            "type": "object",
+            "properties": {
+              "method": { "type": "string" },
+              "path": { "type": "string" },
+              "headers": { "type": "object" },
+              "ip": { "type": "string" }
+            },
+            "required": ["method", "path"]
+          },
+          "context": {
+            "type": "object",
+            "properties": {
+              "geo": { "type": "string" },
+              "asn": { "type": "number" },
+              "threat_score": { "type": "number" }
+            }
+          }
+        },
+        "required": ["request"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "destination": { "type": "string", "enum": ["brain", "identity", "reflex", "state", "surfaces", "static"] },
+          "worker": { "type": "string", "enum": ["gateway", "internal", "synthetic"] },
+          "confidence": { "type": "number" }
+        }
+      }
+    },
+    {
+      "name": "membrane.classify_probe",
+      "description": "Classify an incoming probe by intent, threat level, and fingerprint",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "request": { "type": "object" },
+          "fingerprint": {
+            "type": "object",
+            "properties": {
+              "ip": { "type": "string" },
+              "user_agent": { "type": "string" },
+              "tls_fingerprint": { "type": "string" },
+              "path_pattern": { "type": "string" }
+            }
+          }
+        },
+        "required": ["request", "fingerprint"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "classification": { "type": "string", "enum": ["benign", "scanner", "researcher", "attacker", "bot", "ai_agent"] },
+          "threat_level": { "type": "number", "minimum": 0, "maximum": 1 },
+          "intent": { "type": "string" },
+          "recommended_action": { "type": "string", "enum": ["allow", "challenge", "redirect_maze", "honeypot", "block"] }
+        }
+      }
+    },
+    {
+      "name": "membrane.apply_policy",
+      "description": "Apply an edge policy to a classified request",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "classification": { "type": "string" },
+          "policy_id": { "type": "string" },
+          "override": { "type": "boolean" }
+        },
+        "required": ["classification", "policy_id"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "action": { "type": "string" },
+          "response_code": { "type": "number" },
+          "headers": { "type": "object" },
+          "body_transform": { "type": "string" }
+        }
+      }
+    }
+  ]
+}

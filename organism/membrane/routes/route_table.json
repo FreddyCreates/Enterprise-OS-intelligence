@@ -1,0 +1,81 @@
+{
+  "version": "1.0.0",
+  "routes": [
+    {
+      "pattern": "/api/identity/*",
+      "destination": "identity",
+      "worker": "internal",
+      "tools": ["icp.ssn.register", "icp.ssn.get", "icp.ssn.stake", "icp.ssn_x.mint", "icp.ssn_x.balance"]
+    },
+    {
+      "pattern": "/api/brain/*",
+      "destination": "brain",
+      "worker": "internal",
+      "tools": ["julia.compute", "julia.classify_probe", "julia.optimize_policy", "julia.reward_curve"]
+    },
+    {
+      "pattern": "/api/state/*",
+      "destination": "state",
+      "worker": "internal",
+      "tools": ["state.get", "state.put", "state.append_log", "state.query"]
+    },
+    {
+      "pattern": "/api/workflow/*",
+      "destination": "reflex",
+      "worker": "internal",
+      "tools": ["workflow.start", "workflow.update_step", "workflow.emit_event"]
+    },
+    {
+      "pattern": "/api/surfaces/*",
+      "destination": "surfaces",
+      "worker": "synthetic",
+      "tools": ["surfaces.deploy_honeypot", "surfaces.create_maze", "surfaces.bot_gym_session"]
+    },
+    {
+      "pattern": "/wp-*",
+      "destination": "surfaces",
+      "worker": "synthetic",
+      "classification": "scanner_bait"
+    },
+    {
+      "pattern": "/.env",
+      "destination": "surfaces",
+      "worker": "synthetic",
+      "classification": "scanner_bait"
+    },
+    {
+      "pattern": "/.git/*",
+      "destination": "surfaces",
+      "worker": "synthetic",
+      "classification": "scanner_bait"
+    },
+    {
+      "pattern": "/phpmyadmin*",
+      "destination": "surfaces",
+      "worker": "synthetic",
+      "classification": "scanner_bait"
+    },
+    {
+      "pattern": "/actuator/*",
+      "destination": "surfaces",
+      "worker": "synthetic",
+      "classification": "scanner_bait"
+    },
+    {
+      "pattern": "/health",
+      "destination": "self",
+      "worker": "gateway"
+    },
+    {
+      "pattern": "/status",
+      "destination": "self",
+      "worker": "gateway"
+    },
+    {
+      "pattern": "/*",
+      "destination": "default",
+      "worker": "gateway",
+      "fallback": true
+    }
+  ]
+}

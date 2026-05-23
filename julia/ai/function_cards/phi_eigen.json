@@ -1,0 +1,9 @@
+{
+  "name": "linalg.eigen",
+  "julia": "eigen(A::Matrix{Float64})",
+  "motoko": "linalg_eigen(A: [[Float]]) : async ([Float], [[Float]])",
+  "candid": "linalg_eigen : (vec vec float64) -> (record { eigenvalues: vec float64; eigenvectors: vec vec float64 })",
+  "deterministic": true,
+  "canister_safe": true,
+  "round_trip_tested": true
+}
