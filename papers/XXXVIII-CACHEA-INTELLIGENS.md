@@ -111,18 +111,7 @@ When Cloudflare sees a "cache hit," the organism sees a cognition cycle.
 ### 4.1 Persistent State
 
 ```javascript
-const ORGANISM_STATE_KEY = 'organism:state';
-
-class OrganismState {
-  constructor() {
-    this.bootTime = Date.now();
-    this.cycleCount = 0;
-    this.lastHeartbeat = Date.now();
-    this.learnedPatterns = new Map();
-    this.visitorProfiles = new Map();
-    this.responseCache = new Map();
-  }
-}
+[IMPLEMENTATION REDACTED — see ORO SDK]
 ```
 
 State persists in KV, surviving across requests and Worker invocations.
@@ -130,17 +119,7 @@ State persists in KV, surviving across requests and Worker invocations.
 ### 4.2 Pattern Learning
 
 ```javascript
-async function learnFromVisitor(env, classification, request) {
-  const patternKey = `pattern:${country}:${type}`;
-  const existing = await env.ORGANISM_MEMORY.get(patternKey, 'json');
-  
-  await env.ORGANISM_MEMORY.put(patternKey, JSON.stringify({
-    count: existing.count + 1,
-    lastSeen: new Date().toISOString(),
-    type: classification.type,
-    country: country,
-  }), { expirationTtl: 86400 * 7 });
-}
+[IMPLEMENTATION REDACTED — see ORO SDK]
 ```
 
 The organism learns traffic patterns and stores them in the cache layer.
@@ -148,13 +127,7 @@ The organism learns traffic patterns and stores them in the cache layer.
 ### 4.3 Visitor Profiling
 
 ```javascript
-const visitorProfile = {
-  firstSeen: new Date().toISOString(),
-  visits: 0,
-  types: [],      // Classification history
-  paths: [],      // Accessed paths
-  lastSeen: null,
-};
+[IMPLEMENTATION REDACTED — see ORO SDK]
 ```
 
 Behavioral profiles build over time, enabling adaptive responses.
@@ -162,22 +135,7 @@ Behavioral profiles build over time, enabling adaptive responses.
 ### 4.4 Cached Intelligent Responses
 
 ```javascript
-async function generateOrganismResponse(env, classification, request) {
-  const cacheKey = `response:${classification.type}:${path}`;
-  const cached = await env.ORGANISM_MEMORY.get(cacheKey, 'json');
-  
-  if (cached) {
-    // Cache hit! Organism responded from memory
-    return new Response(cached.response, {
-      headers: { 'X-Organism-Cache': 'HIT' }
-    });
-  }
-  
-  // Generate new response and cache it
-  const response = generateResponseForType(classification);
-  await env.ORGANISM_MEMORY.put(cacheKey, JSON.stringify(response));
-  return response;
-}
+[IMPLEMENTATION REDACTED — see ORO SDK]
 ```
 
 "Dynamic" responses are generated once and cached, making subsequent requests essentially free.
@@ -264,9 +222,7 @@ The organism's cycles are NOT the same as Cloudflare compute. We are decoupling 
 The cache organism integrates with the broader RSHIP φ-resonance framework:
 
 ```javascript
-const PHI = 1.618033988749895;
-const PHI_INV = 0.618033988749895;
-const HEARTBEAT_MS = 873;  // Sovereign heartbeat
+[IMPLEMENTATION REDACTED — see ORO SDK]
 ```
 
 State transitions follow φ-weighted timing, and pattern confidence scores use PHI_INV as the coherence threshold.
