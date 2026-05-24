@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EmailAI Mesh Dashboard — Sovereign Email Intelligence</title>
+    <meta name="description" content="Monitor and manage your sovereign email intelligence layer. Real-time inbox, identities, analytics, and enterprise integrations.">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📧</text></svg>">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'midnight': '#0a0a0f',
+                        'deep-purple': '#1a0a2e',
+                        'cyber-blue': '#00d4ff',
+                        'matrix-green': '#00ff41',
+                        'warning-red': '#ff3366',
+                        'sovereign-purple': '#8b5cf6',
+                        'gold': '#FFD700',
+                        'gold-dark': '#B8860B'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        :root { --phi: 1.618033988749895; }
+        body { font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.618; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #0a0a0f; }
+        ::-webkit-scrollbar-thumb { background: rgba(139, 92, 246, 0.4); border-radius: 9999px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(139, 92, 246, 0.6); }
+        .glass { background: rgba(255,255,255,0.05); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); }
+        .glass-dark { background: rgba(0,0,0,0.4); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.05); }
+        .text-gradient { background: linear-gradient(135deg, #fff 0%, #00d4ff 50%, #8b5cf6 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .glow-purple { box-shadow: 0 0 20px rgba(139, 92, 246, 0.3); }
+        .mesh-grid { background-image: linear-gradient(rgba(139, 92, 246, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(139, 92, 246, 0.03) 1px, transparent 1px); background-size: 50px 50px; animation: mesh-pulse 8s ease-in-out infinite; }
+        @keyframes mesh-pulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 0.6; } }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        .animate-spin { animation: spin 1s linear infinite; }
+        .animate-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
+        [x-cloak] { display: none !important; }
+    </style>
+</head>
+<body class="bg-midnight text-gray-200 min-h-screen">
+    <!-- Mesh Grid Background -->
+    <div class="mesh-grid fixed inset-0 pointer-events-none"></div>
+    
+    <!-- Alpine.js for reactivity -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    <!-- Main App Container -->
+    <div x-data="emailAIMesh()" x-init="init()" class="flex min-h-screen relative">
+        
+        <!-- Sidebar -->
+        <aside class="glass-dark w-72 flex flex-col h-screen sticky top-0" :class="{ 'w-20': !sidebarOpen }">
+            <!-- Logo -->
+            <div class="p-4 border-b border-white/5">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-sovereign-purple to-cyber-blue flex items-center justify-center text-xl">📧</div>
+                    <div x-show="sidebarOpen" x-transition>
+                        <h1 class="font-bold text-white">EmailAI Mesh</h1>
+                        <p class="text-xs text-gray-500">Sovereign Intelligence</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Status -->
+            <div x-show="sidebarOpen && health" class="px-4 py-3 border-b border-white/5">
+                <div class="flex items-center gap-2">
+                    <div class="w-2 h-2 rounded-full animate-pulse" :class="health?.status === 'operational' ? 'bg-matrix-green' : 'bg-warning-red'"></div>
+                    <span class="text-xs text-gray-400" x-text="health?.status === 'operational' ? 'Mesh Operational' : 'Mesh Degraded'"></span>
+                    <span class="text-xs text-gray-600 ml-auto" x-text="health?.organs + ' organs'"></span>
+                </div>
+            </div>
+            
+            <!-- Navigation -->
+            <nav class="flex-1 overflow-y-auto p-2">
+                <div class="space-y-1">
+                    <template x-for="item in navItems" :key="item.id">
+                        <button 
+                            class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 transition-all duration-200 hover:bg-white/5 hover:text-white cursor-pointer"
+                            :class="{ 'bg-sovereign-purple/20 text-sovereign-purple border-l-2 border-sovereign-purple': activeTab === item.id }"
+                            @click="activeTab = item.id"
+                        >
+                            <span class="text-xl" x-text="item.icon"></span>
+                            <div x-show="sidebarOpen" class="flex-1 text-left">
+                                <div class="font-medium" x-text="item.label"></div>
+                                <div class="text-xs text-gray-500" x-text="item.description"></div>
+                            </div>
+                        </button>
+                    </template>
+                </div>
+                
+                <!-- Organ Quick Access -->
+                <div x-show="sidebarOpen && identities.length > 0" class="mt-6">
+                    <div class="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Organs</div>
+                    <div class="space-y-1">
+                        <button 
+                            class="w-full flex items-center gap-3 px-4 py-2 rounded-lg text-gray-400 transition-all hover:bg-white/5 hover:text-white"
+                            :class="{ 'bg-sovereign-purple/20 text-sovereign-purple': !selectedOrgan && activeTab === 'inbox' }"
+                            @click="selectedOrgan = null; activeTab = 'inbox'"
+                        >
+                            <span class="text-sm">📬</span>
+                            <span x-show="sidebarOpen" class="flex-1 text-left text-sm">All Organs</span>
+                        </button>
+                        <template x-for="identity in identities.slice(0, 8)" :key="identity.email">
+                            <button 
+                                class="w-full flex items-center gap-3 px-4 py-2 rounded-lg text-gray-400 transition-all hover:bg-white/5 hover:text-white"
+                                :class="{ 'bg-sovereign-purple/20 text-sovereign-purple': selectedOrgan === identity.organ }"
+                                @click="selectedOrgan = identity.organ; activeTab = 'inbox'"
+                            >
+                                <span class="text-sm" :class="getTypeColor(identity.type)">●</span>
+                                <span x-show="sidebarOpen" class="flex-1 text-left text-sm truncate" x-text="identity.organ"></span>
+                            </button>
+                        </template>
+                    </div>
+                </div>
+            </nav>
+            
+            <!-- Collapse Button -->
+            <div class="p-4 border-t border-white/5">
+                <button class="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-gray-400 hover:bg-white/5 hover:text-white" @click="sidebarOpen = !sidebarOpen">
+                    <span class="text-lg" x-text="sidebarOpen ? '◀' : '▶'"></span>
+                    <span x-show="sidebarOpen" class="text-sm">Collapse</span>
+                </button>
+            </div>
+        </aside>
+        
+        <!-- Main Content Area -->
+        <div class="flex-1 flex flex-col min-h-screen">
+            <!-- Header -->
+            <header class="glass-dark border-b border-white/5 px-6 py-4 sticky top-0 z-10">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-xl font-bold text-gradient" x-text="getTabTitle()"></h2>
+                        <p class="text-sm text-gray-500">
+                            <span x-show="health">Protocol: EAP-1 · Version: <span x-text="health?.version"></span> · φ = <span x-text="health?.phi?.toFixed(6)"></span></span>
+                            <span x-show="!health">Connecting to mesh...</span>
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <div x-show="error" class="px-3 py-1 rounded-full bg-warning-red/20 text-warning-red text-sm animate-pulse" x-text="'⚠️ ' + error"></div>
+                        <div x-show="loading" class="flex items-center gap-2 text-gray-400">
+                            <div class="w-4 h-4 border-2 border-sovereign-purple/30 border-t-sovereign-purple rounded-full animate-spin"></div>
+                            <span class="text-sm">Loading...</span>
+                        </div>
+                        <button class="glass px-4 py-2 rounded-lg text-gray-200 hover:bg-white/10 transition-all flex items-center gap-2" @click="refresh()">
+                            <span :class="{ 'animate-spin': loading }">🔄</span> Refresh
+                        </button>
+                        <div x-show="health" class="flex items-center gap-2 px-3 py-1.5 rounded-lg" :class="health?.status === 'operational' ? 'bg-matrix-green/10 border border-matrix-green/30' : 'bg-warning-red/10 border border-warning-red/30'">
+                            <div class="w-2 h-2 rounded-full" :class="health?.status === 'operational' ? 'bg-matrix-green' : 'bg-warning-red'"></div>
+                            <span class="text-sm font-medium" :class="health?.status === 'operational' ? 'text-matrix-green' : 'text-warning-red'" x-text="health?.status === 'operational' ? 'Operational' : 'Degraded'"></span>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            
+            <!-- Main Content -->
+            <main class="flex-1 overflow-auto p-6">
+                
+                <!-- Inbox Tab -->
+                <div x-show="activeTab === 'inbox'" x-transition>
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <!-- Message List -->
+                        <div class="lg:col-span-2 space-y-4">
+                            <!-- Filter Bar -->
+                            <div class="glass rounded-xl p-4 flex items-center gap-4">
+                                <input type="text" placeholder="Search messages..." class="flex-1 px-4 py-2 rounded-lg glass text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-sovereign-purple/50" x-model="searchQuery">
+                                <select class="px-4 py-2 rounded-lg glass text-gray-200 focus:outline-none focus:ring-2 focus:ring-sovereign-purple/50" x-model="filterIntent">
+                                    <option value="">All Intents</option>
+                                    <option value="alert">🚨 Alerts</option>
+                                    <option value="task">✅ Tasks</option>
+                                    <option value="request">📋 Requests</option>
+                                    <option value="error">❌ Errors</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Loading State -->
+                            <div x-show="loading" class="glass rounded-xl p-12 text-center">
+                                <div class="w-12 h-12 border-4 border-sovereign-purple/30 border-t-sovereign-purple rounded-full animate-spin mx-auto mb-4"></div>
+                                <p class="text-gray-400">Loading messages...</p>
+                            </div>
+                            
+                            <!-- Empty State -->
+                            <div x-show="!loading && filteredMessages.length === 0" class="glass rounded-xl p-12 text-center">
+                                <div class="text-6xl mb-4">📭</div>
+                                <h3 class="text-xl font-bold text-white mb-2">No Messages</h3>
+                                <p class="text-gray-400" x-text="selectedOrgan ? 'No messages for ' + selectedOrgan + ' yet.' : 'The unified inbox is empty.'"></p>
+                            </div>
+                            
+                            <!-- Messages -->
+                            <div x-show="!loading && filteredMessages.length > 0" class="space-y-2">
+                                <template x-for="message in filteredMessages" :key="message.id">
+                                    <button 
+                                        class="glass rounded-xl p-4 w-full text-left transition-all duration-200 hover:border-sovereign-purple/50"
+                                        :class="{ 'border-sovereign-purple glow-purple': selectedMessage?.id === message.id }"
+                                        @click="selectedMessage = selectedMessage?.id === message.id ? null : message"
+                                    >
+                                        <div class="flex items-start gap-4">
+                                            <div class="text-2xl mt-1" x-text="getIntentIcon(message.intent)"></div>
+                                            <div class="flex-1 min-w-0">
+                                                <div class="flex items-center gap-2 mb-1">
+                                                    <span class="font-medium text-white truncate" x-text="message.sender"></span>
+                                                    <span class="text-xs text-gray-500">→</span>
+                                                    <span class="text-sm text-gray-400 truncate" x-text="message.recipient"></span>
+                                                </div>
+                                                <h4 class="font-semibold text-white truncate mb-1" x-text="message.subject || '(no subject)'"></h4>
+                                                <p class="text-sm text-gray-400 line-clamp-2" x-text="message.body?.substring(0, 150) + '...'"></p>
+                                            </div>
+                                            <div class="flex flex-col items-end gap-2 shrink-0">
+                                                <span class="text-xs text-gray-500" x-text="formatDate(message.received_at)"></span>
+                                                <div class="flex gap-1">
+                                                    <span class="px-2 py-0.5 rounded-full text-xs font-medium" :class="getEntityBadge(message.entity_type)" x-text="message.entity_type"></span>
+                                                    <span class="px-2 py-0.5 rounded-full text-xs font-medium" :class="getUrgencyBadge(message.urgency)" x-text="message.urgency"></span>
+                                                </div>
+                                                <div class="flex items-center gap-1 text-xs text-gray-500">
+                                                    <span x-text="(message.confidence * 100).toFixed(0) + '% conf'"></span>
+                                                    <span>→</span>
+                                                    <span class="text-sovereign-purple" x-text="message.organ_target"></span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </button>
+                                </template>
+                            </div>
+                        </div>
+                        
+                        <!-- Detail Panel -->
+                        <div class="space-y-4">
+                            <div x-show="selectedMessage" x-transition class="glass rounded-xl p-6">
+                                <h3 class="text-lg font-bold text-white mb-4">Message Details</h3>
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="text-xs text-gray-500 uppercase tracking-wider">Subject</label>
+                                        <p class="text-white" x-text="selectedMessage?.subject || '(no subject)'"></p>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="text-xs text-gray-500 uppercase tracking-wider">From</label>
+                                            <p class="text-white truncate" x-text="selectedMessage?.sender"></p>
+                                        </div>
+                                        <div>
+                                            <label class="text-xs text-gray-500 uppercase tracking-wider">To</label>
+                                            <p class="text-white truncate" x-text="selectedMessage?.recipient"></p>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="text-xs text-gray-500 uppercase tracking-wider">Body</label>
+                                        <div class="mt-1 p-3 rounded-lg bg-black/30 text-sm text-gray-300 max-h-48 overflow-y-auto" x-text="selectedMessage?.body || '(no body)'"></div>
+                                    </div>
+                                    <hr class="border-white/10">
+                                    <h4 class="font-semibold text-white">Classification</h4>
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label class="text-xs text-gray-500">Intent</label>
+                                            <p class="flex items-center gap-2">
+                                                <span x-text="getIntentIcon(selectedMessage?.intent)"></span>
+                                                <span class="text-white capitalize" x-text="selectedMessage?.intent"></span>
+                                            </p>
+                                        </div>
+                                        <div>
+                                            <label class="text-xs text-gray-500">Confidence</label>
+                                            <p class="text-white" x-text="(selectedMessage?.confidence * 100).toFixed(1) + '%'"></p>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="text-xs text-gray-500">Routed To</label>
+                                        <p class="text-sovereign-purple font-medium" x-text="selectedMessage?.organ_target"></p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div x-show="!selectedMessage" class="glass rounded-xl p-12 text-center">
+                                <div class="text-4xl mb-4">👆</div>
+                                <h3 class="font-semibold text-white mb-2">Select a Message</h3>
+                                <p class="text-sm text-gray-400">Click a message to view details</p>
+                            </div>
+                            
+                            <!-- Quick Stats -->
+                            <div class="glass rounded-xl p-4">
+                                <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Quick Stats</h3>
+                                <div class="space-y-2">
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-400">Total Messages</span>
+                                        <span class="text-white font-medium" x-text="filteredMessages.length"></span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-400">Critical</span>
+                                        <span class="text-warning-red font-medium" x-text="filteredMessages.filter(m => m.urgency === 'critical').length"></span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-400">Alerts</span>
+                                        <span class="text-orange-400 font-medium" x-text="filteredMessages.filter(m => m.intent === 'alert').length"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Identities Tab -->
+                <div x-show="activeTab === 'identities'" x-transition>
+                    <div class="space-y-6">
+                        <!-- Type Filter Cards -->
+                        <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                            <template x-for="[type, count] in Object.entries(organsByType)" :key="type">
+                                <button 
+                                    class="glass rounded-xl p-4 text-center transition-all duration-200"
+                                    :class="{ 'ring-2 ring-sovereign-purple': filterType === type }"
+                                    @click="filterType = filterType === type ? '' : type"
+                                >
+                                    <div class="text-3xl mb-2" x-text="getTypeIcon(type)"></div>
+                                    <div class="text-2xl font-bold" :class="getTypeColor(type)" x-text="count"></div>
+                                    <div class="text-sm text-gray-400 capitalize" x-text="type"></div>
+                                </button>
+                            </template>
+                        </div>
+                        
+                        <!-- Identities Grid -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <template x-for="identity in filteredIdentities" :key="identity.email">
+                                <div class="glass rounded-xl p-4 transition-all duration-200 hover:border-sovereign-purple/50">
+                                    <div class="flex items-start gap-4">
+                                        <div class="w-12 h-12 rounded-xl flex items-center justify-center text-2xl" :class="getTypeBg(identity.type)">
+                                            <span x-text="getTypeIcon(identity.type)"></span>
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <h3 class="font-bold text-white capitalize" x-text="identity.organ"></h3>
+                                            <p class="text-sm text-gray-400 truncate" x-text="identity.email"></p>
+                                            <div class="flex items-center gap-2 mt-2">
+                                                <span class="px-2 py-0.5 rounded-full text-xs font-medium" :class="getTypeBadge(identity.type)" x-text="identity.type"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="mt-4 pt-4 border-t border-white/10">
+                                        <h4 class="text-sm font-semibold text-gray-400 mb-2">Capabilities</h4>
+                                        <div class="flex flex-wrap gap-1">
+                                            <template x-for="cap in identity.capabilities" :key="cap">
+                                                <span class="px-2 py-0.5 rounded-full text-xs bg-white/5 text-gray-300 border border-white/10" x-text="cap"></span>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Stats Tab -->
+                <div x-show="activeTab === 'stats'" x-transition>
+                    <div class="space-y-6">
+                        <!-- Overview Cards -->
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <div class="glass rounded-xl p-6">
+                                <div class="text-4xl mb-2">📬</div>
+                                <div class="text-3xl font-bold text-gradient" x-text="stats?.total_messages?.toLocaleString() || '0'"></div>
+                                <div class="text-gray-400">Total Messages</div>
+                            </div>
+                            <div class="glass rounded-xl p-6">
+                                <div class="text-4xl mb-2">🧬</div>
+                                <div class="text-3xl font-bold text-sovereign-purple" x-text="health?.organs || 0"></div>
+                                <div class="text-gray-400">Active Organs</div>
+                            </div>
+                            <div class="glass rounded-xl p-6">
+                                <div class="text-4xl mb-2">🚨</div>
+                                <div class="text-3xl font-bold text-warning-red" x-text="stats?.by_intent?.find(i => i.intent === 'alert')?.count || 0"></div>
+                                <div class="text-gray-400">Active Alerts</div>
+                            </div>
+                            <div class="glass rounded-xl p-6">
+                                <div class="text-4xl mb-2">✅</div>
+                                <div class="text-3xl font-bold text-matrix-green" x-text="stats?.by_intent?.find(i => i.intent === 'task')?.count || 0"></div>
+                                <div class="text-gray-400">Pending Tasks</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Charts Row -->
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <!-- By Organ -->
+                            <div class="glass rounded-xl p-6">
+                                <h3 class="text-lg font-bold text-white mb-4">Messages by Organ</h3>
+                                <div class="space-y-3">
+                                    <template x-for="(item, i) in (stats?.by_organ || []).slice(0, 8)" :key="item.organ_target">
+                                        <div>
+                                            <div class="flex justify-between text-sm mb-1">
+                                                <span class="text-gray-300 capitalize" x-text="item.organ_target"></span>
+                                                <span class="text-gray-400" x-text="item.count"></span>
+                                            </div>
+                                            <div class="h-2 bg-white/5 rounded-full overflow-hidden">
+                                                <div class="h-full bg-gradient-to-r from-sovereign-purple to-cyber-blue transition-all duration-500" :style="`width: ${stats?.total_messages > 0 ? (item.count / stats.total_messages) * 100 : 0}%`"></div>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                            
+                            <!-- By Intent -->
+                            <div class="glass rounded-xl p-6">
+                                <h3 class="text-lg font-bold text-white mb-4">Messages by Intent</h3>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <template x-for="item in (stats?.by_intent || [])" :key="item.intent">
+                                        <div class="p-4 rounded-lg bg-white/5">
+                                            <div class="flex items-center gap-2 mb-2">
+                                                <span class="text-2xl" x-text="getIntentIcon(item.intent)"></span>
+                                                <span class="text-gray-300 capitalize" x-text="item.intent"></span>
+                                            </div>
+                                            <div class="text-2xl font-bold text-white" x-text="item.count"></div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- System Health -->
+                        <div class="glass rounded-xl p-6">
+                            <h3 class="text-lg font-bold text-white mb-4">System Health</h3>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                <div class="text-center p-4 rounded-lg bg-white/5">
+                                    <div class="text-2xl mb-2">🔌</div>
+                                    <div class="text-sm text-gray-400">Protocol</div>
+                                    <div class="text-white font-medium" x-text="health?.protocol || 'N/A'"></div>
+                                </div>
+                                <div class="text-center p-4 rounded-lg bg-white/5">
+                                    <div class="text-2xl mb-2">📦</div>
+                                    <div class="text-sm text-gray-400">Version</div>
+                                    <div class="text-white font-medium" x-text="health?.version || 'N/A'"></div>
+                                </div>
+                                <div class="text-center p-4 rounded-lg bg-white/5">
+                                    <div class="text-2xl mb-2">🧬</div>
+                                    <div class="text-sm text-gray-400">Status</div>
+                                    <div class="text-matrix-green font-medium capitalize" x-text="health?.status || 'N/A'"></div>
+                                </div>
+                                <div class="text-center p-4 rounded-lg bg-white/5">
+                                    <div class="text-2xl mb-2">φ</div>
+                                    <div class="text-sm text-gray-400">Golden Ratio</div>
+                                    <div class="text-gold font-medium" x-text="health?.phi?.toFixed(6) || 'N/A'"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Enterprise Tab -->
+                <div x-show="activeTab === 'enterprise'" x-transition>
+                    <div class="space-y-6">
+                        <!-- Section Tabs -->
+                        <div class="glass rounded-xl p-4">
+                            <div class="flex gap-2 flex-wrap">
+                                <button class="px-4 py-2 rounded-lg font-medium transition-all duration-200" :class="enterpriseSection === 'overview' ? 'bg-sovereign-purple text-white' : 'glass text-gray-200 hover:bg-white/10'" @click="enterpriseSection = 'overview'">📋 Overview</button>
+                                <button class="px-4 py-2 rounded-lg font-medium transition-all duration-200" :class="enterpriseSection === 'use-cases' ? 'bg-sovereign-purple text-white' : 'glass text-gray-200 hover:bg-white/10'" @click="enterpriseSection = 'use-cases'">🎯 Use Cases</button>
+                                <button class="px-4 py-2 rounded-lg font-medium transition-all duration-200" :class="enterpriseSection === 'onboard' ? 'bg-sovereign-purple text-white' : 'glass text-gray-200 hover:bg-white/10'" @click="enterpriseSection = 'onboard'">🚀 Onboard</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Overview -->
+                        <div x-show="enterpriseSection === 'overview'" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <div class="glass rounded-xl p-6">
+                                <h3 class="text-xl font-bold text-gradient mb-4">Why EmailAI Mesh?</h3>
+                                <ul class="space-y-3 text-gray-300">
+                                    <li class="flex items-start gap-3"><span class="text-matrix-green">✓</span><span><strong>Federated</strong> — Works across companies</span></li>
+                                    <li class="flex items-start gap-3"><span class="text-matrix-green">✓</span><span><strong>System-Native</strong> — Built for machines</span></li>
+                                    <li class="flex items-start gap-3"><span class="text-matrix-green">✓</span><span><strong>Agent-Native</strong> — AI-first protocol (EAP-1)</span></li>
+                                    <li class="flex items-start gap-3"><span class="text-matrix-green">✓</span><span><strong>Zero Integration</strong> — Just email</span></li>
+                                </ul>
+                            </div>
+                            <div class="glass rounded-xl p-6">
+                                <h3 class="text-xl font-bold text-gold mb-4">What It Replaces</h3>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <template x-for="tool in ['Slack', 'Zendesk', 'PagerDuty', 'Splunk', 'Salesforce', 'CrowdStrike']" :key="tool">
+                                        <div class="p-3 rounded-lg bg-warning-red/10 border border-warning-red/20">
+                                            <span class="text-warning-red line-through" x-text="tool"></span>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Use Cases -->
+                        <div x-show="enterpriseSection === 'use-cases'" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <template x-for="[organ, useCase] in Object.entries(useCases?.use_cases || {})" :key="organ">
+                                <div class="glass rounded-xl p-6 hover:border-sovereign-purple/50 transition-all">
+                                    <div class="flex items-start gap-4 mb-4">
+                                        <div class="text-4xl" x-text="getUseCaseIcon(useCase.domain)"></div>
+                                        <div>
+                                            <h3 class="text-xl font-bold text-white" x-text="useCase.domain"></h3>
+                                            <p class="text-sm text-sovereign-purple" x-text="useCase.email"></p>
+                                        </div>
+                                    </div>
+                                    <div class="mb-4">
+                                        <h4 class="text-sm font-semibold text-gray-400 mb-2">Capabilities</h4>
+                                        <div class="flex flex-wrap gap-1">
+                                            <template x-for="cap in useCase.capabilities" :key="cap">
+                                                <span class="px-2 py-0.5 rounded-full text-xs bg-sovereign-purple/20 text-sovereign-purple border border-sovereign-purple/30" x-text="cap"></span>
+                                            </template>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h4 class="text-sm font-semibold text-gray-400 mb-2">Replaces</h4>
+                                        <div class="flex flex-wrap gap-1">
+                                            <template x-for="tool in useCase.replaces" :key="tool">
+                                                <span class="px-2 py-0.5 rounded-full text-xs bg-warning-red/10 text-warning-red border border-warning-red/30" x-text="tool"></span>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                        
+                        <!-- Onboard Form -->
+                        <div x-show="enterpriseSection === 'onboard'" class="glass rounded-xl p-6 max-w-2xl mx-auto">
+                            <h3 class="text-xl font-bold text-gradient mb-6">🚀 Onboard Your Company</h3>
+                            <form @submit.prevent="handleOnboard()" class="space-y-6">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Company Domain *</label>
+                                    <input type="text" class="w-full px-4 py-2 rounded-lg glass text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-sovereign-purple/50" placeholder="acme.com" x-model="onboardForm.domain">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Contact Email</label>
+                                    <input type="email" class="w-full px-4 py-2 rounded-lg glass text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-sovereign-purple/50" placeholder="admin@acme.com" x-model="onboardForm.email">
+                                </div>
+                                <button type="submit" class="w-full px-4 py-3 rounded-lg bg-sovereign-purple text-white font-medium hover:bg-sovereign-purple/80 transition-all">🚀 Onboard Company</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Compose Tab -->
+                <div x-show="activeTab === 'compose'" x-transition>
+                    <div class="max-w-4xl mx-auto space-y-6">
+                        <div class="glass rounded-xl p-6">
+                            <h3 class="text-xl font-bold text-gradient mb-6">✍️ Compose Message</h3>
+                            <form @submit.prevent="handleCompose()" class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">From *</label>
+                                    <input type="email" class="w-full px-4 py-2 rounded-lg glass text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-sovereign-purple/50" placeholder="sender@example.com" x-model="composeForm.from">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">To *</label>
+                                    <div class="flex gap-2">
+                                        <input type="email" class="flex-1 px-4 py-2 rounded-lg glass text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-sovereign-purple/50" placeholder="membrane@medinatechlabs.net" x-model="composeForm.to">
+                                        <select class="px-4 py-2 rounded-lg glass text-gray-200 focus:outline-none focus:ring-2 focus:ring-sovereign-purple/50 w-64" @change="composeForm.to = $event.target.value">
+                                            <option value="">Quick Select...</option>
+                                            <template x-for="identity in identities.slice(0, 15)" :key="identity.email">
+                                                <option :value="identity.email" x-text="identity.organ + ' (' + identity.type + ')'"></option>
+                                            </template>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Subject *</label>
+                                    <input type="text" class="w-full px-4 py-2 rounded-lg glass text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-sovereign-purple/50" placeholder="e.g., [ALERT] Critical security incident" x-model="composeForm.subject">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Body</label>
+                                    <textarea class="w-full px-4 py-2 rounded-lg glass text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-sovereign-purple/50 min-h-[200px] resize-y" placeholder="Enter your message..." x-model="composeForm.body"></textarea>
+                                </div>
+                                <div class="flex gap-3 pt-4">
+                                    <button type="button" class="flex-1 px-4 py-2 rounded-lg glass text-gray-200 hover:bg-white/10 transition-all" @click="classifyMessage()">🔍 Classify Only</button>
+                                    <button type="submit" class="flex-1 px-4 py-2 rounded-lg bg-sovereign-purple text-white font-medium hover:bg-sovereign-purple/80 transition-all">📤 Send & Route</button>
+                                </div>
+                            </form>
+                        </div>
+                        
+                        <!-- Classification Preview -->
+                        <div x-show="classification" x-transition class="glass rounded-xl p-6">
+                            <h4 class="text-lg font-bold text-white mb-4">Classification Preview</h4>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                <div class="p-3 rounded-lg bg-white/5">
+                                    <label class="text-xs text-gray-500">Intent</label>
+                                    <p class="text-white font-medium capitalize" x-text="classification?.intent"></p>
+                                </div>
+                                <div class="p-3 rounded-lg bg-white/5">
+                                    <label class="text-xs text-gray-500">Entity</label>
+                                    <p class="text-white font-medium capitalize" x-text="classification?.entity"></p>
+                                </div>
+                                <div class="p-3 rounded-lg bg-white/5">
+                                    <label class="text-xs text-gray-500">Urgency</label>
+                                    <p class="font-medium capitalize" :class="getUrgencyColor(classification?.urgency)" x-text="classification?.urgency"></p>
+                                </div>
+                                <div class="p-3 rounded-lg bg-white/5">
+                                    <label class="text-xs text-gray-500">Confidence</label>
+                                    <p class="text-white font-medium" x-text="(classification?.confidence * 100).toFixed(1) + '%'"></p>
+                                </div>
+                            </div>
+                            <div class="mt-4 p-4 rounded-lg bg-sovereign-purple/10 border border-sovereign-purple/30">
+                                <div class="flex items-center gap-3">
+                                    <span class="text-2xl">🎯</span>
+                                    <div>
+                                        <p class="text-sm text-gray-400">Will be routed to:</p>
+                                        <p class="text-lg font-bold text-sovereign-purple capitalize" x-text="classification?.organ_target"></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+            </main>
+        </div>
+    </div>
+
+    <!-- Alpine.js App Script -->
+    <script>
+        const API_BASE = '/api/emailai';
+        
+        function emailAIMesh() {
+            return {
+                // State
+                loading: true,
+                error: null,
+                sidebarOpen: true,
+                activeTab: 'inbox',
+                selectedOrgan: null,
+                selectedMessage: null,
+                searchQuery: '',
+                filterIntent: '',
+                filterType: '',
+                enterpriseSection: 'overview',
+                
+                // Data
+                health: null,
+                identities: [],
+                messages: [],
+                stats: null,
+                useCases: null,
+                classification: null,
+                
+                // Forms
+                composeForm: { from: '', to: '', subject: '', body: '' },
+                onboardForm: { domain: '', email: '' },
+                
+                // Navigation
+                navItems: [
+                    { id: 'inbox', label: 'Inbox', icon: '📥', description: 'Unified message inbox' },
+                    { id: 'identities', label: 'Identities', icon: '🆔', description: 'Organ identities' },
+                    { id: 'stats', label: 'Analytics', icon: '📊', description: 'Mesh statistics' },
+                    { id: 'enterprise', label: 'Enterprise', icon: '🏢', description: 'Onboarding & use cases' },
+                    { id: 'compose', label: 'Compose', icon: '✍️', description: 'Send a message' }
+                ],
+                
+                // Computed
+                get filteredMessages() {
+                    let msgs = this.messages;
+                    if (this.selectedOrgan) {
+                        msgs = msgs.filter(m => m.organ_target === this.selectedOrgan);
+                    }
+                    if (this.filterIntent) {
+                        msgs = msgs.filter(m => m.intent === this.filterIntent);
+                    }
+                    if (this.searchQuery) {
+                        const q = this.searchQuery.toLowerCase();
+                        msgs = msgs.filter(m => 
+                            m.subject?.toLowerCase().includes(q) || 
+                            m.body?.toLowerCase().includes(q) ||
+                            m.sender?.toLowerCase().includes(q)
+                        );
+                    }
+                    return msgs;
+                },
+                
+                get filteredIdentities() {
+                    if (!this.filterType) return this.identities;
+                    return this.identities.filter(i => i.type === this.filterType);
+                },
+                
+                get organsByType() {
+                    const counts = {};
+                    for (const identity of this.identities) {
+                        counts[identity.type] = (counts[identity.type] || 0) + 1;
+                    }
+                    return counts;
+                },
+                
+                // Init
+                async init() {
+                    await this.loadData();
+                    this.startPolling();
+                },
+                
+                async loadData() {
+                    this.loading = true;
+                    this.error = null;
+                    try {
+                        const [healthRes, identitiesRes, inboxRes, statsRes, useCasesRes] = await Promise.all([
+                            this.fetch('/'),
+                            this.fetch('/identities'),
+                            this.fetch('/inbox'),
+                            this.fetch('/stats'),
+                            this.fetch('/enterprise/use-cases')
+                        ]);
+                        
+                        this.health = healthRes;
+                        if (identitiesRes?.identities) {
+                            this.identities = Object.entries(identitiesRes.identities).map(([email, data]) => ({
+                                email,
+                                ...data,
+                                name: data.organ,
+                                domain: identitiesRes.domain
+                            }));
+                        }
+                        this.messages = inboxRes?.messages || [];
+                        this.stats = statsRes?.stats;
+                        this.useCases = useCasesRes;
+                    } catch (e) {
+                        this.error = e.message;
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+                
+                async fetch(endpoint) {
+                    const res = await fetch(API_BASE + endpoint);
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    return res.json();
+                },
+                
+                async refresh() {
+                    await this.loadData();
+                },
+                
+                startPolling() {
+                    setInterval(async () => {
+                        try {
+                            const [healthRes, inboxRes] = await Promise.all([
+                                this.fetch('/'),
+                                this.fetch('/inbox')
+                            ]);
+                            this.health = healthRes;
+                            this.messages = inboxRes?.messages || [];
+                        } catch (e) {
+                            console.error('Polling error:', e);
+                        }
+                    }, 10000);
+                },
+                
+                async classifyMessage() {
+                    if (!this.composeForm.from || !this.composeForm.to || !this.composeForm.subject) {
+                        this.error = 'Please fill in From, To, and Subject';
+                        return;
+                    }
+                    try {
+                        const res = await fetch(API_BASE + '/classify', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(this.composeForm)
+                        });
+                        const data = await res.json();
+                        this.classification = data.classification;
+                    } catch (e) {
+                        this.error = e.message;
+                    }
+                },
+                
+                async handleCompose() {
+                    await this.classifyMessage();
+                    if (this.classification) {
+                        try {
+                            const res = await fetch(API_BASE + '/route', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    classification: this.classification,
+                                    message: this.composeForm
+                                })
+                            });
+                            const data = await res.json();
+                            alert(`Message routed to ${data.routes?.length || 0} target(s)!`);
+                            this.composeForm = { from: '', to: '', subject: '', body: '' };
+                            this.classification = null;
+                        } catch (e) {
+                            this.error = e.message;
+                        }
+                    }
+                },
+                
+                async handleOnboard() {
+                    if (!this.onboardForm.domain) {
+                        this.error = 'Please enter a company domain';
+                        return;
+                    }
+                    try {
+                        const res = await fetch(API_BASE + '/enterprise/onboard', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                company_domain: this.onboardForm.domain,
+                                contact_email: this.onboardForm.email,
+                                systems: []
+                            })
+                        });
+                        const data = await res.json();
+                        alert(`Successfully onboarded ${this.onboardForm.domain}!`);
+                        this.onboardForm = { domain: '', email: '' };
+                    } catch (e) {
+                        this.error = e.message;
+                    }
+                },
+                
+                // Helpers
+                getTabTitle() {
+                    const titles = {
+                        inbox: this.selectedOrgan ? `${this.selectedOrgan} Inbox` : 'Unified Inbox',
+                        identities: 'Organ Identities',
+                        stats: 'Mesh Analytics',
+                        enterprise: 'Enterprise Hub',
+                        compose: 'Compose Message'
+                    };
+                    return titles[this.activeTab] || 'Dashboard';
+                },
+                
+                getIntentIcon(intent) {
+                    const icons = { alert: '🚨', task: '✅', request: '📋', info: 'ℹ️', error: '❌', escalation: '⬆️', summary: '📝' };
+                    return icons[intent] || '📧';
+                },
+                
+                getTypeIcon(type) {
+                    const icons = { organ: '🧬', agent: '🤖', system: '⚙️', bot: '🔧', 'client-facing': '🎯' };
+                    return icons[type] || '📧';
+                },
+                
+                getTypeColor(type) {
+                    const colors = { organ: 'text-sovereign-purple', agent: 'text-cyber-blue', system: 'text-matrix-green', bot: 'text-gold', 'client-facing': 'text-warning-red' };
+                    return colors[type] || 'text-gray-400';
+                },
+                
+                getTypeBg(type) {
+                    const bgs = { organ: 'bg-sovereign-purple/20', agent: 'bg-cyber-blue/20', system: 'bg-matrix-green/20', bot: 'bg-gold/20', 'client-facing': 'bg-warning-red/20' };
+                    return bgs[type] || 'bg-gray-500/20';
+                },
+                
+                getTypeBadge(type) {
+                    const badges = { organ: 'bg-sovereign-purple/20 text-sovereign-purple border border-sovereign-purple/30', agent: 'bg-cyber-blue/20 text-cyber-blue border border-cyber-blue/30', system: 'bg-matrix-green/20 text-matrix-green border border-matrix-green/30', bot: 'bg-gold/20 text-gold border border-gold/30', 'client-facing': 'bg-warning-red/20 text-warning-red border border-warning-red/30' };
+                    return badges[type] || '';
+                },
+                
+                getUrgencyBadge(urgency) {
+                    const badges = { critical: 'bg-warning-red/20 text-warning-red border border-warning-red/30', high: 'bg-orange-500/20 text-orange-400 border border-orange-500/30', medium: 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30', low: 'bg-green-500/20 text-green-400 border border-green-500/30' };
+                    return badges[urgency] || '';
+                },
+                
+                getUrgencyColor(urgency) {
+                    const colors = { critical: 'text-warning-red', high: 'text-orange-400', medium: 'text-yellow-400', low: 'text-green-400' };
+                    return colors[urgency] || 'text-gray-400';
+                },
+                
+                getEntityBadge(entity) {
+                    const badges = { organ: 'bg-sovereign-purple/20 text-sovereign-purple border border-sovereign-purple/30', agent: 'bg-cyber-blue/20 text-cyber-blue border border-cyber-blue/30', system: 'bg-matrix-green/20 text-matrix-green border border-matrix-green/30', bot: 'bg-gold/20 text-gold border border-gold/30', human: 'bg-gray-500/20 text-gray-400 border border-gray-500/30' };
+                    return badges[entity] || '';
+                },
+                
+                getUseCaseIcon(domain) {
+                    const icons = { 'IT & Security': '🛡️', 'DevOps / SRE': '⚙️', 'Finance & Analytics': '📊', 'Sales & Customer Success': '🤝', 'Legal & Compliance': '⚖️', 'Research & Intelligence': '🔬', 'Threat Intelligence': '🎯', 'Adversarial Intelligence': '🕵️' };
+                    return icons[domain] || '📧';
+                },
+                
+                formatDate(dateStr) {
+                    if (!dateStr) return '';
+                    const date = new Date(dateStr);
+                    const now = new Date();
+                    const diffMs = now - date;
+                    const diffMins = Math.floor(diffMs / 60000);
+                    const diffHours = Math.floor(diffMs / 3600000);
+                    const diffDays = Math.floor(diffMs / 86400000);
+                    if (diffMins < 1) return 'Just now';
+                    if (diffMins < 60) return diffMins + 'm ago';
+                    if (diffHours < 24) return diffHours + 'h ago';
+                    if (diffDays < 7) return diffDays + 'd ago';
+                    return date.toLocaleDateString();
+                }
+            };
+        }
+    </script>
+</body>
+</html>

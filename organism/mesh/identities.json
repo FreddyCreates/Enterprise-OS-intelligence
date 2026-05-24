@@ -1,0 +1,241 @@
+{
+  "mesh_version": "1.0.0",
+  "domain": "medinatechlabs.net",
+  "protocol": "EAP-1",
+  "organ_identities": [
+    {
+      "organ": "membrane",
+      "email": "membrane@medinatechlabs.net",
+      "purpose": "Probe alerts, routing decisions, edge defense",
+      "type": "organ",
+      "capabilities": ["alert", "route", "block", "escalate"]
+    },
+    {
+      "organ": "brain",
+      "email": "julia@medinatechlabs.net",
+      "purpose": "Analytics, φ-curves, predictions, classification",
+      "type": "organ",
+      "capabilities": ["classify", "predict", "analyze", "summarize"]
+    },
+    {
+      "organ": "identity",
+      "email": "identity@medinatechlabs.net",
+      "purpose": "SSN onboarding, staking, reputation management",
+      "type": "organ",
+      "capabilities": ["onboard", "stake", "verify", "audit"]
+    },
+    {
+      "organ": "reflex",
+      "email": "reflex@medinatechlabs.net",
+      "purpose": "Workflow summaries, event chains, automation",
+      "type": "organ",
+      "capabilities": ["trigger_workflow", "escalate", "chain", "schedule"]
+    },
+    {
+      "organ": "surfaces",
+      "email": "synthetic@medinatechlabs.net",
+      "purpose": "Deception logs, scanner intel, adversarial data",
+      "type": "organ",
+      "capabilities": ["deceive", "log", "fingerprint", "trap"]
+    },
+    {
+      "organ": "nova",
+      "email": "nova@medinatechlabs.net",
+      "purpose": "User-facing communication, public interface",
+      "type": "organ",
+      "capabilities": ["reply", "notify", "report", "communicate"]
+    },
+    {
+      "organ": "research",
+      "email": "research@medinatechlabs.net",
+      "purpose": "Reports, insights, knowledge generation",
+      "type": "organ",
+      "capabilities": ["report", "insight", "synthesize", "publish"]
+    },
+    {
+      "organ": "probe",
+      "email": "probe@medinatechlabs.net",
+      "purpose": "Scanner fingerprints, threat intel, reconnaissance",
+      "type": "organ",
+      "capabilities": ["fingerprint", "classify", "track", "alert"]
+    }
+  ],
+  "agent_identities": [
+    {
+      "agent": "agens",
+      "email": "agens@medinatechlabs.net",
+      "purpose": "Command agent, API orchestration, production showcase",
+      "type": "agent",
+      "capabilities": ["orchestrate", "command", "showcase", "drill"]
+    },
+    {
+      "agent": "cerebrum",
+      "email": "cerebrum@medinatechlabs.net",
+      "purpose": "Deep reasoning, knowledge synthesis, intelligence core",
+      "type": "agent",
+      "capabilities": ["reason", "synthesize", "learn", "infer"]
+    },
+    {
+      "agent": "animus",
+      "email": "animus@medinatechlabs.net",
+      "purpose": "Soul/spirit agent, emotional intelligence, sentiment",
+      "type": "agent",
+      "capabilities": ["sense", "feel", "motivate", "adapt"]
+    },
+    {
+      "agent": "nexus",
+      "email": "nexus@medinatechlabs.net",
+      "purpose": "Connection agent, inter-organ coordination, binding",
+      "type": "agent",
+      "capabilities": ["connect", "bind", "coordinate", "relay"]
+    },
+    {
+      "agent": "vigil",
+      "email": "vigil@medinatechlabs.net",
+      "purpose": "Watchman agent, monitoring, surveillance, alerting",
+      "type": "agent",
+      "capabilities": ["watch", "monitor", "alert", "guard"]
+    },
+    {
+      "agent": "cursor",
+      "email": "cursor@medinatechlabs.net",
+      "purpose": "Navigation agent, pointer, state tracking",
+      "type": "agent",
+      "capabilities": ["navigate", "point", "track", "select"]
+    }
+  ],
+  "infrastructure_identities": [
+    {
+      "service": "gate-node",
+      "email": "gate@medinatechlabs.net",
+      "purpose": "Outer membrane router, request gating, threat filter",
+      "type": "system",
+      "capabilities": ["gate", "filter", "route", "protect"]
+    },
+    {
+      "service": "cache-organism",
+      "email": "cache@medinatechlabs.net",
+      "purpose": "Inner intelligence, AI-powered caching, learning",
+      "type": "system",
+      "capabilities": ["cache", "learn", "respond", "adapt"]
+    },
+    {
+      "service": "emailai-mesh",
+      "email": "mesh@medinatechlabs.net",
+      "purpose": "Email mesh coordinator, message routing, classification",
+      "type": "system",
+      "capabilities": ["ingest", "classify", "route", "coordinate"]
+    }
+  ],
+  "bot_identities": [
+    {
+      "bot": "herald",
+      "email": "herald@medinatechlabs.net",
+      "purpose": "Announcements, notifications, broadcast messages",
+      "type": "bot",
+      "capabilities": ["announce", "broadcast", "notify", "publish"]
+    },
+    {
+      "bot": "conduit",
+      "email": "conduit@medinatechlabs.net",
+      "purpose": "Message relay, cross-platform bridging, forwarding",
+      "type": "bot",
+      "capabilities": ["relay", "bridge", "forward", "translate"]
+    },
+    {
+      "bot": "pulse",
+      "email": "pulse@medinatechlabs.net",
+      "purpose": "Heartbeat monitoring, health checks, vitals",
+      "type": "bot",
+      "capabilities": ["heartbeat", "health", "vitals", "ping"]
+    },
+    {
+      "bot": "sentinel",
+      "email": "sentinel@medinatechlabs.net",
+      "purpose": "Security bot, threat detection, perimeter defense",
+      "type": "bot",
+      "capabilities": ["detect", "defend", "scan", "report"]
+    },
+    {
+      "bot": "arbiter",
+      "email": "arbiter@medinatechlabs.net",
+      "purpose": "Decision bot, conflict resolution, rule enforcement",
+      "type": "bot",
+      "capabilities": ["decide", "arbitrate", "enforce", "resolve"]
+    },
+    {
+      "bot": "imperium",
+      "email": "imperium@medinatechlabs.net",
+      "purpose": "Command bot, authority delegation, governance",
+      "type": "bot",
+      "capabilities": ["command", "delegate", "govern", "authorize"]
+    },
+    {
+      "bot": "nuntius",
+      "email": "nuntius@medinatechlabs.net",
+      "purpose": "Messenger bot, delivery, inter-agent communication",
+      "type": "bot",
+      "capabilities": ["deliver", "message", "notify", "dispatch"]
+    }
+  ],
+  "client_facing_identities": [
+    {
+      "service": "analysis",
+      "email": "analysis@medinatechlabs.net",
+      "purpose": "Client-facing analytics — cost analysis, optimization, predictions",
+      "type": "client-facing",
+      "routes_to": "brain",
+      "domain": "Finance & Analytics",
+      "capabilities": ["analyze", "report", "predict", "optimize"]
+    },
+    {
+      "service": "support",
+      "email": "support@medinatechlabs.net",
+      "purpose": "Client-facing support — queries, issues, escalations",
+      "type": "client-facing",
+      "routes_to": "nova",
+      "domain": "Sales & Customer Success",
+      "capabilities": ["reply", "resolve", "escalate", "summarize"]
+    },
+    {
+      "service": "automation",
+      "email": "automation@medinatechlabs.net",
+      "purpose": "Client-facing automation — workflow triggers, scheduling",
+      "type": "client-facing",
+      "routes_to": "reflex",
+      "domain": "DevOps / SRE",
+      "capabilities": ["automate", "trigger", "schedule", "chain"]
+    },
+    {
+      "service": "security",
+      "email": "security@medinatechlabs.net",
+      "purpose": "Client-facing security — threat analysis, scanning, defense",
+      "type": "client-facing",
+      "routes_to": "membrane",
+      "domain": "IT & Security",
+      "capabilities": ["scan", "detect", "report", "defend"]
+    },
+    {
+      "service": "intelligence",
+      "email": "intelligence@medinatechlabs.net",
+      "purpose": "Client-facing intel — reconnaissance, threat briefings",
+      "type": "client-facing",
+      "routes_to": "probe",
+      "domain": "Threat Intelligence",
+      "capabilities": ["recon", "fingerprint", "track", "brief"]
+    }
+  ],
+  "entity_types": ["human", "bot", "system", "organ", "agent", "client-facing"],
+  "intent_types": ["info", "request", "alert", "error", "task", "escalation", "summary"],
+  "urgency_levels": ["low", "medium", "high", "critical"],
+  "total_identities": 29,
+  "enterprise_use_cases": {
+    "IT & Security": { "organ": "membrane", "email": "membrane@medinatechlabs.net", "replaces": ["Splunk", "CrowdStrike", "Palo Alto"] },
+    "DevOps / SRE": { "organ": "reflex", "email": "reflex@medinatechlabs.net", "replaces": ["PagerDuty", "OpsGenie", "Slack war rooms"] },
+    "Finance": { "organ": "brain", "email": "julia@medinatechlabs.net", "replaces": ["Cloudability", "FinOps dashboards"] },
+    "Sales & CS": { "organ": "nova", "email": "nova@medinatechlabs.net", "replaces": ["Zendesk", "Salesforce Einstein"] },
+    "Legal & Compliance": { "organ": "identity", "email": "identity@medinatechlabs.net", "replaces": ["Contract review teams", "Legal AI"] },
+    "Research": { "organ": "research", "email": "research@medinatechlabs.net", "replaces": ["Research analysts", "Manual reports"] },
+    "Threat Intel": { "organ": "probe", "email": "probe@medinatechlabs.net", "replaces": ["Recorded Future", "Shodan"] }
+  }
+}

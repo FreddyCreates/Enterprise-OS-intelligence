@@ -40,6 +40,28 @@ const API_ROUTES = {
   
   // GATE-NODE — Protocol entry
   'gate': { service: 'GATE_NODE', paths: ['/classify', '/route', '/stats'] },
+  
+  // EMAILAI-MESH — Sovereign Email Intelligence (Full mesh app)
+  'emailai': { 
+    service: 'EMAILAI_MESH', 
+    paths: [
+      '/',              // Status
+      '/health',        // Health check
+      '/identities',    // 29 organ identities
+      '/inbox',         // Unified inbox
+      '/inbox/:organ',  // Organ-specific inbox
+      '/stats',         // Mesh analytics
+      '/classify',      // Classification engine (POST)
+      '/route',         // Routing engine (POST)
+      '/enterprise/use-cases',    // Enterprise use cases
+      '/enterprise/onboard',      // Onboard company (POST)
+      '/enterprise/domains',      // List enterprise domains
+      '/enterprise/capabilities'  // Full capability manifest
+    ]
+  },
+  
+  // NOVA — Live-Fire AI Range
+  'nova': { service: 'NOVA', paths: ['/status', '/threat', '/specimens', '/analytics'] },
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════

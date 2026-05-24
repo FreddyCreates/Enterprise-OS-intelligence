@@ -132,6 +132,14 @@
     {
       "binding": "GATE_NODE",
       "service": "gate-node"
+    },
+    {
+      "binding": "EMAILAI_MESH",
+      "service": "emailai-mesh"
+    },
+    {
+      "binding": "NOVA",
+      "service": "nova"
     }
   ],
 

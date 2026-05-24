@@ -1,0 +1,133 @@
+name               = "emailai-mesh"
+main               = "worker.js"
+compatibility_date = "2024-12-01"
+
+[vars]
+DESIGNATION    = "RSHIP-MESH-EMAIL-001"
+WORKER_NAME    = "EMAILAI_MESH"
+WORKER_LATIN   = "epistula"
+WORKER_MEANING = "EmailAI Mesh — Sovereign Email Intelligence Layer"
+VERSION        = "1.0.0"
+DOMAIN         = "medinatechlabs.net"
+PROTOCOL       = "EAP-1"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# EMAILAI MESH — Multi-Identity Communication Layer
+# All inbound email → parse → classify → route → act → remember
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# ── AI Binding — Classification and response generation ────────────────────────
+[ai]
+binding = "AI"
+
+# ── KV Namespace — Fast inbox cache + message state ───────────────────────────
+[[kv_namespaces]]
+binding = "MESH_INBOX"
+id = "emailai-mesh-inbox"
+preview_id = "emailai-mesh-inbox-preview"
+
+[[kv_namespaces]]
+binding = "MESH_STATE"
+id = "emailai-mesh-state"
+preview_id = "emailai-mesh-state-preview"
+
+# ── D1 Database — Message store, classifications, routing log ──────────────────
+[[d1_databases]]
+binding = "MESH_DB"
+database_name = "emailai-mesh"
+database_id = "emailai-mesh-db"
+
+# ── Queues — Async processing ─────────────────────────────────────────────────
+[[queues.producers]]
+binding = "EMAIL_QUEUE"
+queue = "emailai-mesh-inbound"
+
+[[queues.producers]]
+binding = "REFLEX_QUEUE"
+queue = "emailai-reflex-triggers"
+
+[[queues.producers]]
+binding = "ALERT_QUEUE"
+queue = "emailai-alerts"
+
+[[queues.producers]]
+binding = "BRAIN_QUEUE"
+queue = "emailai-brain-classify"
+
+[[queues.consumers]]
+queue = "emailai-mesh-inbound"
+max_batch_size = 10
+max_batch_timeout = 30
+
+# ── R2 Bucket — Attachment archive ────────────────────────────────────────────
+[[r2_buckets]]
+binding = "ATTACHMENT_STORE"
+bucket_name = "emailai-attachments"
+preview_bucket_name = "emailai-attachments-preview"
+
+# ── Vectorize — Semantic search over messages ──────────────────────────────────
+[[vectorize]]
+binding = "MESSAGE_VECTORS"
+index_name = "emailai-message-vectors"
+
+# ── Analytics Engine — Mesh telemetry ──────────────────────────────────────────
+[[analytics_engine_datasets]]
+binding = "MESH_ANALYTICS"
+dataset = "emailai_mesh_events"
+
+# ── Service Bindings — Connect to other organs ─────────────────────────────────
+[[services]]
+binding = "GATE_NODE"
+service = "gate-node"
+
+[[services]]
+binding = "NOVA"
+service = "nova"
+
+[[services]]
+binding = "CEREBRUM"
+service = "cerebrum"
+
+# ── Email Routing — Receive emails for ALL organ/agent/bot identities ──────────
+# Configure in Cloudflare Dashboard → Email Routing → Email Workers:
+#
+# --- Core Organs ---
+#   membrane@medinatechlabs.net  → emailai-mesh worker
+#   julia@medinatechlabs.net     → emailai-mesh worker
+#   identity@medinatechlabs.net  → emailai-mesh worker
+#   reflex@medinatechlabs.net    → emailai-mesh worker
+#   synthetic@medinatechlabs.net → emailai-mesh worker
+#   nova@medinatechlabs.net      → emailai-mesh worker
+#   research@medinatechlabs.net  → emailai-mesh worker
+#   probe@medinatechlabs.net     → emailai-mesh worker
+#
+# --- Agent Workers ---
+#   agens@medinatechlabs.net     → emailai-mesh worker
+#   cerebrum@medinatechlabs.net  → emailai-mesh worker
+#   animus@medinatechlabs.net    → emailai-mesh worker
+#   nexus@medinatechlabs.net     → emailai-mesh worker
+#   vigil@medinatechlabs.net     → emailai-mesh worker
+#   cursor@medinatechlabs.net    → emailai-mesh worker
+#
+# --- Infrastructure ---
+#   gate@medinatechlabs.net      → emailai-mesh worker
+#   cache@medinatechlabs.net     → emailai-mesh worker
+#   mesh@medinatechlabs.net      → emailai-mesh worker
+#
+# --- Bots ---
+#   herald@medinatechlabs.net    → emailai-mesh worker
+#   conduit@medinatechlabs.net   → emailai-mesh worker
+#   pulse@medinatechlabs.net     → emailai-mesh worker
+#   sentinel@medinatechlabs.net  → emailai-mesh worker
+#   arbiter@medinatechlabs.net   → emailai-mesh worker
+#   imperium@medinatechlabs.net  → emailai-mesh worker
+#   nuntius@medinatechlabs.net   → emailai-mesh worker
+#
+# --- Client-Facing (Enterprises & Clients email these) ---
+#   analysis@medinatechlabs.net     → emailai-mesh worker (→ brain)
+#   support@medinatechlabs.net      → emailai-mesh worker (→ nova)
+#   automation@medinatechlabs.net   → emailai-mesh worker (→ reflex)
+#   security@medinatechlabs.net     → emailai-mesh worker (→ membrane)
+#   intelligence@medinatechlabs.net → emailai-mesh worker (→ probe)
+#
+# Total: 29 sovereign email identities

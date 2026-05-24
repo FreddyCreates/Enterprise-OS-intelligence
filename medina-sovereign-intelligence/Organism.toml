@@ -391,15 +391,159 @@ wiring = "SOVEREIGN"
 event_type = "IntelligenceEvent.FINIS"
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# DEEP MATHEMATICAL/COMPUTATIONAL ENGINES (6 engines)
+# Advanced engines for physics, algebra, calculus, economics, state, social
+# ═══════════════════════════════════════════════════════════════════════════════
+
+[engines.deep]
+count = 6
+engines = [
+    "PHYSIKOS",
+    "ALGEBRAIKOS",
+    "LOGISMIKOS",
+    "OIKONOMIKOS",
+    "ERGASTIKOS",
+    "KOINONIKOS"
+]
+
+[engines.deep.PHYSIKOS]
+name = "Physics Engine"
+designation = "RSHIP-ENGINE-PHYSICS-001"
+formula = "L = T - V, H = T + V, S = ∫L dt"
+description = "Lagrangian/Hamiltonian mechanics, field theory, relativity"
+methods = [
+    "lagrangian", "hamiltonian", "action", "eulerLagrange",
+    "kineticEnergy", "gravitationalPotential", "harmonicPotential",
+    "planeWave", "schrodingerFreeParticle", "lorentzFactor",
+    "relativisticMomentum", "relativisticEnergy", "schwarzschildRadius",
+    "schwarzschildMetric", "fieldStrength", "poyntingVector",
+    "emEnergyDensity", "phiField", "coherenceLength", "symplecticStep"
+]
+
+[engines.deep.ALGEBRAIKOS]
+name = "Algebra Engine"
+designation = "RSHIP-ENGINE-ALGEBRA-001"
+formula = "G × G → G, (ab)c = a(bc), ea = ae = a"
+description = "Abstract algebra, group theory, linear algebra, tensors"
+methods = [
+    "isGroup", "groupOrder", "elementOrder", "cyclicGroup", "symmetricGroupGenerators",
+    "matMul", "transpose", "determinant", "trace", "inverse", "eigenvalues2x2", "powerIteration",
+    "dot", "cross", "norm", "gramSchmidt",
+    "tensorProduct", "outerProduct", "phiWeightedMatrix"
+]
+
+[engines.deep.LOGISMIKOS]
+name = "Calculus Engine"
+designation = "RSHIP-ENGINE-CALCULUS-001"
+formula = "∂f/∂x, ∫f(x)dx, ∇f, ∇²f"
+description = "Differential equations, integration, variational calculus, transforms"
+methods = [
+    "derivative", "secondDerivative", "partialDerivative", "gradient", "hessian", "laplacian", "divergence", "curl",
+    "integrate", "adaptiveIntegrate", "doubleIntegrate", "lineIntegral", "phiIntegrate",
+    "eulerMethod", "rk4", "harmonicOscillator", "dampedOscillator", "lorenzSystem",
+    "dft", "idft", "laplace", "eulerLagrangeSolve"
+]
+
+[engines.deep.OIKONOMIKOS]
+name = "Economics Engine"
+designation = "RSHIP-ENGINE-ECONOMICS-001"
+formula = "U(x) = Σᵢ wᵢ·xᵢ^αᵢ, π = TR - TC"
+description = "Game theory, equilibrium models, utility functions, market dynamics"
+methods = [
+    "cobbDouglasUtility", "cesUtility", "quasiLinearUtility", "expectedUtility", "absoluteRiskAversion", "certaintyEquivalent",
+    "findPureNashEquilibria", "mixedNashEquilibrium2x2", "prisonersDilemma", "eliminateDominatedStrategies", "shapleyValue",
+    "marketEquilibrium", "cournotEquilibrium", "bertrandEquilibrium", "monopolyOptimum", "consumerSurplus", "producerSurplus", "priceElasticity", "phiAuction"
+]
+
+[engines.deep.ERGASTIKOS]
+name = "Working State Engine"
+designation = "RSHIP-ENGINE-WORKING-STATE-001"
+formula = "S × Σ → S, δ: S × Σ → S"
+description = "Process algebra, Petri nets, finite state machines"
+methods = [
+    "createDFA", "runDFA", "minimizeDFA",
+    "createNFA", "runNFA", "nfaToDFA", "epsilonClosure",
+    "createPetriNet", "isTransitionEnabled", "fireTransition", "simulatePetriNet",
+    "createProcess", "parallelComposition", "sequentialComposition", "choiceComposition", "restriction",
+    "createPhiStateMachine", "phiTransition"
+]
+
+[engines.deep.KOINONIKOS]
+name = "Interpersonal Engine"
+designation = "RSHIP-ENGINE-INTERPERSONAL-001"
+formula = "T(t+1) = T(t) + α(outcome - T(t))"
+description = "Social networks, trust dynamics, influence propagation"
+methods = [
+    "createNetwork", "degreeCentrality", "betweennessCentrality", "closenessCentrality", "pageRank", "labelPropagation",
+    "updateTrust", "createTrustNetwork", "transitiveTrust", "aggregateTrust", "decayTrust", "reputation",
+    "independentCascade", "linearThreshold", "findInfluentialNodes",
+    "phiRelationshipStrength", "socialCoherence", "mapToOrganMesh"
+]
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# ORGANISM GATES - Neural Highways Connecting Engines to Organs
+# ═══════════════════════════════════════════════════════════════════════════════
+
+[gates]
+version = "1.0.0"
+designation = "RSHIP-GATES-001"
+types = ["inbound", "outbound", "lateral", "reflexive"]
+statuses = ["closed", "open", "throttled", "saturated"]
+
+[gates.protocols]
+executors = [
+    "PROTO-DYNAMICS",
+    "PROTO-STRUCTURE",
+    "PROTO-CONTINUUM",
+    "PROTO-EQUILIBRIUM",
+    "PROTO-AUTOMATA",
+    "PROTO-SOCIAL",
+    "PROTO-GATE-OPEN",
+    "PROTO-GATE-CLOSE",
+    "PROTO-GATE-THROTTLE",
+    "PROTO-MESH-ROUTE"
+]
+
+[gates.protocols.PROTO-DYNAMICS]
+executor = "execDynamics"
+wiring = "PHYSIKOS"
+event_type = "IntelligenceEvent.DYNAMICS"
+
+[gates.protocols.PROTO-STRUCTURE]
+executor = "execStructure"
+wiring = "ALGEBRAIKOS"
+event_type = "IntelligenceEvent.STRUCTURE"
+
+[gates.protocols.PROTO-CONTINUUM]
+executor = "execContinuum"
+wiring = "LOGISMIKOS"
+event_type = "IntelligenceEvent.CONTINUUM"
+
+[gates.protocols.PROTO-EQUILIBRIUM]
+executor = "execEquilibrium"
+wiring = "OIKONOMIKOS"
+event_type = "IntelligenceEvent.EQUILIBRIUM"
+
+[gates.protocols.PROTO-AUTOMATA]
+executor = "execAutomata"
+wiring = "ERGASTIKOS"
+event_type = "IntelligenceEvent.AUTOMATA"
+
+[gates.protocols.PROTO-SOCIAL]
+executor = "execSocial"
+wiring = "KOINONIKOS"
+event_type = "IntelligenceEvent.SOCIAL"
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # VERSION REGISTRY
 # ═══════════════════════════════════════════════════════════════════════════════
 
 [version]
 major = 3
-minor = 0
+minor = 1
 patch = 0
-build = "2026.05.13"
-codename = "SOVEREIGN"
+build = "2026.05.23"
+codename = "SOVEREIGN-GATES"
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # PLATFORM INTEGRATION
