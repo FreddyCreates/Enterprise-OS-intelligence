@@ -1,0 +1,41 @@
+{
+  "version": "1.0.0",
+  "policies": [
+    {
+      "id": "scanner_redirect",
+      "trigger": { "classification": "scanner", "confidence_min": 0.8 },
+      "action": "redirect_maze",
+      "parameters": { "maze_depth": 10, "delay_multiplier": 1.618 }
+    },
+    {
+      "id": "attacker_honeypot",
+      "trigger": { "classification": "attacker", "confidence_min": 0.9 },
+      "action": "honeypot",
+      "parameters": { "template": "admin_panel", "intelligence_extraction": true }
+    },
+    {
+      "id": "bot_challenge",
+      "trigger": { "classification": "bot", "confidence_min": 0.7 },
+      "action": "challenge",
+      "parameters": { "type": "js_challenge", "timeout_seconds": 5 }
+    },
+    {
+      "id": "ai_agent_allow",
+      "trigger": { "classification": "ai_agent", "confidence_min": 0.8 },
+      "action": "allow",
+      "parameters": { "rate_limit": "100/min", "log": true }
+    },
+    {
+      "id": "researcher_observe",
+      "trigger": { "classification": "researcher", "confidence_min": 0.7 },
+      "action": "allow",
+      "parameters": { "log": true, "fingerprint": true }
+    },
+    {
+      "id": "default_allow",
+      "trigger": { "classification": "benign" },
+      "action": "allow",
+      "parameters": {}
+    }
+  ]
+}

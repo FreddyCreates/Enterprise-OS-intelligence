@@ -1,0 +1,118 @@
+{
+  "organ": "reflex",
+  "version": "1.0.0",
+  "substrate": "cloudflare-workflows",
+  "description": "Reflex / Workflow Organ — Async tasks, multi-step reactions, event pipelines, probe-reflex loops",
+  "tools": [
+    {
+      "name": "workflow.start",
+      "description": "Start a new workflow instance for a multi-step reaction",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "workflow_id": { "type": "string", "description": "Registered workflow identifier" },
+          "trigger": {
+            "type": "object",
+            "properties": {
+              "event_type": { "type": "string", "enum": ["probe_detected", "threshold_breach", "identity_event", "schedule", "manual"] },
+              "source_organ": { "type": "string", "enum": ["membrane", "identity", "brain", "state", "surfaces"] },
+              "payload": { "type": "object" }
+            },
+            "required": ["event_type", "source_organ"]
+          },
+          "priority": { "type": "string", "enum": ["critical", "high", "normal", "low"], "default": "normal" }
+        },
+        "required": ["workflow_id", "trigger"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "instance_id": { "type": "string" },
+          "status": { "type": "string", "enum": ["started", "queued", "rejected"] },
+          "estimated_duration_ms": { "type": "number" },
+          "steps_total": { "type": "number" }
+        }
+      }
+    },
+    {
+      "name": "workflow.update_step",
+      "description": "Update the current step of a running workflow instance",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "instance_id": { "type": "string" },
+          "step_id": { "type": "string" },
+          "status": { "type": "string", "enum": ["completed", "failed", "skipped", "waiting"] },
+          "output": { "type": "object" },
+          "next_step_override": { "type": "string" }
+        },
+        "required": ["instance_id", "step_id", "status"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "workflow_status": { "type": "string" },
+          "current_step": { "type": "string" },
+          "steps_completed": { "type": "number" },
+          "steps_remaining": { "type": "number" }
+        }
+      }
+    },
+    {
+      "name": "workflow.emit_event",
+      "description": "Emit an event from a workflow to trigger cross-organ reactions",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "event_type": { "type": "string" },
+          "target_organs": {
+            "type": "array",
+            "items": { "type": "string", "enum": ["membrane", "identity", "brain", "state", "surfaces", "all"] }
+          },
+          "payload": { "type": "object" },
+          "ttl_seconds": { "type": "number", "default": 300 }
+        },
+        "required": ["event_type", "target_organs", "payload"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "event_id": { "type": "string" },
+          "delivered_to": { "type": "array", "items": { "type": "string" } },
+          "queued_for": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    {
+      "name": "workflow.list",
+      "description": "List running workflow instances with optional filtering",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "string", "enum": ["running", "completed", "failed", "all"], "default": "running" },
+          "source_organ": { "type": "string" },
+          "limit": { "type": "number", "default": 50 }
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "instances": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "instance_id": { "type": "string" },
+                "workflow_id": { "type": "string" },
+                "status": { "type": "string" },
+                "started_at": { "type": "number" },
+                "current_step": { "type": "string" }
+              }
+            }
+          },
+          "total": { "type": "number" }
+        }
+      }
+    }
+  ]
+}

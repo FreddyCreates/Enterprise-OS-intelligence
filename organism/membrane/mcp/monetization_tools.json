@@ -1,0 +1,86 @@
+{
+  "organ": "monetization",
+  "version": "1.0.0",
+  "substrate": "cloudflare-workers + icp",
+  "description": "Monetization Engine — 4 revenue streams from probes and edge defense/offense",
+  "revenue_streams": {
+    "A": "Probe-Intel Feed (Recurring Revenue)",
+    "B": "Pay-to-Probe Synthetic Surfaces (Active Monetization)",
+    "C": "Reputation-Gated Access / SSN-X Slashing (Behavior Monetization)",
+    "D": "Edge Defense/Offense as a Service (Infrastructure Monetization)"
+  },
+  "tools": [
+    {
+      "name": "monetize.intel_feed",
+      "description": "Query the probe intelligence feed for scanner signatures, patterns, and fingerprints",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "query_type": { "type": "string", "enum": ["recent", "signatures", "snapshot", "novel"] },
+          "time_range": { "type": "string", "enum": ["1h", "24h", "7d", "30d"] },
+          "filter": {
+            "type": "object",
+            "properties": {
+              "scanner_type": { "type": "string" },
+              "min_novelty": { "type": "number" },
+              "country": { "type": "string" },
+              "asn": { "type": "number" }
+            }
+          }
+        },
+        "required": ["query_type"]
+      }
+    },
+    {
+      "name": "monetize.gym_session",
+      "description": "Start a pay-to-probe bot gym session against synthetic surfaces",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "surface": { "type": "string", "enum": ["wordpress", "laravel", "spring_boot", "swagger", "admin_panels", "full_maze"] },
+          "duration_minutes": { "type": "number", "default": 60 },
+          "stake_ssn_x": { "type": "number", "minimum": 10 },
+          "ssn": { "type": "string" }
+        },
+        "required": ["surface", "stake_ssn_x", "ssn"]
+      }
+    },
+    {
+      "name": "monetize.reputation_check",
+      "description": "Check reputation score and access tier for an SSN",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "ssn": { "type": "string" }
+        },
+        "required": ["ssn"]
+      }
+    },
+    {
+      "name": "monetize.reputation_stake",
+      "description": "Stake SSN-X tokens for improved access tier",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "ssn": { "type": "string" },
+          "amount": { "type": "number", "minimum": 10 },
+          "duration_days": { "type": "number", "minimum": 1 }
+        },
+        "required": ["ssn", "amount"]
+      }
+    },
+    {
+      "name": "monetize.edge_provision",
+      "description": "Provision edge defense/offense as a service for an external app",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "plan": { "type": "string", "enum": ["membrane_filter", "reflex_classify", "synthetic_absorb", "full_organism"] },
+          "origin_url": { "type": "string" },
+          "ssn": { "type": "string" }
+        },
+        "required": ["plan", "origin_url", "ssn"]
+      }
+    }
+  ]
+}

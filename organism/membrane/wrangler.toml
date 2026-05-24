@@ -12,3 +12,49 @@ VERSION = "1.0.0"
 # Routes configured per environment
 # [env.production.routes]
 # route = { pattern = "*.medinatech.dev/*", zone_name = "medinatech.dev" }
+name               = "organism-gateway"
+main               = "workers/gateway.js"
+compatibility_date = "2024-09-02"
+
+[vars]
+DESIGNATION    = "ORGANISM-MEMBRANE-001"
+WORKER_NAME    = "MEMBRANE_GATEWAY"
+VERSION        = "1.0.0"
+ARCHITECTURE   = "door-4-five-organ"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# WORKER 1 — MEMBRANE GATEWAY (Sovereign Organ)
+# All public traffic. All routing. All probe classification.
+# All identity resolution.
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# ── KV Namespace — Route cache ──────────────────────────────────────────────
+[[kv_namespaces]]
+binding = "ROUTE_CACHE"
+id = "organism-route-cache"
+preview_id = "organism-route-cache-preview"
+
+# ── D1 Database — Probe patterns ────────────────────────────────────────────
+[[d1_databases]]
+binding = "PROBE_DB"
+database_name = "organism-probes"
+database_id = "organism-probes-db"
+
+# ── Queue — Cross-organ events ──────────────────────────────────────────────
+[[queues.producers]]
+binding = "ORGAN_QUEUE"
+queue = "organism-cross-organ"
+
+# ── Service Bindings — Other sovereign workers ──────────────────────────────
+[[services]]
+binding = "INTERNAL_SERVICES"
+service = "organism-internal"
+
+[[services]]
+binding = "SYNTHETIC_SURFACES"
+service = "organism-surfaces"
+
+# ── Analytics ───────────────────────────────────────────────────────────────
+[[analytics_engine_datasets]]
+binding = "MEMBRANE_ANALYTICS"
+dataset = "organism_membrane_events"

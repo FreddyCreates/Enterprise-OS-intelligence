@@ -1,0 +1,9 @@
+{
+  "name": "phi.reward_curve",
+  "julia": "reward_curve(probe_type::String, engagement::Float64, time_s::Float64, intel::Float64)",
+  "motoko": "phi_reward_curve(probe_type: Text, engagement: Float, time_s: Float, intel: Float) : async RewardResult",
+  "candid": "phi_reward_curve : (text, float64, float64, float64) -> (record { reward: float64; phi_resonance: float64; optimal_action: text; diminishing_at: float64 })",
+  "deterministic": true,
+  "canister_safe": true,
+  "round_trip_tested": true
+}

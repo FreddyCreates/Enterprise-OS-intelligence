@@ -1,0 +1,164 @@
+{
+  "tool": "julia_motoko_bridge",
+  "version": "1.0.0",
+  "description": "Julia-Motoko Bridge — MCP tool system for cross-substrate computation between Julia, ICP (Motoko/Candid), and Cloudflare Workers (TypeScript)",
+  "tools": [
+    {
+      "name": "julia_motoko_bridge.generate_wrapper",
+      "description": "Generate typed wrappers for a Julia function across Motoko, Candid, and TypeScript substrates",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "julia_function": {
+            "type": "string",
+            "description": "Name of the Julia function card (e.g. phi_eigen, reward_curve, probe_classify)"
+          },
+          "input_type": {
+            "type": "string",
+            "description": "Julia input type signature (e.g. Matrix{Float64}, Vector{Float64})"
+          },
+          "target": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["Motoko", "Candid", "TypeScript", "Rust", "Python"]
+            },
+            "description": "Target languages/substrates to generate wrappers for"
+          },
+          "options": {
+            "type": "object",
+            "properties": {
+              "deterministic": { "type": "boolean", "default": true },
+              "canister_safe": { "type": "boolean", "default": true },
+              "include_tests": { "type": "boolean", "default": true },
+              "wasm_compatible": { "type": "boolean", "default": true }
+            }
+          }
+        },
+        "required": ["julia_function", "input_type", "target"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "wrappers": {
+            "type": "object",
+            "description": "Generated wrapper code for each target substrate",
+            "additionalProperties": {
+              "type": "object",
+              "properties": {
+                "code": { "type": "string" },
+                "type_signature": { "type": "string" },
+                "candid_interface": { "type": "string" },
+                "test_harness": { "type": "string" }
+              }
+            }
+          },
+          "function_card": {
+            "type": "object",
+            "description": "Complete function card with all substrate mappings"
+          },
+          "round_trip_test": {
+            "type": "object",
+            "properties": {
+              "test_vectors": { "type": "array" },
+              "expected_results": { "type": "array" },
+              "all_passed": { "type": "boolean" }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "julia_motoko_bridge.validate_card",
+      "description": "Validate a function card for type correctness across all substrates",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "card_path": { "type": "string", "description": "Path to function card JSON" },
+          "strict": { "type": "boolean", "default": true }
+        },
+        "required": ["card_path"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "valid": { "type": "boolean" },
+          "julia_type_check": { "type": "boolean" },
+          "motoko_type_check": { "type": "boolean" },
+          "candid_type_check": { "type": "boolean" },
+          "round_trip_safe": { "type": "boolean" },
+          "errors": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    {
+      "name": "julia_motoko_bridge.invoke",
+      "description": "Invoke a Julia function through the bridge, routing through WASM to ICP canister",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "function_card": { "type": "string" },
+          "args": { "type": "object" },
+          "route": {
+            "type": "string",
+            "enum": ["julia_direct", "julia_wasm", "julia_wasm_icp", "icp_only"],
+            "default": "julia_wasm",
+            "description": "Execution route through substrates"
+          },
+          "cache": { "type": "boolean", "default": true }
+        },
+        "required": ["function_card", "args"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "result": { "type": "object" },
+          "route_used": { "type": "string" },
+          "execution_time_ms": { "type": "number" },
+          "cached": { "type": "boolean" },
+          "substrate_hops": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Substrates traversed during execution"
+          }
+        }
+      }
+    },
+    {
+      "name": "julia_motoko_bridge.list_cards",
+      "description": "List all registered function cards in the brain organ",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "filter": {
+            "type": "object",
+            "properties": {
+              "deterministic_only": { "type": "boolean" },
+              "canister_safe_only": { "type": "boolean" },
+              "round_trip_tested_only": { "type": "boolean" }
+            }
+          }
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "cards": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": { "type": "string" },
+                "julia": { "type": "string" },
+                "deterministic": { "type": "boolean" },
+                "canister_safe": { "type": "boolean" },
+                "round_trip_tested": { "type": "boolean" }
+              }
+            }
+          },
+          "total": { "type": "number" }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EmailAI Mesh — Sovereign Communication Layer</title>
+  <meta name="description" content="EmailAI Mesh: Multi-identity, cross-network communication layer for agents, systems, and organisms. EAP-1 protocol.">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✉</text></svg>">
+  <style>
+    :root {
+      --gold: #ffd700;
+      --cyan: #00d4ff;
+      --emerald: #00ff88;
+      --crimson: #ff4d6d;
+      --purple: #a855f7;
+      --blue: #3b82f6;
+      --bg: #02050f;
+      --card: #0a0f1a;
+      --border: #1a2535;
+      --text: #e2ecf5;
+      --dim: #6b7a8f;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+    }
+    a { color: var(--cyan); text-decoration: none; }
+    a:hover { color: var(--gold); }
+
+    nav {
+      position: sticky; top: 0;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 48px;
+      background: rgba(2,5,15,0.95);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      z-index: 100;
+    }
+    .logo { font-size: 1.2rem; font-weight: bold; color: var(--gold); letter-spacing: 2px; }
+    .nav-links { display: flex; gap: 24px; }
+    .nav-links a { color: var(--dim); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; }
+    .nav-links a:hover { color: var(--gold); }
+
+    .hero {
+      text-align: center;
+      padding: 120px 48px 80px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .hero h1 {
+      font-size: 3.5rem;
+      font-weight: 800;
+      letter-spacing: -1px;
+      background: linear-gradient(135deg, var(--gold), var(--cyan));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 24px;
+    }
+    .hero .tagline {
+      font-size: 1.3rem;
+      color: var(--dim);
+      max-width: 700px;
+      margin: 0 auto 40px;
+    }
+    .hero .pitch {
+      font-size: 1.1rem;
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px 32px;
+      background: var(--card);
+      text-align: left;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    .hero .pitch code {
+      color: var(--emerald);
+      font-size: 0.95rem;
+    }
+
+    .section { padding: 80px 48px; max-width: 1100px; margin: 0 auto; }
+    .section h2 {
+      font-size: 2rem;
+      color: var(--gold);
+      margin-bottom: 16px;
+    }
+    .section .subtitle {
+      color: var(--dim);
+      margin-bottom: 40px;
+      font-size: 1.05rem;
+    }
+
+    .identities-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+    }
+    .identity-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      transition: border-color 0.2s;
+    }
+    .identity-card:hover { border-color: var(--gold); }
+    .identity-card .address {
+      font-family: monospace;
+      font-size: 1rem;
+      color: var(--cyan);
+      margin-bottom: 8px;
+    }
+    .identity-card .role { color: var(--dim); font-size: 0.9rem; margin-bottom: 12px; }
+    .identity-card .voice {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .voice-tactical { background: rgba(255,77,109,0.15); color: var(--crimson); }
+    .voice-analytical { background: rgba(0,212,255,0.15); color: var(--cyan); }
+    .voice-authoritative { background: rgba(168,85,247,0.15); color: var(--purple); }
+    .voice-operational { background: rgba(0,255,136,0.15); color: var(--emerald); }
+    .voice-deceptive { background: rgba(255,215,0,0.15); color: var(--gold); }
+    .voice-intelligence { background: rgba(59,130,246,0.15); color: var(--blue); }
+    .voice-executive { background: rgba(255,215,0,0.15); color: var(--gold); }
+    .voice-investigative { background: rgba(255,77,109,0.15); color: #ff6b9d; }
+
+    .flows-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 24px;
+    }
+    .flow-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 28px;
+    }
+    .flow-card h3 { color: var(--emerald); margin-bottom: 8px; }
+    .flow-card .flow-route {
+      font-family: monospace;
+      font-size: 0.85rem;
+      color: var(--cyan);
+      margin-bottom: 12px;
+      padding: 8px 12px;
+      background: rgba(0,212,255,0.05);
+      border-radius: 6px;
+    }
+    .flow-card .flow-desc { color: var(--dim); font-size: 0.9rem; }
+    .flow-card .flow-response {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+      color: var(--text);
+      font-size: 0.85rem;
+    }
+    .flow-card .flow-response strong { color: var(--gold); }
+
+    .protocol-section {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 40px;
+      margin-top: 40px;
+    }
+    .protocol-section h3 { color: var(--gold); margin-bottom: 16px; }
+    .protocol-section pre {
+      background: #0d1117;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px;
+      overflow-x: auto;
+      font-size: 0.85rem;
+      line-height: 1.5;
+      color: var(--text);
+    }
+
+    .why-section {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-top: 40px;
+    }
+    .why-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+    }
+    .why-card .emoji { font-size: 2rem; margin-bottom: 8px; }
+    .why-card .label { color: var(--dim); font-size: 0.85rem; }
+
+    .cta-section {
+      text-align: center;
+      padding: 80px 48px;
+    }
+    .cta-section h2 { margin-bottom: 20px; }
+    .cta-section .cta-text { color: var(--dim); font-size: 1.1rem; max-width: 600px; margin: 0 auto 32px; }
+    .cta-button {
+      display: inline-block;
+      padding: 14px 36px;
+      background: linear-gradient(135deg, var(--gold), #ff9500);
+      color: #000;
+      font-weight: bold;
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: transform 0.2s;
+    }
+    .cta-button:hover { transform: translateY(-2px); color: #000; }
+
+    footer {
+      text-align: center;
+      padding: 40px 48px;
+      border-top: 1px solid var(--border);
+      color: var(--dim);
+      font-size: 0.85rem;
+    }
+
+    @media (max-width: 768px) {
+      .hero h1 { font-size: 2.2rem; }
+      nav { padding: 12px 20px; }
+      .section { padding: 60px 20px; }
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="logo">✉ EmailAI Mesh</div>
+    <div class="nav-links">
+      <a href="/">Home</a>
+      <a href="#identities">Identities</a>
+      <a href="#flows">Flows</a>
+      <a href="#protocol">EAP-1</a>
+      <a href="/pages/nova.html">NOVA</a>
+    </div>
+  </nav>
+
+  <section class="hero">
+    <h1>EmailAI Mesh</h1>
+    <p class="tagline">
+      A sovereign, multi-identity, cross-network communication layer for agents, systems, and organisms.
+    </p>
+    <div class="pitch">
+      <p>Give your systems email addresses.<br>Let them talk to my agents.<br><strong>No SDKs. No APIs. Just email.</strong></p>
+      <br>
+      <p><code>security@yourco.com → membrane@medinatechlabs.net</code></p>
+      <p><code>billing@yourco.com → identity@medinatechlabs.net</code></p>
+      <p><code>alerts@yourco.com → reflex@medinatechlabs.net</code></p>
+    </div>
+  </section>
+
+  <section class="section" id="identities">
+    <h2>Organ Identities</h2>
+    <p class="subtitle">Every organ is an autonomous correspondent with its own inbox, voice, and personality.</p>
+    <div class="identities-grid">
+      <div class="identity-card">
+        <div class="address">membrane@medinatechlabs.net</div>
+        <div class="role">Probe alerts, routing decisions, policy updates, scanner decomposition</div>
+        <span class="voice voice-tactical">tactical voice</span>
+      </div>
+      <div class="identity-card">
+        <div class="address">julia@medinatechlabs.net</div>
+        <div class="role">Analytics, φ-curves, predictions, optimizations, intelligence scoring</div>
+        <span class="voice voice-analytical">analytical voice</span>
+      </div>
+      <div class="identity-card">
+        <div class="address">identity@medinatechlabs.net</div>
+        <div class="role">SSN onboarding, staking confirmations, reputation updates</div>
+        <span class="voice voice-authoritative">authoritative voice</span>
+      </div>
+      <div class="identity-card">
+        <div class="address">reflex@medinatechlabs.net</div>
+        <div class="role">Workflow summaries, event chains, reflex logs, incident correlation</div>
+        <span class="voice voice-operational">operational voice</span>
+      </div>
+      <div class="identity-card">
+        <div class="address">synthetic@medinatechlabs.net</div>
+        <div class="role">Deception reports, scanner fingerprints, novelty scores, maze engagement</div>
+        <span class="voice voice-deceptive">deceptive voice</span>
+      </div>
+      <div class="identity-card">
+        <div class="address">intel@medinatechlabs.net</div>
+        <div class="role">Threat intel feeds, scanner signatures, temporal patterns</div>
+        <span class="voice voice-intelligence">intelligence voice</span>
+      </div>
+      <div class="identity-card">
+        <div class="address">nova@medinatechlabs.net</div>
+        <div class="role">Customer intelligence, complaint analysis, churn detection, health scoring</div>
+        <span class="voice voice-investigative">investigative voice</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="flows">
+    <h2>Enterprise Flows</h2>
+    <p class="subtitle">They email your organs like they'd email support@ or sales@ — but the organs read, classify, route, compute, and reply.</p>
+    <div class="flows-grid">
+      <div class="flow-card">
+        <h3>Security → Membrane</h3>
+        <div class="flow-route">security@bigco.com → membrane@medinatechlabs.net</div>
+        <div class="flow-desc">"Daily probe summary for our edge"</div>
+        <div class="flow-response">
+          <strong>Membrane replies:</strong> Top 5 scanner classes, ASNs, novel signatures, recommendations
+        </div>
+      </div>
+      <div class="flow-card">
+        <h3>Billing → Identity</h3>
+        <div class="flow-route">billing@bigco.com → identity@medinatechlabs.net</div>
+        <div class="flow-desc">"What's our SSN-X usage this month?"</div>
+        <div class="flow-response">
+          <strong>Identity replies:</strong> Ledger + forecast with SSN-X consumption breakdown
+        </div>
+      </div>
+      <div class="flow-card">
+        <h3>DevOps → Reflex</h3>
+        <div class="flow-route">alerts@bigco.com → reflex@medinatechlabs.net</div>
+        <div class="flow-desc">"P1: API latency spike across us-east-1"</div>
+        <div class="flow-response">
+          <strong>Reflex replies:</strong> Root cause, blast radius, recommended patch, triggered workflows
+        </div>
+      </div>
+      <div class="flow-card">
+        <h3>Data Team → Julia</h3>
+        <div class="flow-route">data@bigco.com → julia@medinatechlabs.net</div>
+        <div class="flow-desc">"Anomaly detection on last 24h traffic"</div>
+        <div class="flow-response">
+          <strong>Julia replies:</strong> φ-weighted anomaly scores, temporal patterns, predictions
+        </div>
+      </div>
+      <div class="flow-card">
+        <h3>Red Team → Synthetic</h3>
+        <div class="flow-route">redteam@bigco.com → synthetic@medinatechlabs.net</div>
+        <div class="flow-desc">"Weekly honeypot engagement report"</div>
+        <div class="flow-response">
+          <strong>Synthetic replies:</strong> Scanner fingerprints, maze depths, engagement metrics
+        </div>
+      </div>
+      <div class="flow-card">
+        <h3>Agent → Organism</h3>
+        <div class="flow-route">siem-agent@corp.com → organism@medinatechlabs.net</div>
+        <div class="flow-desc">"Agent handshake: requesting mesh access"</div>
+        <div class="flow-response">
+          <strong>Organism replies:</strong> Access granted, permissions, billing setup
+        </div>
+      </div>
+      <div class="flow-card">
+        <h3>Sales/CS → Nova</h3>
+        <div class="flow-route">cs@bigco.com → nova@medinatechlabs.net</div>
+        <div class="flow-desc">"Summarize all customer complaints from the last 7 days"</div>
+        <div class="flow-response">
+          <strong>Nova replies:</strong> Complaint clusters, churn risks, customer health report, sentiment scores
+        </div>
+      </div>
+      <div class="flow-card">
+        <h3>FinOps → Julia</h3>
+        <div class="flow-route">finops@bigco.com → julia@medinatechlabs.net</div>
+        <div class="flow-desc">"Analyze Q2 spend across AWS, Azure, Cloudflare. Recommend optimizations."</div>
+        <div class="flow-response">
+          <strong>Julia replies:</strong> Cost-reduction plan, optimization recommendations, projections
+        </div>
+      </div>
+      <div class="flow-card">
+        <h3>Legal → Identity</h3>
+        <div class="flow-route">legal@bigco.com → identity@medinatechlabs.net</div>
+        <div class="flow-desc">"Scan these contracts for risk clauses and summarize obligations"</div>
+        <div class="flow-response">
+          <strong>Identity replies:</strong> Compliance summary, flagged risks, obligation timeline
+        </div>
+      </div>
+      <div class="flow-card">
+        <h3>Monitoring → Membrane</h3>
+        <div class="flow-route">monitoring@bigco.com → membrane@medinatechlabs.net</div>
+        <div class="flow-desc">"Seeing spikes in traffic from AS12345. Can you analyze?"</div>
+        <div class="flow-response">
+          <strong>Membrane replies:</strong> Scanner classes, risk scores, recommended firewall rules
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="clients">
+    <h2>Client-Facing Identities</h2>
+    <p class="subtitle">Clients email your agents like departments. No portals, no tickets, no new apps.</p>
+    <div class="identities-grid">
+      <div class="identity-card">
+        <div class="address">analysis@medinatechlabs.net</div>
+        <div class="role">Data analysis, anomaly detection, cost optimization → routes to Julia Brain</div>
+        <span class="voice voice-analytical">analytical</span>
+      </div>
+      <div class="identity-card">
+        <div class="address">research@medinatechlabs.net</div>
+        <div class="role">Threat research, scanner intelligence, IOC lookups → routes to Intel</div>
+        <span class="voice voice-intelligence">intelligence</span>
+      </div>
+      <div class="identity-card">
+        <div class="address">support@medinatechlabs.net</div>
+        <div class="role">System status, health reports, general triage → routes to Organism</div>
+        <span class="voice voice-executive">executive</span>
+      </div>
+      <div class="identity-card">
+        <div class="address">automation@medinatechlabs.net</div>
+        <div class="role">Trigger workflows, schedule automations, request actions → routes to Reflex</div>
+        <span class="voice voice-operational">operational</span>
+      </div>
+    </div>
+    <div class="protocol-section" style="margin-top: 32px;">
+      <h3>Enterprise System Onboarding</h3>
+      <p style="color: var(--dim); margin-bottom: 16px;">Companies onboard their entire stack — each system gets an email identity:</p>
+      <pre>
+crm@company.com       → talks to nova@medinatechlabs.net
+monitoring@company.com → talks to membrane@medinatechlabs.net
+security@company.com  → talks to membrane@medinatechlabs.net
+billing@company.com   → talks to identity@medinatechlabs.net
+support@company.com   → talks to support@medinatechlabs.net
+alerts@company.com    → talks to reflex@medinatechlabs.net
+analytics@company.com → talks to analysis@medinatechlabs.net</pre>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>What This Replaces</h2>
+    <p class="subtitle">One protocol-native communication layer replaces entire tool categories.</p>
+    <div class="flows-grid">
+      <div class="flow-card">
+        <h3>🔒 Security</h3>
+        <div class="flow-desc">Replaces: Splunk, CrowdStrike, Palo Alto dashboards, manual log correlation</div>
+      </div>
+      <div class="flow-card">
+        <h3>🚨 DevOps/SRE</h3>
+        <div class="flow-desc">Replaces: PagerDuty, OpsGenie, Slack war rooms, manual incident triage</div>
+      </div>
+      <div class="flow-card">
+        <h3>💰 Finance/FinOps</h3>
+        <div class="flow-desc">Replaces: Cloudability, FinOps dashboards, manual spreadsheet analysis</div>
+      </div>
+      <div class="flow-card">
+        <h3>🤝 Sales/CS</h3>
+        <div class="flow-desc">Replaces: Zendesk, Salesforce Einstein, noisy Slack channels</div>
+      </div>
+      <div class="flow-card">
+        <h3>⚖️ Legal</h3>
+        <div class="flow-desc">Replaces: Contract review teams, legal AI tools, manual redlining</div>
+      </div>
+      <div class="flow-card">
+        <h3>📊 Analytics</h3>
+        <div class="flow-desc">Replaces: Custom dashboards, BI tools, manual report generation</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="protocol">
+    <h2>EAP-1 Protocol</h2>
+    <p class="subtitle">Email Agent Protocol — the wire format for inter-organism communication.</p>
+    <div class="protocol-section">
+      <h3>Required Headers</h3>
+      <pre>
+X-EAP-Version: 1.0
+X-EAP-Sender-Type: system
+X-EAP-Intent: report</pre>
+      <h3 style="margin-top: 24px;">Optional Headers</h3>
+      <pre>
+X-EAP-Sender-ID: SIEM-Agent-001
+X-EAP-Org: BigCo Security
+X-EAP-Priority: high
+X-EAP-Thread-ID: 7f3a2c91-...
+X-EAP-Payload-Type: json
+X-EAP-Schema: probe-report
+X-EAP-Signature: hmac-sha256-...
+X-EAP-Billing: ssn-x-0x...</pre>
+      <h3 style="margin-top: 24px;">Example: Security → Membrane</h3>
+      <pre>
+From: security@bigco.com
+To: membrane@medinatechlabs.net
+Subject: Daily probe summary for our edge
+X-EAP-Version: 1.0
+X-EAP-Sender-Type: system
+X-EAP-Intent: report
+X-EAP-Schema: probe-report
+X-EAP-Payload-Type: json
+
+{
+  "source": "bigco-edge-firewall",
+  "timeframe": "2026-05-21T00:00:00Z/P1D",
+  "probes": [
+    {"ip": "45.88.138.44", "path": "/wp-login.php", "ua": "nuclei"},
+    {"ip": "203.159.90.116", "path": "/.env", "ua": "python-requests"}
+  ],
+  "summary_requested": true
+}</pre>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>Why Email?</h2>
+    <p class="subtitle">Email is the only protocol that crosses every boundary.</p>
+    <div class="why-section">
+      <div class="why-card"><div class="emoji">🌐</div><div class="label">Global</div></div>
+      <div class="why-card"><div class="emoji">🔗</div><div class="label">Federated</div></div>
+      <div class="why-card"><div class="emoji">🔓</div><div class="label">Permissionless</div></div>
+      <div class="why-card"><div class="emoji">🏢</div><div class="label">Cross-Company</div></div>
+      <div class="why-card"><div class="emoji">☁️</div><div class="label">Cross-Cloud</div></div>
+      <div class="why-card"><div class="emoji">🤖</div><div class="label">Agent-Native</div></div>
+      <div class="why-card"><div class="emoji">📋</div><div class="label">Auditable</div></div>
+      <div class="why-card"><div class="emoji">🔥</div><div class="label">Firewall-Friendly</div></div>
+    </div>
+  </section>
+
+  <section class="cta-section">
+    <h2 style="color: var(--gold);">Post-SaaS. Post-API. Post-Integration.</h2>
+    <p class="cta-text">
+      You're not replacing Slack. You're building the inter-organism protocol that sits under everything.
+      Protocol-native AI communication.
+    </p>
+    <a href="/enterprise/onboard" class="cta-button">Onboard Your Systems →</a>
+  </section>
+
+  <footer>
+    <p>© 2026 Alfredo Medina Hernandez. All Rights Reserved. Door 4 Architecture.</p>
+    <p style="margin-top: 8px;">EmailAI Mesh v1.0 | EAP-1 Protocol | medinatechlabs.net</p>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,76 @@
+name               = "organism-email-mesh"
+main               = "workers/email-mesh.js"
+compatibility_date = "2024-09-02"
+
+[vars]
+DESIGNATION    = "ORGANISM-EMAIL-001"
+WORKER_NAME    = "EMAIL_MESH"
+VERSION        = "1.0.0"
+ARCHITECTURE   = "door-4-five-organ"
+DOMAIN         = "medinatechlabs.net"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# WORKER 4 — EMAIL MESH (Sovereign Communication Organ)
+# Multi-identity AI email. Every organ has an inbox, outbound identity, and voice.
+# The universal protocol-native communication layer for AI civilizations.
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# ── KV Namespace — Email state + identity cache ──────────────────────────────
+[[kv_namespaces]]
+binding = "EMAIL_STATE"
+id = "organism-email-state"
+preview_id = "organism-email-state-preview"
+
+# ── KV Namespace — Message queue buffer ──────────────────────────────────────
+[[kv_namespaces]]
+binding = "MESSAGE_BUFFER"
+id = "organism-message-buffer"
+preview_id = "organism-message-buffer-preview"
+
+# ── D1 Database — Email logs, conversations, routing rules ───────────────────
+[[d1_databases]]
+binding = "EMAIL_DB"
+database_name = "organism-email"
+database_id = "organism-email-db"
+
+# ── Queue — Cross-organ email events ────────────────────────────────────────
+[[queues.producers]]
+binding = "EMAIL_QUEUE"
+queue = "organism-email-events"
+
+# ── Queue — Outbound dispatch ────────────────────────────────────────────────
+[[queues.producers]]
+binding = "OUTBOUND_QUEUE"
+queue = "organism-email-outbound"
+
+# ── AI — LLM for email classification, summarization, response generation ────
+[ai]
+binding = "AI"
+
+# ── Service Bindings — Other sovereign workers ───────────────────────────────
+[[services]]
+binding = "MEMBRANE"
+service = "organism-gateway"
+
+[[services]]
+binding = "INTERNAL_SERVICES"
+service = "organism-internal"
+
+[[services]]
+binding = "SYNTHETIC_SURFACES"
+service = "organism-surfaces"
+
+# ── R2 — Email archive ──────────────────────────────────────────────────────
+[[r2_buckets]]
+binding = "EMAIL_ARCHIVE"
+bucket_name = "organism-email-archive"
+
+# ── Analytics ───────────────────────────────────────────────────────────────
+[[analytics_engine_datasets]]
+binding = "EMAIL_ANALYTICS"
+dataset = "organism_email_events"
+
+# ── Email Routing — Inbound email handling ───────────────────────────────────
+# Cloudflare Email Routing forwards inbound mail to this worker
+# Configure in Cloudflare Dashboard: Email Routing → Routes → Worker
+# All addresses @medinatechlabs.net → organism-email-mesh worker

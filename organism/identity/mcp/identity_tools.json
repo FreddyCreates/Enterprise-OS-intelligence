@@ -1,0 +1,167 @@
+{
+  "organ": "identity",
+  "version": "1.0.0",
+  "substrate": "icp-canisters",
+  "description": "Identity / SSN Organ — Registration, staking, reputation, SSN-X tokens",
+  "tools": [
+    {
+      "name": "icp.ssn.register",
+      "description": "Register a new Sovereign Social Number on the ICP identity substrate",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "principal": { "type": "string", "description": "ICP principal ID" },
+          "metadata": {
+            "type": "object",
+            "properties": {
+              "display_name": { "type": "string" },
+              "entity_type": { "type": "string", "enum": ["human", "agent", "organism", "collective"] },
+              "public_key": { "type": "string" }
+            }
+          }
+        },
+        "required": ["principal"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "ssn": { "type": "string", "description": "Assigned SSN identifier" },
+          "registered_at": { "type": "number" },
+          "canister_id": { "type": "string" }
+        }
+      }
+    },
+    {
+      "name": "icp.ssn.get",
+      "description": "Retrieve SSN record and reputation state",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "ssn": { "type": "string" },
+          "include_reputation": { "type": "boolean", "default": true },
+          "include_stake": { "type": "boolean", "default": false }
+        },
+        "required": ["ssn"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "ssn": { "type": "string" },
+          "principal": { "type": "string" },
+          "entity_type": { "type": "string" },
+          "reputation": { "type": "number" },
+          "stake": { "type": "number" },
+          "created_at": { "type": "number" }
+        }
+      }
+    },
+    {
+      "name": "icp.ssn.stake",
+      "description": "Stake SSN-X tokens against an SSN for reputation weight",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "ssn": { "type": "string" },
+          "amount": { "type": "number", "minimum": 0 },
+          "duration_days": { "type": "number", "minimum": 1 }
+        },
+        "required": ["ssn", "amount"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "stake_id": { "type": "string" },
+          "total_staked": { "type": "number" },
+          "reputation_multiplier": { "type": "number" },
+          "unlock_at": { "type": "number" }
+        }
+      }
+    },
+    {
+      "name": "icp.ssn.reputation.update",
+      "description": "Update reputation score based on on-chain activity",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "ssn": { "type": "string" },
+          "event_type": { "type": "string", "enum": ["contribution", "violation", "stake", "unstake", "governance_vote"] },
+          "delta": { "type": "number" },
+          "evidence": { "type": "string" }
+        },
+        "required": ["ssn", "event_type", "delta"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "new_reputation": { "type": "number" },
+          "rank": { "type": "string" },
+          "event_logged": { "type": "boolean" }
+        }
+      }
+    },
+    {
+      "name": "icp.ssn_x.mint",
+      "description": "Mint SSN-X tokens to a registered SSN",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "to_ssn": { "type": "string" },
+          "amount": { "type": "number", "minimum": 0 },
+          "reason": { "type": "string", "enum": ["registration_bonus", "stake_reward", "contribution_reward", "governance_reward"] }
+        },
+        "required": ["to_ssn", "amount", "reason"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "tx_id": { "type": "string" },
+          "new_balance": { "type": "number" },
+          "total_supply": { "type": "number" }
+        }
+      }
+    },
+    {
+      "name": "icp.ssn_x.balance",
+      "description": "Query SSN-X token balance for an SSN",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "ssn": { "type": "string" }
+        },
+        "required": ["ssn"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "balance": { "type": "number" },
+          "staked": { "type": "number" },
+          "available": { "type": "number" },
+          "pending_rewards": { "type": "number" }
+        }
+      }
+    },
+    {
+      "name": "icp.ssn_x.transfer",
+      "description": "Transfer SSN-X tokens between SSNs",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "from_ssn": { "type": "string" },
+          "to_ssn": { "type": "string" },
+          "amount": { "type": "number", "minimum": 0 },
+          "memo": { "type": "string" }
+        },
+        "required": ["from_ssn", "to_ssn", "amount"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "tx_id": { "type": "string" },
+          "from_balance": { "type": "number" },
+          "to_balance": { "type": "number" },
+          "fee": { "type": "number" }
+        }
+      }
+    }
+  ]
+}

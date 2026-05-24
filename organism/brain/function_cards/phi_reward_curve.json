@@ -1,0 +1,29 @@
+{
+  "name": "phi.reward_curve",
+  "julia": "reward_curve(probe_type::String, engagement::Float64, time_s::Float64, intel::Float64)",
+  "motoko": "phi_reward_curve(probe_type: Text, engagement: Float, time_s: Float, intel: Float) : async RewardResult",
+  "candid": "phi_reward_curve : (text, float64, float64, float64) -> (record { reward: float64; phi_resonance: float64; optimal_action: text; diminishing_at: float64 })",
+  "deterministic": true,
+  "canister_safe": true,
+  "round_trip_tested": true,
+  "description": "Compute φ-weighted reward curve for probe engagement optimization",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "probe_type": { "type": "string" },
+      "engagement_depth": { "type": "number", "minimum": 0, "maximum": 1 },
+      "time_in_maze_seconds": { "type": "number", "minimum": 0 },
+      "intelligence_extracted": { "type": "number", "minimum": 0, "maximum": 1 }
+    },
+    "required": ["probe_type", "engagement_depth"]
+  },
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "reward": { "type": "number" },
+      "phi_resonance": { "type": "number" },
+      "optimal_next_action": { "type": "string" },
+      "diminishing_returns_at": { "type": "number" }
+    }
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "probe.classify",
+  "julia": "classify_probe(features::ProbeFeatures)::Classification",
+  "motoko": "probe_classify(features: ProbeFeatures) : async Classification",
+  "candid": "probe_classify : (record { timing_vector: vec float64; path_entropy: float64; header_fingerprint: text; behavioral_embedding: vec float64 }) -> (record { class: text; confidence: float64; policy: text })",
+  "deterministic": true,
+  "canister_safe": true,
+  "round_trip_tested": true
+}

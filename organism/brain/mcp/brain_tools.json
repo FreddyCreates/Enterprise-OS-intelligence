@@ -1,0 +1,105 @@
+{
+  "organ": "brain",
+  "version": "1.0.0",
+  "substrate": "julia-wasm-bridge",
+  "description": "Julia Brain Organ — Numerical intelligence, policy optimization, probe classification, φ-mathematics",
+  "tools": [
+    {
+      "name": "julia.compute",
+      "description": "Execute a registered Julia function card by name",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "function_card": { "type": "string", "description": "Name of the function card (e.g. phi_eigen, reward_curve)" },
+          "args": { "type": "object", "description": "Arguments matching the function card input schema" },
+          "deterministic": { "type": "boolean", "default": true }
+        },
+        "required": ["function_card", "args"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "result": { "type": "object" },
+          "computation_time_ms": { "type": "number" },
+          "deterministic": { "type": "boolean" },
+          "canister_safe": { "type": "boolean" }
+        }
+      }
+    },
+    {
+      "name": "julia.classify_probe",
+      "description": "Use Julia numerical intelligence to classify a network probe",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "features": {
+            "type": "object",
+            "properties": {
+              "timing_vector": { "type": "array", "items": { "type": "number" } },
+              "path_entropy": { "type": "number" },
+              "header_fingerprint": { "type": "string" },
+              "behavioral_embedding": { "type": "array", "items": { "type": "number" } }
+            }
+          },
+          "threshold": { "type": "number", "default": 0.7 }
+        },
+        "required": ["features"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "classification": { "type": "string" },
+          "confidence": { "type": "number" },
+          "feature_importance": { "type": "object" },
+          "recommended_policy": { "type": "string" }
+        }
+      }
+    },
+    {
+      "name": "julia.optimize_policy",
+      "description": "Optimize an edge policy using Julia optimization algorithms",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "policy_id": { "type": "string" },
+          "objective": { "type": "string", "enum": ["minimize_false_positives", "maximize_engagement", "minimize_cost", "maximize_intelligence"] },
+          "constraints": { "type": "object" },
+          "historical_data": { "type": "array", "items": { "type": "object" } }
+        },
+        "required": ["policy_id", "objective"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "optimized_parameters": { "type": "object" },
+          "expected_improvement": { "type": "number" },
+          "convergence": { "type": "boolean" },
+          "iterations": { "type": "number" }
+        }
+      }
+    },
+    {
+      "name": "julia.reward_curve",
+      "description": "Compute reward curve for probe engagement using φ-mathematics",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "probe_type": { "type": "string" },
+          "engagement_depth": { "type": "number", "minimum": 0, "maximum": 1 },
+          "time_in_maze_seconds": { "type": "number" },
+          "intelligence_extracted": { "type": "number" }
+        },
+        "required": ["probe_type", "engagement_depth"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "reward": { "type": "number" },
+          "phi_resonance": { "type": "number" },
+          "optimal_next_action": { "type": "string" },
+          "diminishing_returns_at": { "type": "number" }
+        }
+      }
+    }
+  ]
+}

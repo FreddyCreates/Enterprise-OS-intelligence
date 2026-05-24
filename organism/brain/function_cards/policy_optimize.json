@@ -1,0 +1,10 @@
+{
+  "name": "policy.optimize",
+  "julia": "optimize_policy(policy_id::String, objective::Symbol, constraints::Dict, history::Vector{Dict})",
+  "motoko": "policy_optimize(policy_id: Text, objective: Text, constraints: PolicyConstraints, history: [HistoryEntry]) : async OptimizationResult",
+  "candid": "policy_optimize : (text, text, record { max_false_positive_rate: float64; min_detection_rate: float64 }, vec record { timestamp: nat64; outcome: text }) -> (record { parameters: vec record { key: text; value: float64 }; improvement: float64; converged: bool })",
+  "deterministic": false,
+  "canister_safe": true,
+  "round_trip_tested": true,
+  "description": "Optimize edge policy parameters using Julia optimization (Optim.jl) against historical probe data"
+}
