@@ -76,8 +76,13 @@ const PHASES = {
   },
 };
 
+let idCounter = 0;
+
 function safeId(prefix) {
-  return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+  const uuid = globalThis.crypto?.randomUUID?.();
+  if (uuid) return `${prefix}_${uuid}`;
+  idCounter += 1;
+  return `${prefix}_${Date.now()}_${idCounter}`;
 }
 
 function splitClauses(text = '') {
