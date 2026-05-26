@@ -1,0 +1,24 @@
+{
+  "name": "@medina/reefer-contract-intelligence",
+  "version": "1.0.0",
+  "description": "Reefer Contract Intelligence for 18-wheelers: contract risk, obligations, internal/external intelligence, orchestration, and enterprise controls.",
+  "main": "reefer-contract-intelligence.js",
+  "type": "module",
+  "keywords": [
+    "reefer",
+    "trucking",
+    "contract-intelligence",
+    "cold-chain",
+    "logistics",
+    "risk",
+    "compliance",
+    "enterprise"
+  ],
+  "author": "Alfredo Medina Hernandez",
+  "license": "SEE LICENSE IN ../../LICENSE",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/FreddyCreates/Enterprise-OS-intelligence.git",
+    "directory": "sdk/reefer-contract-intelligence"
+  }
+}
