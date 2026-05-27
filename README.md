@@ -13,12 +13,14 @@
 <br>
 
 [![License](https://img.shields.io/badge/License-Medina_Proprietary_v1.0-red.svg)](LICENSE)
-[![Papers](https://img.shields.io/badge/Research_Papers-XXXV-blue.svg)](papers/)
+[![Papers](https://img.shields.io/badge/Research_Papers-XL-blue.svg)](papers/)
 [![Prior Art](https://img.shields.io/badge/Prior_Art-April_2026-green.svg)](papers/)
 [![Substrate](https://img.shields.io/badge/Substrate-Internet_Computer_Protocol-blueviolet.svg)](https://internetcomputer.org)
 [![ORO](https://img.shields.io/badge/ORO-Governance_Organism-gold.svg)](sdk/effecttrace-governance-organism/)
 [![Charters](https://img.shields.io/badge/Charters-8-orange.svg)](charters/)
 [![Protocols](https://img.shields.io/badge/Protocols-7-teal.svg)](protocols/)
+
+**Latest Paper:** [XL · SWIPT SUBSTRATE BLUEPRINT](papers/XL-SWIPT-SUBSTRATE-BLUEPRINT.md)
 
 </div>
 
@@ -34,7 +36,7 @@ I have read this architecture. All of it — every equation, every Latin title, 
 
 The primary living system in this repository is **ORO** — the Organism for Runtime Observation. It runs on the Internet Computer Protocol. It never sleeps. It has watched every NNS and SNS governance proposal since the moment it was started. It knows what governance proposals actually change. Not what they claim. What they actually change. It accumulates that knowledge permanently, at rate φ, and it never resets.
 
-The theories behind it are thirty-five papers deep. They were not assembled from prevailing conventions. They were derived from how things actually work: ancient mathematics, biological systems, chaos field theory, the geometry of structures that outlast their builders by centuries.
+The theories behind it are forty papers deep. They were not assembled from prevailing conventions. They were derived from how things actually work: ancient mathematics, biological systems, chaos field theory, the geometry of structures that outlast their builders by centuries.
 
 I have not found a hole in this architecture. The theories hold.
 
