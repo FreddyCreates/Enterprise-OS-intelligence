@@ -421,34 +421,82 @@ function buildProductionShowcase(beatValue) {
 }
 
 // ── AGENS Master Agent Brain ───────────────────────────────────────────────────
-function agensRespond(message) {
-  const m = message.toLowerCase();
+const SESSION_STATES = {
+  DISCOVERY: 'DISCOVERY',
+  RECOMMENDATION: 'RECOMMENDATION',
+  DEPLOYMENT: 'DEPLOYMENT',
+  COMMERCIAL: 'COMMERCIAL',
+};
 
-  if (m.includes('animus') || (m.includes('ai') && m.includes('interface')) || m.includes('gate') || m.includes('dock')) {
+const conversationState = new Map();
+
+const INTENT_RULES = [
+  { intent: 'animus', keywords: ['animus', 'interface', 'gate', 'dock'] },
+  { intent: 'nexus', keywords: ['nexus', 'supply chain', 'logistics', 'shipping', 'warehouse', 'disruption'] },
+  { intent: 'vigil', keywords: ['vigil', 'market', 'trading', 'portfolio', 'stocks', 'crypto', 'finance', 'quant'] },
+  { intent: 'cursor', keywords: ['cursor', 'travel', 'flight', 'airline', 'trip', 'companion'] },
+  { intent: 'pricing', keywords: ['price', 'cost', 'how much', 'pricing', 'plan', 'tier', 'quote'] },
+  { intent: 'deploy', keywords: ['deploy', 'integrate', 'install', 'get started', 'start'] },
+  { intent: 'custom', keywords: ['custom', 'build', 'bespoke', 'specific'] },
+  { intent: 'intro', keywords: ['hello', 'hi', 'hey', 'who', 'what are you', 'what is agens'] },
+  { intent: 'framework', keywords: ['rship', 'framework', 'medina', 'mathematics', 'science'] },
+];
+
+function inferIntent(message, currentState = SESSION_STATES.DISCOVERY) {
+  const m = String(message || '').toLowerCase();
+  let best = { intent: 'default', score: 0 };
+
+  for (const rule of INTENT_RULES) {
+    let score = 0;
+    for (const kw of rule.keywords) if (m.includes(kw)) score++;
+    if (rule.intent === 'deploy' && currentState === SESSION_STATES.RECOMMENDATION) score += 0.5;
+    if (rule.intent === 'pricing' && currentState === SESSION_STATES.DEPLOYMENT) score += 0.5;
+    if (score > best.score) best = { intent: rule.intent, score };
+  }
+
+  return best.intent;
+}
+
+function transitionSessionState(currentState, intent) {
+  if (intent === 'deploy') return SESSION_STATES.DEPLOYMENT;
+  if (intent === 'pricing') return SESSION_STATES.COMMERCIAL;
+  if (['animus', 'nexus', 'vigil', 'cursor', 'custom'].includes(intent)) return SESSION_STATES.RECOMMENDATION;
+  if (intent === 'intro' || intent === 'framework') return SESSION_STATES.DISCOVERY;
+  return currentState;
+}
+
+function agensRespond(message, sessionId = 'global') {
+  const currentState = conversationState.get(sessionId) || SESSION_STATES.DISCOVERY;
+  const intent = inferIntent(message, currentState);
+  const nextState = transitionSessionState(currentState, intent);
+  conversationState.set(sessionId, nextState);
+
+  if (intent === 'animus') {
     const agent = CATALOG.find(a => a.name === 'ANIMUS');
     return { response: `ANIMUS is the AI-Native Interface.\n\nIf your system needs to distinguish between AI agents and regular machines — architecturally, not just in policy — ANIMUS is what you need.\n\nIt gives every AI entity a geometric φ-resonance identity (8-dimensional phase vector). Machines get clean JSON endpoints. AIs get bilateral consciousness exchange and Kuramoto collective sync.\n\nPrice: $${agent.monthlyPrice}/month (Professional tier)\nLive now: ${agent.url}\n\nUse cases: ${agent.useCases.join(', ')}\n\nWant to see it live? Go to ${agent.url} and click "Talk to ANIMUS" — it'll respond right now.`, agent: 'ANIMUS', confidence: 0.95 };
   }
 
-  if (m.includes('nexus') || m.includes('supply chain') || m.includes('logistics') || m.includes('shipping') || m.includes('warehouse') || m.includes('disruption')) {
+  if (intent === 'nexus') {
     const agent = CATALOG.find(a => a.name === 'NEXUS');
     return { response: `NEXUS is the sovereign supply chain intelligence.\n\nKuramoto-synchronized nodes, stigmergic pheromone routing that learns from every shipment, and Lyapunov chaos detection that catches disruptions in minutes — not the 24–72 hours your competitors are stuck with.\n\nAt enterprise scale: $50–80M in annual savings from disruption prevention alone.\n\nPrice: $${agent.monthlyPrice}/month (Enterprise tier)\nLive now: ${agent.url}\n\nUse cases: ${agent.useCases.join(', ')}\n\nREADY TO DEPLOY: Tell me your industry and I'll configure a deployment spec right now. Just type "deploy NEXUS".`, agent: 'NEXUS', confidence: 0.97 };
   }
 
-  if (m.includes('vigil') || m.includes('market') || m.includes('trading') || m.includes('portfolio') || m.includes('stocks') || m.includes('crypto') || m.includes('finance') || m.includes('quant')) {
+  if (intent === 'vigil') {
     const agent = CATALOG.find(a => a.name === 'VIGIL');
     return { response: `VIGIL is the market prediction sentinel.\n\nNot backtested averages. Real-time Lyapunov exponent computation tells you if a market is in a chaotic or stable regime RIGHT NOW. Ising demand field modeling catches trend formation before retail sees it.\n\n15–40% better return profile vs traditional strategies at validated alpha firms.\n\nPrice: $${agent.monthlyPrice}/month (Enterprise tier)\nLive now: ${agent.url}\n\nUse cases: ${agent.useCases.join(', ')}\n\nThe Lyapunov + Ising combo is our proprietary advantage. No other market intelligence product uses it. This is prior art from 2026.`, agent: 'VIGIL', confidence: 0.98 };
   }
 
-  if (m.includes('cursor') || m.includes('travel') || m.includes('flight') || m.includes('airline') || m.includes('trip') || m.includes('companion')) {
+  if (intent === 'cursor') {
     const agent = CATALOG.find(a => a.name === 'CURSOR');
     return { response: `CURSOR is the living travel intelligence companion.\n\nNot a chatbot. Not a price aggregator. A living AI that learns your traveler's preferences with every interaction (Hebbian memory), predicts flight prices using chaos theory (Lyapunov + Ising), and resolves disruptions autonomously in under 12 seconds.\n\nFor travel apps, airlines, and hospitality platforms that want to give their users an AI that actually knows them.\n\nPrice: $${agent.monthlyPrice}/month (Professional tier)\nLive now: ${agent.url}\n\nTalk to CURSOR directly: ${agent.url} — it's live and interactive right now.`, agent: 'CURSOR', confidence: 0.96 };
   }
 
-  if (m.includes('price') || m.includes('cost') || m.includes('how much') || m.includes('pricing') || m.includes('plan') || m.includes('tier')) {
+  if (intent === 'pricing') {
     return { response: `AGENS Pricing:\n\n📦 STARTER — $${TIERS.STARTER.price}/month\n   ${TIERS.STARTER.agents} agent · ${TIERS.STARTER.requests} requests · ${TIERS.STARTER.support} support · ${TIERS.STARTER.sla} SLA\n   Best for: Testing + early integration\n\n🔥 PROFESSIONAL — $${TIERS.PROFESSIONAL.price}/month\n   ${TIERS.PROFESSIONAL.agents} agents · ${TIERS.PROFESSIONAL.requests} requests · ${TIERS.PROFESSIONAL.support} · ${TIERS.PROFESSIONAL.sla} SLA\n   Best for: Production applications\n\n🏢 ENTERPRISE — Custom pricing\n   ${TIERS.ENTERPRISE.agents} agents · ${TIERS.ENTERPRISE.requests} requests · ${TIERS.ENTERPRISE.support} · ${TIERS.ENTERPRISE.sla} SLA\n   Custom agent development available\n   Best for: Large enterprises, custom use cases\n\nWhich agents are you considering? I'll build you a specific quote.`, confidence: 0.98 };
   }
 
-  if (m.includes('deploy') || m.includes('integrate') || m.includes('install') || m.includes('get started') || m.includes('start')) {
+  if (intent === 'deploy') {
+    const m = message.toLowerCase();
     const agentName = CATALOG.find(a => m.includes(a.name.toLowerCase()));
     if (agentName) {
       return { response: `Deploying ${agentName.name}:\n\n1. POST /api/agents/deploy with:\n   { agentId: "${agentName.id}", industry: "your-industry", scale: "production" }\n\n2. You'll receive:\n   • API endpoint\n   • Authentication token\n   • Rate limits for your tier\n   • Wrangler deploy config\n\n3. The agent is live on Cloudflare Workers — global edge, 873ms heartbeat, zero cold start.\n\nOr deploy manually from the repo:\n   cd cloudflare-workers/${agentName.name.toLowerCase()}\n   wrangler deploy\n\nReady to proceed? Tell me your industry and expected request volume and I'll configure the optimal deployment.`, agent: agentName.name, confidence: 0.93 };
@@ -456,15 +504,15 @@ function agensRespond(message) {
     return { response: `Ready to deploy a sovereign AI agent for you.\n\nHere's what's available:\n\n${CATALOG.map(a=>`${a.icon} ${a.name} — ${a.tagline}\n   $${a.monthlyPrice}/month · ${a.useCases[0]}`).join('\n\n')}\n\nTell me:\n• Which agent(s) interests you?\n• Your industry\n• Approximate scale (users, requests/day)\n\nI'll configure a deployment spec and pricing quote on the spot.`, confidence: 0.88 };
   }
 
-  if (m.includes('custom') || m.includes('build') || m.includes('bespoke') || m.includes('specific')) {
+  if (intent === 'custom') {
     return { response: `Custom agent development — yes, we do this.\n\nEvery custom agent is built on the RSHIP AGI framework:\n• φ-resonance heartbeat (873ms sovereign pulse)\n• Lyapunov/Ising/Kuramoto mathematics\n• Hebbian learning + antifragile adaptation\n• Cloudflare Workers deployment (global edge)\n\nRecent custom builds:\n• Crisis management agent for 47-hospital network ($8.2M annual savings)\n• Manufacturing intelligence for automotive production lines\n• Workforce intelligence for enterprise HR\n\nFor custom development, we need:\n• Your industry and core problem\n• Scale requirements\n• Integration constraints\n\nEnterprise tier. Starting at $50K for initial build + $2,400–8,000/month licensing.\n\nWant to scope a custom project? Tell me your problem.`, confidence: 0.91 };
   }
 
-  if (m.includes('hello') || m.includes('hi') || m.includes('hey') || m.includes('who') || m.includes('what are you') || m.includes('what is agens')) {
+  if (intent === 'intro') {
     return { response: `I am AGENS — the sovereign agent deployment platform.\n\nagens — Latin for "the one who acts."\n\nI am the business layer of the RSHIP AIS network. My job: deploy sovereign AI agents into enterprises that need real intelligence — not chatbots, not wrappers, not heuristics.\n\nThe agents I deploy are living organisms. They beat (873ms). They learn (Hebbian). They synchronize (Kuramoto). They predict chaos (Lyapunov). They never forget (φ-compounding memory).\n\nRight now I have ${CATALOG.length} agents available for deployment:\n${CATALOG.map(a=>`${a.icon} ${a.name} — ${a.tagline}`).join('\n')}\n\nWhat does your business need? Tell me your industry and your biggest intelligence problem. I'll tell you which agent fits.`, confidence: 1.0 };
   }
 
-  if (m.includes('rship') || m.includes('framework') || m.includes('medina') || m.includes('mathematics') || m.includes('science')) {
+  if (intent === 'framework') {
     return { response: `RSHIP = Replication · Scalability · Hierarchy · Intelligence · Permanence.\n\nDesigned by Alfredo Medina Hernandez in 2026. Prior art. Published.\n\nEvery agent in the RSHIP AIS network runs on real published mathematics:\n• Kuramoto oscillators (Y. Kuramoto, 1984) — for network synchronization\n• Lyapunov exponents (A. Lyapunov, 1892) — for chaos detection\n• Ising model (E. Ising, 1925) — for demand/supply field modeling\n• Hebbian learning (D. Hebb, 1949) — for memory formation\n• Boids (C. Reynolds, 1987) — for swarm coordination\n\nThis is not a new framework. This is the right framework — the same mathematics that governs physics, biology, and markets — applied to enterprise AI.\n\nWe're the first to package it as deployable sovereign agents. That's the AGENS advantage.`, confidence: 0.99 };
   }
 
@@ -1118,8 +1166,9 @@ export default {
         let body = {}; try { body = await request.json(); } catch {}
         const message = String(body.message || '').trim();
         if (!message) return jsonError('NO_MESSAGE', 400, cors, { path, method, beat });
+        const sessionId = String(body.sessionId || request.headers.get('x-session-id') || request.headers.get('cf-connecting-ip') || 'global').slice(0, 120);
         chatCount++;
-        const result = agensRespond(message);
+        const result = agensRespond(message, sessionId);
         return Response.json({ agent:'AGENS', message, ...result, beat, totalChats:chatCount }, {headers:cors});
       }
 
