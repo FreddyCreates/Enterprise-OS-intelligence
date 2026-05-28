@@ -1,0 +1,23 @@
+{
+  "name": "@medina/inventory-intelligence",
+  "version": "1.0.0",
+  "description": "Enterprise inventory intelligence — ingest, classify, track, validate, and AI-context libraries for warehouse/stock data",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./schema": "./lib/schema.js",
+    "./ingest": "./lib/ingest-normalize.js",
+    "./classify": "./lib/item-classification.js",
+    "./tracking": "./lib/stock-tracking.js",
+    "./forecast": "./lib/demand-forecast.js",
+    "./ledger": "./lib/inventory-ledger.js",
+    "./ai-context": "./lib/ai-inventory-context.js",
+    "./validate": "./lib/validation-gates.js",
+    "./observe": "./lib/observability.js",
+    "./output": "./lib/output-formats.js"
+  },
+  "keywords": ["inventory", "warehouse", "stock", "intelligence", "ai", "enterprise", "supply-chain"],
+  "author": "Alfredo Medina Hernandez",
+  "license": "UNLICENSED",
+  "private": true
+}

@@ -1,0 +1,23 @@
+{
+  "name": "@medina/fleet-logistics-intelligence",
+  "version": "1.0.0",
+  "description": "Enterprise fleet & logistics intelligence — ingest, route, track, validate, and AI-context libraries for shipment/transport data",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./schema": "./lib/schema.js",
+    "./ingest": "./lib/ingest-normalize.js",
+    "./routing": "./lib/route-intelligence.js",
+    "./tracking": "./lib/shipment-tracking.js",
+    "./fleet": "./lib/fleet-management.js",
+    "./ledger": "./lib/logistics-ledger.js",
+    "./ai-context": "./lib/ai-logistics-context.js",
+    "./validate": "./lib/validation-gates.js",
+    "./observe": "./lib/observability.js",
+    "./output": "./lib/output-formats.js"
+  },
+  "keywords": ["fleet", "logistics", "shipping", "routing", "intelligence", "ai", "enterprise", "transport"],
+  "author": "Alfredo Medina Hernandez",
+  "license": "UNLICENSED",
+  "private": true
+}
