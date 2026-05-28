@@ -46,7 +46,7 @@ Enterprise-grade AGI governance and intelligence systems built for the real worl
 
 ## AGI SDK Registry
 
-**Total SDKs: 128**
+**Total SDKs: 138**
 
 - `INTERNAL_SDK_README.md`
 - `accessex-agi`
@@ -64,6 +64,7 @@ Enterprise-grade AGI governance and intelligence systems built for the real worl
 - `aurorex-agi`
 - `axiom-sdk`
 - `backend-orchestration-engine`
+- `billing-intelligence`
 - `birth-ai`
 - `blockchain-operations-engine`
 - `blunt-tools`
@@ -79,6 +80,7 @@ Enterprise-grade AGI governance and intelligence systems built for the real worl
 - `climatex-agi`
 - `cognovex-agi`
 - `communex-agi`
+- `compliance-intelligence`
 - `compositex-agi`
 - `concex-agi`
 - `construx-agi`
@@ -89,15 +91,13 @@ Enterprise-grade AGI governance and intelligence systems built for the real worl
 - `designex-agi`
 - `document-absorption-engine`
 - `domex-agi`
+- `eddi-core`
 - `edge-coordination-engine`
 - `effecttrace-governance-organism`
+- `emailai`
 - `emergence-catalyst-sdk`
 - `enterprise-integration-sdk`
 - `entity-sdk`
-- `finotex-agi`
-- `fleetex-agi`
-- `formex-agi`
-- `fortress-sdk`
 
 ---
 
