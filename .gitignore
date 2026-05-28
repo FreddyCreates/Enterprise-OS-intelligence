@@ -14,6 +14,27 @@ scripts/
 deploy/
 bootstrap/
 
+# ─── ALLOWLIST: PARRALAX implementation scaffold ───────────────────────
+# This directory is a pre-extraction scaffold for the separate
+# parralax-aihftfund implementation repository (charter PLAN.md § 5.4
+# Option A). The contents are extracted to their own repository via
+# `git subtree split` — see parralax-impl/EXTRACTION.md. The allowlist
+# entries below let git track the scaffold on this branch so the
+# extraction can happen cleanly.
+!parralax-impl/
+!parralax-impl/src/
+!parralax-impl/src/**
+!parralax-impl/scripts/
+!parralax-impl/scripts/**
+!parralax-impl/tests/
+!parralax-impl/tests/**
+!parralax-impl/tools/
+!parralax-impl/tools/**
+!parralax-impl/charters/
+!parralax-impl/charters/**
+!parralax-impl/.github/
+!parralax-impl/.github/**
+
 # Strategy registers & manifests
 *.csv
 *_Register.csv
