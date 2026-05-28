@@ -1,0 +1,34 @@
+{
+  "protocols": [
+    {
+      "id": "signal-validation",
+      "family": "trading",
+      "description": "Validate incoming signals before trade proposal."
+    },
+    {
+      "id": "trade-authorization",
+      "family": "trading",
+      "description": "Authorize trade execution only after risk clearance."
+    },
+    {
+      "id": "risk-gate",
+      "family": "risk",
+      "description": "Apply drawdown, volatility, leverage, and kill-switch checks."
+    },
+    {
+      "id": "governance-vote",
+      "family": "governance",
+      "description": "Record governance approvals for mandate or treasury changes."
+    },
+    {
+      "id": "compute-receipt",
+      "family": "proofs",
+      "description": "Persist auditable receipts for agent computation and execution."
+    },
+    {
+      "id": "market-memory",
+      "family": "memory",
+      "description": "Write market and strategy outcomes back to persistent memory."
+    }
+  ]
+}

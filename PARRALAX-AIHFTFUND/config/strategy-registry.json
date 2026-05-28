@@ -1,0 +1,25 @@
+{
+  "strategies": [
+    {
+      "id": "equities-momentum-paper",
+      "assetClass": "equities",
+      "mode": "paper",
+      "authorityLevel": 3,
+      "maxPositionWeight": 0.1
+    },
+    {
+      "id": "crypto-event-driven-paper",
+      "assetClass": "crypto",
+      "mode": "paper",
+      "authorityLevel": 3,
+      "maxPositionWeight": 0.08
+    },
+    {
+      "id": "multi-asset-risk-overlay",
+      "assetClass": "multi-asset",
+      "mode": "guardrail",
+      "authorityLevel": 4,
+      "maxPositionWeight": 0.25
+    }
+  ]
+}

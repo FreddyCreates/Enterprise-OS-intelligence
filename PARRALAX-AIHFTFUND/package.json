@@ -1,0 +1,10 @@
+{
+  "name": "parralax-aihftfund",
+  "private": true,
+  "type": "module",
+  "description": "Sovereign AI-native multi-asset trading, execution, and financial infrastructure stack.",
+  "scripts": {
+    "demo": "node scripts/paper-execution-demo.mjs",
+    "validate": "node scripts/validate.mjs"
+  }
+}

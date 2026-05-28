@@ -1,0 +1,46 @@
+{
+  "agents": [
+    {
+      "id": "observer-market-001",
+      "class": "MarketObserver",
+      "authorityLevel": 0,
+      "scope": ["market-data", "sentiment", "order-book"],
+      "allowedActions": ["observe", "report"]
+    },
+    {
+      "id": "signal-alpha-001",
+      "class": "SignalAgent",
+      "authorityLevel": 1,
+      "scope": ["signal-generation", "confidence-scoring"],
+      "allowedActions": ["observe", "score", "propose"]
+    },
+    {
+      "id": "risk-gate-001",
+      "class": "RiskAgent",
+      "authorityLevel": 4,
+      "scope": ["drawdown", "volatility", "exposure"],
+      "allowedActions": ["evaluate", "block", "allow", "halt"]
+    },
+    {
+      "id": "exec-paper-001",
+      "class": "ExecutionAgent",
+      "authorityLevel": 4,
+      "scope": ["paper-routing", "fill-simulation"],
+      "allowedActions": ["route", "split", "execute"]
+    },
+    {
+      "id": "audit-ledger-001",
+      "class": "AuditAgent",
+      "authorityLevel": 2,
+      "scope": ["receipts", "reconciliation", "ledger"],
+      "allowedActions": ["record", "verify", "export"]
+    },
+    {
+      "id": "governance-council-001",
+      "class": "GovernanceAgent",
+      "authorityLevel": 5,
+      "scope": ["mandates", "strategy-approval", "treasury-authorization"],
+      "allowedActions": ["approve", "reject", "escalate"]
+    }
+  ]
+}

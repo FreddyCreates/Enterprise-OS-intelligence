@@ -1,0 +1,22 @@
+{
+  "assets": [
+    {
+      "id": "parralax-governance-unit",
+      "class": "internal-token",
+      "purpose": "governance-rights",
+      "rights": ["vote", "approve", "escalate"]
+    },
+    {
+      "id": "parralax-compute-receipt",
+      "class": "receipt-token",
+      "purpose": "compute-proof",
+      "rights": ["audit", "trace"]
+    },
+    {
+      "id": "parralax-strategy-license",
+      "class": "nft",
+      "purpose": "strategy-license",
+      "rights": ["execute", "review"]
+    }
+  ]
+}
