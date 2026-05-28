@@ -13,9 +13,7 @@ VERSION        = "2.0.0"
 # INTELLIGENT BINDINGS — Give AGENS brains, memory, and coordination
 # ═══════════════════════════════════════════════════════════════════════════════
 
-# ── Workers AI — LLM-powered agent reasoning ──────────────────────────────────
-[ai]
-binding = "AI"
+# ── Core agent logic is deterministic and self-contained (no external LLM) ───
 
 # ── KV Namespace — Session and config storage ─────────────────────────────────
 [[kv_namespaces]]
