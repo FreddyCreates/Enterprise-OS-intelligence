@@ -1,0 +1,70 @@
+name: "PARRALAX-IMPL — CI"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Fail-closed pipeline. Three independent stages; all must pass.
+#
+#   1. sanitiser     — MUNDATOR COGNITUS finance-extended (--verify, strict)
+#   2. typecheck     — tsc --noEmit, strict mode
+#   3. tests         — vitest run
+#
+# No deploy step on day 1. This scaffold has no deploy surface yet.
+# ─────────────────────────────────────────────────────────────────────────────
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch: {}
+
+concurrency:
+  group: parralax-impl-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  sanitiser:
+    name: "Sanitiser (Mundator Cognitus, --verify)"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - name: Sanitise (fail-closed)
+        run: node tools/sanitiser.mjs . --verify
+
+  typecheck:
+    name: "Typecheck (tsc strict)"
+    needs: sanitiser
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22', cache: 'npm' }
+      - run: npm ci || npm install
+      - run: npm run typecheck
+
+  tests:
+    name: "Tests (vitest)"
+    needs: sanitiser
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22', cache: 'npm' }
+      - run: npm ci || npm install
+      - run: npm test
+
+  summary:
+    name: "CI Summary"
+    needs: [sanitiser, typecheck, tests]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo "═══════════════════════════════════════════════"
+          echo "  PARRALAX-IMPL CI"
+          echo "═══════════════════════════════════════════════"
+          echo "  Sanitiser:  ${{ needs.sanitiser.result }}"
+          echo "  Typecheck:  ${{ needs.typecheck.result }}"
+          echo "  Tests:      ${{ needs.tests.result }}"
+          echo "═══════════════════════════════════════════════"
