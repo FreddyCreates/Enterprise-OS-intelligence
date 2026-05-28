@@ -1,0 +1,43 @@
+{
+  "name": "@medina/parralax-aihftfund",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "description": "Sovereign AI-native financial execution infrastructure — implementation scaffold. Charters live in /parralax-aihftfund of the public showcase repo.",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "scripts": {
+    "typecheck":   "tsc --noEmit",
+    "test":        "vitest run",
+    "test:watch":  "vitest",
+    "sanitise":    "node tools/sanitiser.mjs .",
+    "sanitise:verify": "node tools/sanitiser.mjs . --verify",
+    "lint":        "tsc --noEmit && echo 'No linter configured yet — typecheck is the floor.'",
+    "build":       "npm run sanitise:verify && npm run typecheck && npm test"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "typescript":  "^5.5.0",
+    "tsx":         "^4.19.0",
+    "vitest":      "^2.1.0"
+  },
+  "author": "Alfredo Medina Hernandez <medinasitech@outlook.com>",
+  "license": "SEE LICENSE IN LICENSE",
+  "repository": {
+    "type": "git",
+    "url":  "https://github.com/FreddyCreates/parralax-aihftfund.git"
+  },
+  "keywords": [
+    "parralax",
+    "aihftfund",
+    "sovereign",
+    "ai-native",
+    "trading",
+    "hft",
+    "financial-execution",
+    "voxis",
+    "custos",
+    "chrono"
+  ]
+}
