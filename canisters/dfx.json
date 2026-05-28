@@ -19,6 +19,14 @@
     "ai_entity": {
       "type": "motoko",
       "main": "src/AIEntity.mo"
+    },
+    "email_service": {
+      "type": "motoko",
+      "main": "src/EmailService.mo"
+    },
+    "llm_bridge": {
+      "type": "motoko",
+      "main": "src/LLMBridge.mo"
     }
   },
   "defaults": {
