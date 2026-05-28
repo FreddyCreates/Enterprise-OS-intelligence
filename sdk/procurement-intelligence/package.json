@@ -1,0 +1,23 @@
+{
+  "name": "@medina/procurement-intelligence",
+  "version": "1.0.0",
+  "description": "Enterprise procurement intelligence — ingest, vendor analysis, PO management, validate, and AI-context libraries for purchasing data",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./schema": "./lib/schema.js",
+    "./ingest": "./lib/ingest-normalize.js",
+    "./vendor": "./lib/vendor-intelligence.js",
+    "./purchase-orders": "./lib/purchase-orders.js",
+    "./spend": "./lib/spend-analytics.js",
+    "./ledger": "./lib/procurement-ledger.js",
+    "./ai-context": "./lib/ai-procurement-context.js",
+    "./validate": "./lib/validation-gates.js",
+    "./observe": "./lib/observability.js",
+    "./output": "./lib/output-formats.js"
+  },
+  "keywords": ["procurement", "purchasing", "vendor", "PO", "intelligence", "ai", "enterprise", "spend"],
+  "author": "Alfredo Medina Hernandez",
+  "license": "UNLICENSED",
+  "private": true
+}
