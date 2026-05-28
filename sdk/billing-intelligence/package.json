@@ -1,0 +1,22 @@
+{
+  "name": "@medina/billing-intelligence",
+  "version": "1.0.0",
+  "description": "Enterprise billing intelligence — ingest, parse, price, ledger, and AI-context libraries",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./schema": "./lib/schema.js",
+    "./ingest": "./lib/ingest-normalize.js",
+    "./labor": "./lib/labor-intel.js",
+    "./pricing": "./lib/contract-pricing.js",
+    "./ledger": "./lib/billing-ledger.js",
+    "./ai-context": "./lib/ai-billing-context.js",
+    "./validate": "./lib/validation-gates.js",
+    "./observe": "./lib/observability.js",
+    "./output": "./lib/output-formats.js"
+  },
+  "keywords": ["billing", "invoice", "labor", "intelligence", "ai", "enterprise"],
+  "author": "Alfredo Medina Hernandez",
+  "license": "UNLICENSED",
+  "private": true
+}

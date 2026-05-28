@@ -1,0 +1,23 @@
+{
+  "name": "@medina/compliance-intelligence",
+  "version": "1.0.0",
+  "description": "Enterprise compliance intelligence — ingest, regulation parsing, audit trails, risk scoring, validate, and AI-context for regulatory data",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./schema": "./lib/schema.js",
+    "./ingest": "./lib/ingest-normalize.js",
+    "./regulations": "./lib/regulation-engine.js",
+    "./audit": "./lib/audit-trail.js",
+    "./risk": "./lib/risk-scoring.js",
+    "./ledger": "./lib/compliance-ledger.js",
+    "./ai-context": "./lib/ai-compliance-context.js",
+    "./validate": "./lib/validation-gates.js",
+    "./observe": "./lib/observability.js",
+    "./output": "./lib/output-formats.js"
+  },
+  "keywords": ["compliance", "regulatory", "audit", "risk", "intelligence", "ai", "enterprise", "governance"],
+  "author": "Alfredo Medina Hernandez",
+  "license": "UNLICENSED",
+  "private": true
+}

@@ -1,0 +1,23 @@
+{
+  "name": "@medina/workforce-intelligence",
+  "version": "1.0.0",
+  "description": "Enterprise workforce intelligence — ingest, schedule parsing, timesheet analysis, validate, and AI-context for HR/workforce data",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./schema": "./lib/schema.js",
+    "./ingest": "./lib/ingest-normalize.js",
+    "./schedule": "./lib/schedule-intelligence.js",
+    "./timesheet": "./lib/timesheet-analytics.js",
+    "./workforce": "./lib/workforce-planning.js",
+    "./ledger": "./lib/workforce-ledger.js",
+    "./ai-context": "./lib/ai-workforce-context.js",
+    "./validate": "./lib/validation-gates.js",
+    "./observe": "./lib/observability.js",
+    "./output": "./lib/output-formats.js"
+  },
+  "keywords": ["workforce", "HR", "scheduling", "timesheet", "intelligence", "ai", "enterprise", "labor"],
+  "author": "Alfredo Medina Hernandez",
+  "license": "UNLICENSED",
+  "private": true
+}
