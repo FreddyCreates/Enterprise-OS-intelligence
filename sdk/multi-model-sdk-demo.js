@@ -3,6 +3,7 @@ import { createOrchestrator, TaskType, Priority } from './organism-ai/src/index.
 import { createQueryEngine } from './medina-queries/src/index.js';
 import { createComposer } from './protocol-composer/src/index.js';
 import { createBootstrap, createStateManager, createValidator } from './organism-bootstrap/src/index.js';
+import { IMPLEMENTATION_METRICS } from '../cloudflare-workers/shared/organism-manifest.js';
 
 console.log('═══════════════════════════════════════════════════════════════');
 console.log('  MEDINA MULTI-MODEL SDK INTEGRATION DEMO (LIVE)');
@@ -53,4 +54,5 @@ console.log('Composition result keys:', Object.keys(composition));
 console.log('Generated wrappers:', Object.keys(deployment.wrappers));
 console.log('Stable state entries:', state.serializeStableState().totalEntries);
 console.log('Validation passed:', validation.passed);
+console.log('Manifest validation commands:', IMPLEMENTATION_METRICS.validationCommands.length);
 console.log('All core SDKs integrated successfully.');

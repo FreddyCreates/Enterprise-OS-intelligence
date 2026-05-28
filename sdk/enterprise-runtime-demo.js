@@ -2,6 +2,7 @@ import { ModelRouter, CommandParser, TerminalDispatch, IntelligenceWire, Workfor
 import { ModelOrchestrator } from './multi-model-sdk/src/index.js';
 import { SpatialMemoryStore, DualLayerSearch, MemoryLineage, LivingDocument, PhiCoordinateGenerator } from './sovereign-memory-sdk/src/index.js';
 import { CanisterDeployer, WorkforceManager } from './workforce-on-chain-sdk/src/index.js';
+import { ORGANISM_LAYERS } from '../cloudflare-workers/shared/organism-manifest.js';
 
 console.log('═══════════════════════════════════════════════════════════════');
 console.log('  ENTERPRISE RUNTIME DEMO');
@@ -65,4 +66,5 @@ console.log('Lineage:', lineage.getLineage('idea-2'));
 console.log('Document snapshot:', docs.snapshot(doc.id));
 console.log('Deployment manifest:', deployed);
 console.log('On-chain workforce status:', workforceManager.getWorkforceStatus());
+console.log('Atlas layers:', ORGANISM_LAYERS.map((layer) => layer.id).join(', '));
 console.log('Enterprise runtime demo complete.');

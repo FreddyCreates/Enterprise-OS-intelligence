@@ -16,12 +16,16 @@
  * © 2026 Alfredo Medina Hernandez · RSHIP AGI Systems · All Rights Reserved.
  */
 
-'use strict';
-
-const PHI          = 1.618033988749895;
-const PHI_INV      = 0.618033988749895;
-const HEARTBEAT_MS = 873;
-const GOLDEN_ANGLE = 2.399963229728653;
+import {
+  AGENTS,
+  computeEmergence,
+  HEARTBEAT_MS,
+  IMPLEMENTATION_METRICS,
+  ORGANISM_LAYERS,
+  PHI,
+  PHI_INV,
+  PROTOCOLS,
+} from '../shared/organism-manifest.js';
 
 function phiHash(input) {
   let h = 0;
@@ -29,95 +33,6 @@ function phiHash(input) {
   for (let i = 0; i < s.length; i++) h = ((h << 5) - h + s.charCodeAt(i)) | 0;
   return Math.abs(h).toString(16).padStart(16, '0');
 }
-
-const AGENTS = [
-  { id:'RSHIP-AIS-CB-001', name:'CEREBRUM', latin:'cerebrum', meaning:'brain',
-    role:'Intelligence OS — command center', url:'https://cerebrum.rship.workers.dev', color:'#00d4ff', icon:'◎' },
-  { id:'RSHIP-AIS-AN-001', name:'ANIMUS',   latin:'animus',   meaning:'soul · mind',
-    role:'AI-Native Interface — intelligence gate', url:'https://animus.rship.workers.dev', color:'#ffd700', icon:'✦' },
-  { id:'RSHIP-AIS-AG-001', name:'AGENS',    latin:'agens',    meaning:'the one who acts',
-    role:'Agent AI Services — enterprise agent deployment', url:'https://agens.rship.workers.dev', color:'#ff6b35', icon:'⬡' },
-  { id:'RSHIP-AIS-NX-001', name:'NEXUS',    latin:'nexus',    meaning:'bond · network',
-    role:'Supply Chain Intelligence — Kuramoto sync', url:'https://nexus.rship.workers.dev', color:'#00ff88', icon:'◈' },
-  { id:'RSHIP-AIS-VG-001', name:'VIGIL',    latin:'vigil',    meaning:'watchman · sentinel',
-    role:'Market Sentinel — chaos detection', url:'https://vigil.rship.workers.dev', color:'#ff9500', icon:'◉' },
-  { id:'RSHIP-AIS-CS-001', name:'CURSOR',   latin:'cursor',   meaning:'runner · messenger',
-    role:'Travel Intelligence — living companion', url:'https://cursor.rship.workers.dev', color:'#cc44ff', icon:'↗' },
-];
-
-const PROTOCOLS = [
-  { id:'PROTO-013', name:'Neural Synchronization', math:'21 neurochemicals · Hebbian plasticity' },
-  { id:'PROTO-014', name:'Emergence Detection',    math:'Ising model · Landau · percolation' },
-  { id:'PROTO-015', name:'Cognitive Memory',       math:'working / episodic / semantic' },
-  { id:'PROTO-016', name:'Adaptive Learning',      math:'Lyapunov stability · antifragility' },
-  { id:'PROTO-017', name:'Scalability Coordination', math:'boids swarm · quorum sensing' },
-];
-
-const ORGANISM_LAYERS = [
-  {
-    id: 'foundation',
-    name: 'Foundational SDKs',
-    color: '#00d4ff',
-    items: [
-      'medina-heart',
-      'medina-registry',
-      'organism-ai',
-      'medina-queries',
-      'protocol-composer',
-      'organism-bootstrap',
-    ],
-  },
-  {
-    id: 'math',
-    name: 'Math Runtime Layer',
-    color: '#00ff88',
-    items: [
-      'medina-tensor',
-      'medina-field',
-      'medina-phase',
-      'medina-swarm',
-      'medina-timers',
-      'medina-calls',
-    ],
-  },
-  {
-    id: 'enterprise',
-    name: 'Enterprise Runtime Layer',
-    color: '#ffd700',
-    items: [
-      'intelligence-routing-sdk',
-      'multi-model-sdk',
-      'sovereign-memory-sdk',
-      'workforce-on-chain-sdk',
-    ],
-  },
-  {
-    id: 'substrate',
-    name: 'Substrate + Protocols',
-    color: '#cc44ff',
-    items: [
-      'PROTO-011 ... PROTO-017',
-      'five ORO Motoko canisters',
-      'organism-core Rust crate',
-      'Go organism gateway',
-    ],
-  },
-];
-
-const IMPLEMENTATION_METRICS = Object.freeze({
-  packageCount: 27,
-  protocolCount: 7,
-  canisterCount: 5,
-  languageSurfaces: ['JavaScript', 'Motoko', 'Rust', 'Go'],
-  verification: [
-    'core-sdk verification',
-    'protocol integration',
-    'rust tests + demo',
-    'math-layer verification',
-    'enterprise/runtime demos',
-    'atlas worker route checks',
-  ],
-});
 
 function buildOrganismAtlasHTML(beat, seal) {
   const layers = ORGANISM_LAYERS.map(layer => `
@@ -127,8 +42,9 @@ function buildOrganismAtlasHTML(beat, seal) {
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px">
         ${layer.items.map(item => `
           <div style="border:1px solid #0d2030;border-radius:8px;padding:16px;background:rgba(2,5,15,.7);color:#8899bb">
-            <div style="color:${layer.color};font-weight:bold;margin-bottom:6px">${item}</div>
-            <div style="font-size:.8rem;line-height:1.5">Implemented on this branch as a runnable part of the organism stack.</div>
+            <div style="color:${layer.color};font-weight:bold;margin-bottom:6px">${item.id}</div>
+            <div style="font-size:.8rem;line-height:1.5;margin-bottom:8px">Implemented on this branch as a runnable part of the organism stack.</div>
+            <div style="font-size:.72rem;color:#667788;line-height:1.5">kind: ${item.kind}<br>path: ${item.path}</div>
           </div>
         `).join('')}
       </div>
@@ -200,10 +116,6 @@ function buildOrganismAtlasPayload(beat) {
     publicView: 'organism-atlas',
     updatedAt: new Date().toISOString(),
   };
-}
-
-function computeEmergence(n, beat) {
-  return parseFloat((Math.log(Math.max(1, n * beat)) * PHI_INV).toFixed(4));
 }
 
 function buildHTML(beat, seal) {
