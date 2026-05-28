@@ -3,6 +3,7 @@
   "version": "4.0.0",
   "description": "RSHIP AGI Systems — Cloudflare Worker Network: 6 AI Agent workers + 6 Bot workers (Slack, Workflow, Cron, Alerts, Enterprise Control, Broadcast)",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev:cerebrum": "cd cerebrum && wrangler dev",
     "dev:animus":   "cd animus   && wrangler dev",
