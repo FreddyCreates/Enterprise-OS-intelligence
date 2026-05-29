@@ -33,3 +33,13 @@ export * from './custos/gates.js';
 
 // ── KILL SWITCH (Kill Switch Doctrine) ──
 export * from './killswitch/state.js';
+
+// ── Venues (Testing Doctrine § 2 — adapter contract + paper + Alpaca stub) ──
+export * from './venues/types.js';
+export { PaperVenue } from './venues/paper.js';
+export type { PaperVenueConfig } from './venues/paper.js';
+export { AlpacaPaperVenue, NotImplementedError } from './venues/alpaca-paper.js';
+export type { AlpacaPaperConfig } from './venues/alpaca-paper.js';
+
+// ── Operator UI shapes (Testing Doctrine § 3 — TradingView overlay) ──
+export * from './operator-ui/tradingview.js';
