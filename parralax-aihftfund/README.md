@@ -40,6 +40,13 @@ These three documents together specify the entire trade-authorisation pipeline: 
 |---|---|
 | [`TESTING_INTEGRATION_OPTIONS.md`](./TESTING_INTEGRATION_OPTIONS.md) | **TradingView vs. demo accounts vs. own internal venue — with recommendation.** Test pyramid: unit-tests → internal paper venue → demo accounts on real exchanges → live (guarded). TradingView orthogonal as operator chart UI, never as execution layer. "Own real exchange" is a separate strategic question, not a testing strategy. Awaits operator selection to harden into `TESTING_DOCTRINE.md`. |
 
+### Tokens — registry, taxonomy, and the first concrete proposal
+
+| Document | Purpose |
+|---|---|
+| [`AI_TOKEN_REGISTRY.md`](./AI_TOKEN_REGISTRY.md) | **Inventory of every internal-token concept named across the corpus.** Forty-one named concepts, **zero issued.** Five classes: Governance · Utility · Compute-backed · Reputation · Risk/credit-units, plus a provenance-NFT transverse pattern. Five concrete token charters proposed (LOCUS first sketch landed; PARRALAX-GOV / -ACCESS / -REP / -TRES not started). Eight-step inclusion path from naming to issuance — no compression permitted. Seven doctrinal constraints universal to every token. |
+| [`LOCUS_TOKEN_CHARTER.md`](./LOCUS_TOKEN_CHARTER.md) | **First sketch — place-bound compute-backed entangled tokens.** A LOCUS is a tuple of (geographic boundary + verified work history); the token is the claim. Four sub-families (EDGE · CORE · GRID · SHARED). The "entanglement" concept is precise: structural correlation through shared substrate via Kuramoto coupling (Paper II) — not literal quantum entanglement; honest naming. Value compounds at φ on POST-confirmed work (Paper XXII). The pheromone reaction-diffusion equation (Paper XX) reinterpreted with compute density as the field. Three-root oracle defence against compute washing. Natural prediction-market overlay (capacity / efficiency / outage / entanglement-coherence markets). Five blocking operator questions before this leaves first-sketch status. Eight steps from sketch to a live LOCUS token. |
+
 ## What this work is, and what it is not
 
 | Is | Is not |
