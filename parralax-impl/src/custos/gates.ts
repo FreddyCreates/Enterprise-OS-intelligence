@@ -53,11 +53,17 @@ export interface MarketContext {
   readonly asOf:              Iso8601;
   readonly currentBookDepthUsd: Record<VenueId, DecimalUsd>;
   readonly currentMidPrice:   Record<AssetId, string>;
-  readonly venueHealth:       Record<VenueId, VenueHealth>;
+  readonly venueHealth:       Record<VenueId, VenueHealthInput>;
   // ... extended as gates require more inputs
 }
 
-export interface VenueHealth {
+/**
+ * The health snapshot CUSTOS evaluates against gate.venue parameters.
+ * NB intentionally distinct in name from `VenueHealth` in `src/venues/types.ts`,
+ * which is the canonical output of `Venue.health()` (a superset of this).
+ * The gate consumes the relevant subset.
+ */
+export interface VenueHealthInput {
   readonly p99OrderLatencyMs: number;
   readonly recentFailureRate: number;
   readonly marketDataAgeMs:   number;
