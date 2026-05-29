@@ -38,7 +38,8 @@ These three documents together specify the entire trade-authorisation pipeline: 
 
 | Document | Purpose |
 |---|---|
-| [`TESTING_INTEGRATION_OPTIONS.md`](./TESTING_INTEGRATION_OPTIONS.md) | **TradingView vs. demo accounts vs. own internal venue — with recommendation.** Test pyramid: unit-tests → internal paper venue → demo accounts on real exchanges → live (guarded). TradingView orthogonal as operator chart UI, never as execution layer. "Own real exchange" is a separate strategic question, not a testing strategy. Awaits operator selection to harden into `TESTING_DOCTRINE.md`. |
+| [`TESTING_INTEGRATION_OPTIONS.md`](./TESTING_INTEGRATION_OPTIONS.md) | **TradingView vs. demo accounts vs. own internal venue — with recommendation.** Test pyramid: unit-tests → internal paper venue → demo accounts on real exchanges → live (guarded). TradingView orthogonal as operator chart UI, never as execution layer. **Two of four questions now resolved** (see TESTING_DOCTRINE below); two remain open. |
+| [`TESTING_DOCTRINE.md`](./TESTING_DOCTRINE.md) | **Ratified testing doctrine.** Hardens the two resolved questions: (a) **Alpaca Paper Trading** is the day-one demo-account venue for US equities; future venues (OANDA, Binance Testnet, Kalshi Sandbox, IBKR Paper) require council ratification. (b) **TradingView is a read-only operator overlay only** — never an execution surface, never a kill-switch trigger, never a strategy-parameter store. Locks the four-layer test pyramid as doctrine: unit-tests → paper venue → demo accounts → live (guarded). Skipping any layer is forbidden. Promotion between layers requires operator + council + CHRONO entry. |
 
 ### Tokens — registry, taxonomy, and the first concrete proposal
 

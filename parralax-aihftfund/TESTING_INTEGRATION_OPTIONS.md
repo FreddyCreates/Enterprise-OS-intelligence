@@ -1,7 +1,7 @@
 # TESTING INTEGRATION — OPTIONS AND RECOMMENDATION
 
 **Document:** `parralax-aihftfund/TESTING_INTEGRATION_OPTIONS.md`  
-**Status:** Decision document. Not yet doctrine. Awaits operator selection. No implementation in this commit.
+**Status:** Decision document. **Partially resolved** — two of four operator questions in § 7 are now answered and hardened into [`TESTING_DOCTRINE.md`](./TESTING_DOCTRINE.md). Two remain open.
 
 ---
 
@@ -256,14 +256,14 @@ The implementation-scaffold repository (Option A, the separate PARRALAX repo) ne
 
 ## 7. Operator decisions (what you need to pick)
 
-To finalise the testing posture as doctrine (rather than this decision document), you need to choose:
+| # | Question | Status |
+|:--:|---|---|
+| 1 | **First demo-account venue** | ✓ **RESOLVED** — Alpaca Paper Trading (US equities). See [`TESTING_DOCTRINE.md`](./TESTING_DOCTRINE.md) § 2. |
+| 2 | **TradingView integration scope** | ✓ **RESOLVED** — read-only operator overlay only; no Pine Script secrets; no execution layer. See [`TESTING_DOCTRINE.md`](./TESTING_DOCTRINE.md) § 3. |
+| 3 | **"Own real exchange" — yes / no / horizon** | ◯ open (recommendation: defer 12 months; build the trading system first) |
+| 4 | **Canonical operator UI: PARRALAX-owned page vs. TradingView as primary** | ◯ open (recommendation: PARRALAX-owned for the canonical interface; TradingView as a secondary view consuming the same overlay endpoint) |
 
-1. **First demo-account venue.** Recommendation: Alpaca paper. Lowest friction, US equities, immediate value.
-2. **TradingView integration scope.** Recommendation: read-only operator-overlay only, no Pine Script secrets. You can override if you want a richer integration.
-3. **"Own real exchange" — yes or no, and if yes, on what horizon.** Recommendation: defer the decision; build the trading system first; revisit in 12 months when a track record exists.
-4. **Whether the operator UI itself lives on TradingView or as a PARRALAX-owned Astro page** (like the journal). Recommendation: PARRALAX-owned for the canonical interface; TradingView as an optional secondary view.
-
-When you mark this document up with your answers, the agent will draft a follow-up `TESTING_DOCTRINE.md` that fixes the choices as charter.
+Questions 1 and 2 have been hardened into [`TESTING_DOCTRINE.md`](./TESTING_DOCTRINE.md) and are no longer rewritable by anything short of an explicit charter revision. Questions 3 and 4 stay in this document until the operator chooses.
 
 ---
 
