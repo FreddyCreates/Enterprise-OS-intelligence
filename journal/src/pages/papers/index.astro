@@ -1,0 +1,130 @@
+---
+import JournalLayout from '../../layouts/JournalLayout.astro';
+import { getCollection } from 'astro:content';
+
+const all = await getCollection('papers');
+
+// Sort canonical by order; arxiv go to the end.
+all.sort((a, b) => (a.data.order ?? 999) - (b.data.order ?? 999));
+
+const numbered  = all.filter(p => !p.data.arxiv);
+const arxiv     = all.filter(p =>  p.data.arxiv);
+
+const layers = ['Laws', 'Architecture', 'Proposals', 'Live'];
+const byLayer = Object.fromEntries(
+  layers.map(L => [L, numbered.filter(p => p.data.layer === L)]),
+);
+
+const threads = {
+  TRACE:    numbered.filter(p => p.data.threads.includes('TRACE')),
+  VERIFY:   numbered.filter(p => p.data.threads.includes('VERIFY')),
+  REMEMBER: numbered.filter(p => p.data.threads.includes('REMEMBER')),
+};
+---
+<JournalLayout
+  title="The Papers — The Journal"
+  description="Thirty-four research papers. Sovereign Intelligence Research. Prior art established April 2026."
+  eyebrow="§ I — The Canon"
+>
+  <header class="measure stack" style="margin-top: var(--s-4);">
+    <h1>The Papers</h1>
+    <p class="muted">
+      Thirty-four documents. The theoretical foundation of the work.
+      Each prior art. Each public. Read them in the order they were written,
+      by their layer in the architecture, or by the three threads that run
+      through the whole corpus: <em class="latin">trace</em>, <em class="latin">verify</em>,
+      <em class="latin">remember</em>.
+    </p>
+  </header>
+
+  <!-- ───── NUMERICAL ─────────────────────────────────────────────────── -->
+  <section style="margin-top: var(--s-7);">
+    <h2 id="numerical">By Number</h2>
+    <p class="muted small">The order they were written.</p>
+    <div class="stack-sm" style="margin-top: var(--s-4);">
+      {numbered.map(p => (
+        <article>
+          <a href={`/papers/${p.data.id}`} class="no-underline">
+            <span class="mono muted" style="display:inline-block; min-width: 4.5em;">
+              {p.data.roman ?? '—'}
+            </span>
+            <strong>{p.data.title}</strong>
+            <span class="muted"> · {p.data.subtitle}</span>
+          </a>
+        </article>
+      ))}
+    </div>
+  </section>
+
+  <!-- ───── BY LAYER ──────────────────────────────────────────────────── -->
+  <section style="margin-top: var(--s-7);">
+    <h2 id="by-layer">By Layer</h2>
+    <p class="muted small">What each paper establishes.</p>
+    {layers.map(L => (
+      <div style="margin-top: var(--s-5);">
+        <h3 style="font-size: var(--t-h5);">{L}</h3>
+        <div class="stack-sm" style="margin-top: var(--s-3);">
+          {(byLayer[L] || []).map(p => (
+            <div>
+              <a href={`/papers/${p.data.id}`} class="no-underline">
+                <span class="mono muted" style="min-width: 4.5em; display:inline-block;">
+                  {p.data.roman ?? '—'}
+                </span>
+                <strong>{p.data.title}</strong>
+                <span class="muted"> · {p.data.subtitle}</span>
+              </a>
+            </div>
+          ))}
+        </div>
+      </div>
+    ))}
+  </section>
+
+  <!-- ───── BY THREAD ─────────────────────────────────────────────────── -->
+  <section style="margin-top: var(--s-7);">
+    <h2 id="by-thread">By Thread</h2>
+    <p class="muted small">
+      Three threads run through the work. Each thread is a one-paper-at-a-time path
+      that builds one of the three governance verbs from first principles.
+    </p>
+    {(['TRACE', 'VERIFY', 'REMEMBER'] as const).map(t => (
+      <div style="margin-top: var(--s-5);">
+        <h3 style="font-size: var(--t-h5);"><span class="latin">{t.toLowerCase()}</span></h3>
+        <div class="stack-sm" style="margin-top: var(--s-3);">
+          {(threads[t] || []).map(p => (
+            <div>
+              <a href={`/papers/${p.data.id}`} class="no-underline">
+                <span class="mono muted" style="min-width: 4.5em; display:inline-block;">
+                  {p.data.roman ?? '—'}
+                </span>
+                <strong>{p.data.title}</strong>
+                <span class="muted"> · {p.data.subtitle}</span>
+              </a>
+            </div>
+          ))}
+        </div>
+      </div>
+    ))}
+  </section>
+
+  {arxiv.length > 0 && (
+    <section style="margin-top: var(--s-7);">
+      <h2 id="arxiv">ArXiv Preprints</h2>
+      <p class="muted small">Concentrated for external peer-review submission.</p>
+      <div class="stack-sm" style="margin-top: var(--s-3);">
+        {arxiv.map(p => (
+          <div>
+            <a href={`/papers/${p.data.id}`} class="no-underline">
+              <strong>{p.data.title}</strong>
+              <span class="muted"> · {p.data.subtitle}</span>
+            </a>
+          </div>
+        ))}
+      </div>
+    </section>
+  )}
+
+  <p class="small muted" style="margin-top: var(--s-7); text-align: center;">
+    Prior art established April 2026.
+  </p>
+</JournalLayout>

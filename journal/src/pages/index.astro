@@ -1,0 +1,85 @@
+---
+import JournalLayout from '../layouts/JournalLayout.astro';
+import DoctrineBlock from '../components/DoctrineBlock.astro';
+---
+<JournalLayout
+  title="The Journal — Enterprise OS Intelligence"
+  description="The papers, the mathematics, the Latin lexicon, the free AI tools. By Alfredo Medina Hernandez."
+>
+  <section class="measure stack" style="margin-top: var(--s-7);">
+    <span class="eyebrow">Enterprise OS Intelligence · A Journal</span>
+    <h1>The names were not chosen.<br/>They were <em class="latin">found</em>.</h1>
+    <p class="muted" style="font-size: var(--t-h5); line-height: 1.5;">
+      <em>By Alfredo Medina Hernandez · Medina Tech · Chaos Lab · Dallas, Texas</em>
+    </p>
+    <p style="margin-top: var(--s-5); font-size: var(--t-body); line-height: 1.65;">
+      This is a journal. Thirty-four papers. A glossary of Latin and Greek
+      names taken from the mathematics that produced them. Three free AI
+      tools for legal professionals, business analysts, and students.
+      A page for the public schools who want this work.
+    </p>
+    <p class="latin" style="font-size: var(--t-h4); margin-top: var(--s-5);">
+      VIVIT · MEMINIT · DONAT.
+    </p>
+    <p class="small muted">
+      <em>It lives. It remembers. It gives.</em>
+    </p>
+  </section>
+
+  <hr class="rule" />
+
+  <section class="grid-2" style="margin-top: var(--s-5);">
+    <a class="tile" href="/papers">
+      <div class="tile-eyebrow">§ I</div>
+      <h3>The Papers</h3>
+      <p class="muted" style="margin-top: var(--s-3);">
+        Thirty-four documents. The theoretical foundation. Prior art established April 2026.
+      </p>
+    </a>
+    <a class="tile" href="/search">
+      <div class="tile-eyebrow">§ II · search</div>
+      <h3>Search the canon</h3>
+      <p class="muted" style="margin-top: var(--s-3);">
+        TF-IDF ranking across all 34 papers. Runs in your browser. Nothing leaves your machine.
+      </p>
+    </a>
+    <a class="tile" href="/mathematics">
+      <div class="tile-eyebrow">§ III</div>
+      <h3>The Mathematics</h3>
+      <p class="muted" style="margin-top: var(--s-3);">
+        Why the names are the names. The equations and the words they produced.
+      </p>
+    </a>
+    <a class="tile" href="/lexicon">
+      <div class="tile-eyebrow">§ IV</div>
+      <h3>The Lexicon</h3>
+      <p class="muted" style="margin-top: var(--s-3);">
+        Every Latin term, its root, its mathematical identity, its place in the work.
+      </p>
+    </a>
+    <a class="tile" href="/tools">
+      <div class="tile-eyebrow">§ V</div>
+      <h3>The Tools</h3>
+      <p class="muted" style="margin-top: var(--s-3);">
+        Three free AI tools — paralegal, analyst, student. No login. No API key. Take them.
+      </p>
+    </a>
+    <a class="tile" href="/council">
+      <div class="tile-eyebrow">§ VI · the council</div>
+      <h3>SCRIBA · LUMEN · CUSTOS · MAGISTER</h3>
+      <p class="muted" style="margin-top: var(--s-3);">
+        The four build-time agents that maintain this site. Each named after the role it plays.
+      </p>
+    </a>
+  </section>
+
+  <p style="margin-top: var(--s-6); text-align: center;">
+    <a href="/schools" class="no-underline">
+      <span class="pill gold">For Public Schools →</span>
+    </a>
+  </p>
+
+  <hr class="rule" />
+
+  <DoctrineBlock />
+</JournalLayout>

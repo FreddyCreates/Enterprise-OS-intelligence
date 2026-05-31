@@ -1,0 +1,185 @@
+---
+import JournalLayout from '../layouts/JournalLayout.astro';
+import searchIndex from '../data/search-index.json';
+
+const indexSize = searchIndex.vocab.length;
+const docCount  = searchIndex.docs.length;
+const builtAt   = searchIndex.builtAt;
+---
+<JournalLayout
+  title="Search — The Journal"
+  description="Search the 34 papers by content. TF-IDF ranking over the full corpus. No tracking, no history, runs locally in your browser."
+  eyebrow="Search the canon"
+>
+  <header class="measure stack" style="margin-top: var(--s-4);">
+    <h1>Search</h1>
+    <p class="muted" style="font-size: var(--t-h5); line-height: 1.5;">
+      Search the 34 papers by content. TF-IDF ranking over the full corpus.
+    </p>
+    <p class="small muted">
+      The search index is built once per release by <strong class="latin">SCRIBA</strong> — the journal's scribe agent —
+      and shipped to your browser as a single static file. Your query never leaves your machine.
+      No history is kept. No autocomplete. The journal does not learn what you searched for.
+    </p>
+  </header>
+
+  <section class="measure" style="margin-top: var(--s-5);">
+    <form id="search-form" onsubmit="return false;">
+      <input
+        id="q"
+        type="search"
+        autocomplete="off"
+        autofocus
+        placeholder="e.g. honeybee quorum threshold, pheromone field, golden ratio"
+        style="width: 100%; padding: var(--s-3) var(--s-4); font-size: var(--t-h5); border: 1px solid var(--c-rule); background: var(--c-paper-2); color: var(--c-ink); font-family: var(--f-serif); border-radius: 2px;"
+      />
+    </form>
+    <p class="small muted" id="status" style="margin-top: var(--s-3);">
+      Index: {docCount} papers · {indexSize} terms · built {builtAt.slice(0, 10)}.
+    </p>
+  </section>
+
+  <section id="results" class="measure stack-sm" style="margin-top: var(--s-5);"></section>
+
+  <noscript>
+    <p class="muted" style="margin-top: var(--s-5);">
+      Client-side search requires JavaScript. The full paper list is at <a href="/papers">/papers</a>.
+    </p>
+  </noscript>
+
+  <hr class="rule" />
+
+  <aside class="doctrine">
+    <h6>How this search works</h6>
+    <p>
+      <strong>Indexing.</strong>
+      Every paper is tokenised, English stopwords are removed, and a TF-IDF vector is computed.
+      The top 240 most-distinctive terms per paper are retained. The full index ships as JSON.
+    </p>
+    <p>
+      <strong>Querying.</strong>
+      Your query is tokenised the same way. Each query term contributes IDF-weighted score
+      to any paper whose retained vector contains it. Papers are ranked by total score.
+    </p>
+    <p>
+      <strong>What does not happen.</strong>
+      No query is sent anywhere. No search history is recorded. No autocomplete suggestions
+      are pre-loaded. If you reload the page, the journal does not remember you visited.
+    </p>
+  </aside>
+
+  <script type="module" define:vars={{ INDEX: searchIndex }}>
+    // ── Client-side SCRIBA search ─────────────────────────────────────────
+    //
+    // Loads the static index emitted by journal/agents/scriba.mjs and
+    // runs IDF-weighted ranking against the user's typed query.
+    //
+    // Doctrine: this script never makes a network request. Every line below
+    // operates on data already shipped with the page.
+
+    const vocab = INDEX.vocab;
+    const idf   = INDEX.idf;
+    const docs  = INDEX.docs;
+
+    // Build a fast term → index lookup.
+    const termIdx = new Map();
+    for (let i = 0; i < vocab.length; i++) termIdx.set(vocab[i], i);
+
+    const STOPWORDS = new Set([
+      'a','an','and','are','as','at','be','because','been','before','being','but',
+      'by','can','could','did','do','does','doing','from','had','has','have','having',
+      'he','her','here','hers','him','himself','his','how','i','if','in','into','is',
+      'it','its','itself','just','let','me','more','most','my','myself','no','nor',
+      'not','now','of','off','on','once','only','or','other','our','ours','ourselves',
+      'out','over','own','said','same','she','should','so','some','such','than','that',
+      'the','their','theirs','them','themselves','then','there','these','they','this',
+      'those','through','to','too','until','up','very','was','we','were','what','when',
+      'where','which','while','who','whom','why','will','with','would','you','your',
+      'yours','yourself','yourselves','about','above','below','any','again',
+    ]);
+
+    function tokenize(text) {
+      const out = [];
+      for (const raw of text.split(/[^A-Za-zΑ-Ωα-ω0-9À-ÿ]+/)) {
+        if (!raw) continue;
+        const t = raw.toLowerCase();
+        if (t.length < 3) continue;
+        if (STOPWORDS.has(t)) continue;
+        out.push(t);
+      }
+      return out;
+    }
+
+    function rank(query) {
+      const tokens = tokenize(query);
+      if (tokens.length === 0) return [];
+
+      const queryIdxs = [];
+      for (const t of tokens) {
+        const i = termIdx.get(t);
+        if (i !== undefined) queryIdxs.push({ idx: i, term: t, w: idf[t] ?? 1 });
+      }
+      if (queryIdxs.length === 0) return [];
+
+      const scored = [];
+      for (const d of docs) {
+        let score = 0;
+        let hits  = 0;
+        for (const { idx, w } of queryIdxs) {
+          const v = d.vec[idx];
+          if (v !== undefined) { score += w * v; hits++; }
+        }
+        if (score > 0) scored.push({ d, score, hits });
+      }
+      scored.sort((a, b) => b.score - a.score);
+      return scored.slice(0, 12);
+    }
+
+    function render(results, q) {
+      const r = document.getElementById('results');
+      const s = document.getElementById('status');
+      r.innerHTML = '';
+      if (!q.trim()) {
+        s.textContent = `Index: ${docs.length} papers · ${vocab.length} terms.`;
+        return;
+      }
+      if (results.length === 0) {
+        s.textContent = `No matches for "${q}".`;
+        return;
+      }
+      s.textContent = `${results.length} result${results.length === 1 ? '' : 's'} for "${q}".`;
+      for (const { d, score, hits } of results) {
+        const a = document.createElement('a');
+        a.href = `/papers/${d.id}`;
+        a.className = 'tile';
+        a.style.display = 'block';
+        a.style.marginBottom = 'var(--s-3)';
+        a.innerHTML = `
+          <div class="tile-eyebrow">${d.roman ?? '—'} · ${d.layer ?? 'paper'}</div>
+          <h3 style="font-size: var(--t-h5);">${d.title}</h3>
+          ${d.subtitle ? `<p class="muted small" style="margin-top: var(--s-2);">${d.subtitle}</p>` : ''}
+          <p class="small muted" style="margin-top: var(--s-2);">score ${score.toFixed(3)} · ${hits} term${hits === 1 ? '' : 's'} matched</p>
+        `;
+        r.appendChild(a);
+      }
+    }
+
+    const input = document.getElementById('q');
+    let timer = null;
+    input.addEventListener('input', (e) => {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        const q = e.target.value;
+        const r = rank(q);
+        render(r, q);
+      }, 80);
+    });
+
+    // Honour ?q= for shareable URLs.
+    const sp = new URLSearchParams(location.search);
+    if (sp.get('q')) {
+      input.value = sp.get('q');
+      input.dispatchEvent(new Event('input'));
+    }
+  </script>
+</JournalLayout>

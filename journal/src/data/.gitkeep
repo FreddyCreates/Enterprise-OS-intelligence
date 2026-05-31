@@ -1,0 +1,8 @@
+# The journal council's outputs land here at build time:
+#   search-index.json    — written by SCRIBA
+#   paper-graph.json     — written by LUMEN
+#   custos-report.json   — written by CUSTOS
+#   magister-report.json — written by MAGISTER
+#
+# This directory is gitignored except for this file. Re-run
+# `npm run agents` (or `npm run build`) to regenerate.

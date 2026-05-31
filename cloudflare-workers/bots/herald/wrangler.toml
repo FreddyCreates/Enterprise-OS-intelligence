@@ -1,6 +1,8 @@
 name               = "rship-herald"
 main               = "worker.js"
 compatibility_date = "2024-09-02"
+workers_dev     = true
+# Private own-domain for now: rship-herald.<account-subdomain>.workers.dev
 
 # Set these as Worker Secrets (wrangler secret put SLACK_SIGNING_SECRET):
 #   SLACK_SIGNING_SECRET   — from your Slack app settings

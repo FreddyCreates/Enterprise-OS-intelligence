@@ -14,6 +14,22 @@ scripts/
 deploy/
 bootstrap/
 
+# ─── ALLOWLIST: public Journal + Public Gateway canister stub ──────────
+# These negations come AFTER the broad rules above so they take effect.
+# The Journal (Astro static site) and the canister stub are public by
+# construction — their content is sanitiser-gated and contains no
+# implementation-level source code.
+!journal/
+!journal/src/
+!journal/src/**
+!journal/scripts/
+!journal/scripts/**
+!journal/public/
+!journal/public/**
+
+!canisters/public-gateway/
+!canisters/public-gateway/**
+
 # Strategy registers & manifests
 *.csv
 *_Register.csv

@@ -1,0 +1,30 @@
+{
+  "name": "@medina/journal",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "The Journal — public-facing view of the Enterprise OS Intelligence corpus. Papers, mathematics, lexicon, free tools, public-schools page. Static. Sanitizer-gated.",
+  "scripts": {
+    "sync": "node scripts/sync-papers.mjs",
+    "verify": "node ../tools/doc-sanitizer.js src/content/papers/ --verify",
+    "agents": "node agents/council.mjs",
+    "scriba": "node agents/scriba.mjs",
+    "lumen": "node agents/lumen.mjs",
+    "custos": "node agents/custos.mjs",
+    "magister": "node agents/magister.mjs",
+    "fabricor": "node agents/fabricor.mjs",
+    "nuntius": "node agents/nuntius.mjs",
+    "arbiter": "node agents/arbiter.mjs",
+    "copy-releases": "node scripts/copy-releases.mjs",
+    "verify-checksums": "node scripts/verify-checksums.mjs",
+    "dev": "npm run sync && npm run agents && astro dev",
+    "build": "npm run sync && npm run verify && npm run agents && astro build && npm run copy-releases && npm run verify-checksums",
+    "preview": "astro preview"
+  },
+  "dependencies": {
+    "@resvg/resvg-js": "^2.6.2",
+    "astro": "^5.0.0"
+  },
+  "author": "Alfredo Medina Hernandez",
+  "license": "SEE LICENSE IN ../LICENSE"
+}

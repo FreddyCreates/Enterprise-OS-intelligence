@@ -1,0 +1,197 @@
+---
+import JournalLayout from '../../layouts/JournalLayout.astro';
+import { getCollection } from 'astro:content';
+import graphData from '../../data/paper-graph.json';
+
+export async function getStaticPaths() {
+  const all = await getCollection('papers');
+  return all.map(paper => ({
+    params: { id: paper.data.id },
+    props:  { paper },
+  }));
+}
+
+const { paper } = Astro.props;
+const { Content } = await paper.render();
+
+// JSON-LD ScholarlyArticle for academic indexers (Google Scholar, etc.)
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type':    'ScholarlyArticle',
+  headline:   paper.data.title,
+  alternativeHeadline: paper.data.subtitle,
+  description: paper.data.description,
+  author: {
+    '@type': 'Person',
+    name: 'Alfredo Medina Hernandez',
+    affiliation: {
+      '@type': 'Organization',
+      name: 'Medina Tech',
+    },
+  },
+  publisher: {
+    '@type': 'Organization',
+    name:    'Medina Tech · Chaos Lab',
+    url:     'https://medinatech.example',
+  },
+  datePublished: '2026-04-30',
+  inLanguage:    'en',
+  isPartOf: {
+    '@type': 'PublicationSeries',
+    name:    'Sovereign Intelligence Research',
+  },
+  ...(paper.data.roman ? { issueNumber: paper.data.roman } : {}),
+  keywords: [paper.data.layer, ...(paper.data.threads ?? [])].filter(Boolean).join(', '),
+  url:    `https://journal-medina.pages.dev/papers/${paper.data.id}`,
+  encoding: [
+    { '@type': 'MediaObject', contentUrl: `https://journal-medina.pages.dev/papers/${paper.data.id}.txt`, encodingFormat: 'text/plain' },
+    { '@type': 'MediaObject', contentUrl: `https://journal-medina.pages.dev/api/papers/${paper.data.id}.json`, encodingFormat: 'application/json' },
+  ],
+};
+
+// LUMEN graph for this paper.
+const node = graphData.byPaper[paper.data.id] ?? { related: [], cited: [], thread: {} };
+const related = (node.related ?? []).map(r => ({
+  ...graphData.lookup[r.id], id: r.id, weight: r.weight,
+})).filter(r => r.title);
+const cited   = (node.cited ?? []).map(id => ({
+  ...graphData.lookup[id], id,
+})).filter(c => c.title);
+
+// Same-thread links: collect all thread entries minus self.
+const threadGroups = Object.entries(node.thread ?? {}).map(([thread, ids]) => ({
+  thread,
+  papers: ids.map(id => ({ ...graphData.lookup[id], id })).filter(p => p.title),
+}));
+---
+<JournalLayout
+  title={`${paper.data.title} — The Journal`}
+  description={paper.data.description}
+  eyebrow={paper.data.arxiv
+    ? 'ArXiv preprint'
+    : `Paper ${paper.data.roman ?? ''} · ${paper.data.layer}`}
+  ogImage={`/og/${paper.data.id}.png`}
+  jsonLd={jsonLd}
+>
+  <article class="measure stack" style="margin-top: var(--s-4);">
+    <header class="stack-sm">
+      <h1>{paper.data.title}</h1>
+      {paper.data.subtitle && (
+        <p class="muted" style="font-size: var(--t-h5);">
+          <em>{paper.data.subtitle}</em>
+        </p>
+      )}
+      <p class="small muted">
+        <strong>Alfredo Medina Hernandez</strong> · Medina Tech · Chaos Lab · Dallas, Texas
+      </p>
+      {paper.data.threads.length > 0 && (
+        <p>
+          {paper.data.threads.map(t => (
+            <span class="pill gold" style="margin-right: var(--s-3);">{t.toLowerCase()}</span>
+          ))}
+        </p>
+      )}
+    </header>
+
+    <hr class="rule" />
+
+    <div class="prose">
+      <Content />
+    </div>
+
+    <hr class="rule" />
+
+    {(related.length > 0 || cited.length > 0 || threadGroups.length > 0) && (
+      <section class="stack" aria-label="LUMEN graph for this paper">
+        <span class="eyebrow">LUMEN · connections in the canon</span>
+
+        {related.length > 0 && (
+          <div>
+            <h3 style="font-size: var(--t-h5);">Related by content</h3>
+            <p class="small muted">Top-K cosine similarity over SCRIBA's TF-IDF index of the corpus.</p>
+            <ul style="list-style: none; padding: 0; margin: var(--s-3) 0;">
+              {related.map(r => (
+                <li style="margin-bottom: var(--s-2);">
+                  <a href={`/papers/${r.id}`} class="no-underline">
+                    <span class="mono muted" style="min-width: 4em; display:inline-block;">
+                      {r.roman ?? '—'}
+                    </span>
+                    <strong>{r.title}</strong>
+                    <span class="muted small"> · sim {r.weight}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {cited.length > 0 && (
+          <div>
+            <h3 style="font-size: var(--t-h5);">Referenced in this paper</h3>
+            <p class="small muted">Explicit citations found in the text — &quot;Paper XXI&quot;, &quot;see XXIV&quot;, or a Latin paper title used in the body.</p>
+            <ul style="list-style: none; padding: 0; margin: var(--s-3) 0;">
+              {cited.map(c => (
+                <li style="margin-bottom: var(--s-2);">
+                  <a href={`/papers/${c.id}`} class="no-underline">
+                    <span class="mono muted" style="min-width: 4em; display:inline-block;">
+                      {c.roman ?? '—'}
+                    </span>
+                    <strong>{c.title}</strong>
+                    {c.subtitle && <span class="muted"> · {c.subtitle}</span>}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {threadGroups.length > 0 && (
+          <div>
+            <h3 style="font-size: var(--t-h5);">Same thread</h3>
+            {threadGroups.map(g => (
+              <div style="margin-top: var(--s-3);">
+                <span class="pill gold">{g.thread.toLowerCase()}</span>
+                <ul style="list-style: none; padding: 0; margin: var(--s-2) 0;">
+                  {g.papers.map(p => (
+                    <li style="margin-bottom: var(--s-2);">
+                      <a href={`/papers/${p.id}`} class="no-underline">
+                        <span class="mono muted" style="min-width: 4em; display:inline-block;">
+                          {p.roman ?? '—'}
+                        </span>
+                        <strong>{p.title}</strong>
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+    )}
+
+    <hr class="rule" />
+
+    <footer class="small muted stack-sm">
+      <p>
+        <strong>Cite as:</strong>
+        Medina Hernandez, A. ({paper.data.roman ? `Paper ${paper.data.roman}, ` : ''}April 2026).
+        <em>{paper.data.title}</em>.
+        Sovereign Intelligence Research, Medina Tech.
+      </p>
+      <p>
+        <a href="/papers">← All papers</a>
+        ·
+        <a href="/search">Search the canon</a>
+        ·
+        <a href="/council">The Council that built this page</a>
+      </p>
+      <p>
+        Also available as:
+        <a href={`/papers/${paper.data.id}.txt`}>plain text</a> ·
+        <a href={`/api/papers/${paper.data.id}.json`}>JSON</a> ·
+        <a href={`/og/${paper.data.id}.png`}>social card</a>
+      </p>
+    </footer>
+  </article>
+</JournalLayout>

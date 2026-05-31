@@ -1,6 +1,8 @@
 name               = "rship-nuntius"
 main               = "worker.js"
 compatibility_date = "2024-09-02"
+workers_dev     = true
+# Private own-domain for now: rship-nuntius.<account-subdomain>.workers.dev
 
 # Cron: morning briefing + evening summary
 [[triggers.crons]]

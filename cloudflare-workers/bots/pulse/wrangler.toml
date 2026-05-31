@@ -1,6 +1,8 @@
 name               = "rship-pulse"
 main               = "worker.js"
 compatibility_date = "2024-09-02"
+workers_dev     = true
+# Private own-domain for now: rship-pulse.<account-subdomain>.workers.dev
 
 # Cron triggers — intelligence reports on schedule
 [[triggers.crons]]

@@ -1,0 +1,82 @@
+---
+import JournalLayout from '../layouts/JournalLayout.astro';
+import { tools } from '../lib/tools.js';
+---
+<JournalLayout
+  title="The Tools — The Journal"
+  description="Three free domain-specific AI tools: paralegal-ai, analyst-ai, student-ai. Free download. No API key. No subscription. No data leaves your machine."
+  eyebrow="§ IV — The Tools"
+>
+  <header class="measure stack" style="margin-top: var(--s-4);">
+    <h1>The Tools</h1>
+    <p class="muted" style="font-size: var(--t-h5); line-height: 1.5;">
+      Three free AI tools. For lawyers, for analysts, for students.
+    </p>
+    <p>
+      No API key. No subscription. No login. No data leaves the machine they run on.
+      Domain-specific AI, built correctly, needs nothing from a cloud provider —
+      these tools exist to prove the point.
+    </p>
+    <p class="small muted">
+      Verify the SHA-256 of each download against the checksum shown.
+      The same checksums live in <code class="mono">releases/CHECKSUMS.sha256</code>.
+    </p>
+  </header>
+
+  <hr class="rule" />
+
+  <section class="stack-lg">
+    {tools.map(t => (
+      <article id={t.id} class="tool-card stack">
+        <header class="stack-sm">
+          <span class="eyebrow">{t.audience}</span>
+          <h2 style="font-size: var(--t-h3);"><span class="latin">{t.title}</span></h2>
+          <p class="small muted">
+            <code class="mono">{t.package}</code> · v{t.version}
+          </p>
+          <p>{t.description}</p>
+        </header>
+
+        <div>
+          <span class="eyebrow">Primary methods</span>
+          <table>
+            <tbody>
+              {t.methods.map(m => (
+                <tr>
+                  <td class="mono" style="width: 45%;"><code>{m.sig}</code></td>
+                  <td class="muted">{m.note}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div>
+          <span class="eyebrow">Download</span>
+          <p>
+            <a class="btn" href={`/releases/${t.file}`} download>Download v{t.version} (.zip)</a>
+          </p>
+          <p class="checksum" style="margin-top: var(--s-3);">
+            SHA-256: <span>{t.sha256}</span>
+          </p>
+        </div>
+      </article>
+    ))}
+  </section>
+
+  <hr class="rule" />
+
+  <aside class="doctrine">
+    <h6>About these downloads</h6>
+    <p>
+      Each tool is an early-alpha release. They are functional and free to use
+      for personal evaluation. Commercial use requires written authorisation
+      (see the <a href="https://github.com/FreddyCreates/Enterprise-OS-intelligence/blob/main/LICENSE">License</a>).
+    </p>
+    <p>
+      No telemetry. No license check. No phone-home. If you want to share one
+      of these tools — share the ZIP. The checksum tells the recipient it is
+      the same one published here.
+    </p>
+  </aside>
+</JournalLayout>

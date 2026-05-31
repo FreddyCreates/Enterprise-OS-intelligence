@@ -1,6 +1,8 @@
 name               = "rship-conduit"
 main               = "worker.js"
 compatibility_date = "2024-09-02"
+workers_dev     = true
+# Private own-domain for now: rship-conduit.<account-subdomain>.workers.dev
 
 # Optional secrets:
 #   CONDUIT_AUTH_TOKEN     — Bearer token to protect the routing API

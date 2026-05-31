@@ -1,0 +1,62 @@
+---
+import JournalLayout from '../layouts/JournalLayout.astro';
+import { equations, closing } from '../lib/mathematics.js';
+---
+<JournalLayout
+  title="The Mathematics — The Journal"
+  description="The equations and the names they produced. Why φ is everywhere, why STIGMERGY became TRACE, why QUORUM became VERIFY, why AURUM became REMEMBER."
+  eyebrow="§ II — The Mathematics"
+>
+  <header class="measure stack" style="margin-top: var(--s-4);">
+    <h1>The Mathematics</h1>
+    <p class="muted" style="font-size: var(--t-h5); line-height: 1.5;">
+      The names were not chosen for branding.
+      Each one is the name of a piece of mathematics that the work implements.
+    </p>
+    <p>
+      The same handful of equations recur at every scale — from a single
+      compute unit&apos;s heartbeat all the way up to the way the agent council
+      reaches consensus. This page is the registry.
+    </p>
+  </header>
+
+  <hr class="rule" />
+
+  <section class="stack-lg">
+    {equations.map((e, i) => (
+      <article class="stack-sm">
+        <header class="stack-sm">
+          <span class="eyebrow">{String(i + 1).padStart(2, '0')}</span>
+          <h2 style="font-size: var(--t-h3);">
+            <span class="latin">{e.name}</span>
+          </h2>
+          <p class="muted">{e.summary}</p>
+        </header>
+
+        <pre class="eq">{e.eq}</pre>
+
+        <div class="grid-2">
+          <div>
+            <span class="eyebrow">The phenomenon</span>
+            <p>{e.phenomenon}</p>
+          </div>
+          <div>
+            <span class="eyebrow">In the work</span>
+            <p>{e.note}</p>
+          </div>
+        </div>
+
+        <p class="small muted">
+          {e.paper && <>Paper <strong>{e.paper}</strong> · </>}
+          <code class="mono">{e.code}</code>
+        </p>
+      </article>
+    ))}
+  </section>
+
+  <hr class="rule" />
+
+  <p class="latin" style="text-align: center; font-size: var(--t-h4);">
+    {closing}
+  </p>
+</JournalLayout>
