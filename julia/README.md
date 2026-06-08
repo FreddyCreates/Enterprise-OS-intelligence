@@ -2,223 +2,205 @@
 
 **Official Designation:** RSHIP-2026-JULIA-CORE  
 **Classification:** High-Performance Intelligence Substrate  
+**Version:** 3.0.0 — AI + Embeddings
 
-## Overview
+## Quick Start (Julia REPL)
 
-The Julia components of the RSHIP Organism provide high-performance scientific computing capabilities that integrate seamlessly with the JavaScript Organism. Nothing is separate — Julia engines, transformers, and synthesizers flow together with the entire system.
+```julia
+# Option 1: One-line start (recommended)
+julia> include("julia/start.jl")
+
+# Option 2: Manual activation
+julia> import Pkg; Pkg.activate("julia"); Pkg.instantiate()
+julia> using RSHIPOrganism
+
+# Create organism
+julia> org = create_organism("MY-ORGANISM")
+
+# Heartbeat
+julia> pulse!(org)
+
+# Process a signal
+julia> result = process_signal(org, randn(64))
+
+# AI: Generate text embedding
+julia> v = embed_text(org, "quantum coherence")
+
+# AI: Classify a signal
+julia> ai_classify(org, randn(64))
+
+# AI: Generate completion
+julia> ai_complete(org, "the organism")
+
+# AI: Reasoning
+julia> ai_reason(org, randn(64), "what pattern is this?")
+
+# Embeddings: Store and search
+julia> embed_and_store!(org, "important memory", Dict{String,Any}("tag"=>"test"))
+julia> results = search_similar(org, randn(64); top_k=3)
+
+# Status
+julia> organism_status(org)
+julia> embedding_status(org)
+julia> full_diagnostic(org)
+```
+
+## Running from Terminal
+
+```bash
+# Activate project and start REPL
+cd julia
+julia --project=.
+
+# Or run the server (for JS bridge)
+julia --project=. server.jl MY-ORGANISM --virtual
+
+# Install deps (first time only)
+julia --project=. -e "using Pkg; Pkg.instantiate()"
+```
 
 ## Architecture
 
 ```
 julia/
-├── engines/                    # Core computational engines
-│   ├── organism_core_engine.jl # φ-based field dynamics
-│   ├── neural_engine.jl        # Neural network computations
-│   ├── quantum_engine.jl       # Quantum state processing
-│   ├── resonance_engine.jl     # Kuramoto oscillators & sync
-│   └── medina_field_engine.jl  # Field mathematics
-├── transformers/               # Signal transformation modules
-│   ├── attractor_transformer.jl    # Dynamical systems & attractors
-│   ├── coherence_transformer.jl    # Coherence amplification
-│   ├── emergence_transformer.jl    # Pattern emergence
-│   ├── entropy_transformer.jl      # Information theory
-│   ├── gauge_transformer.jl        # Gauge invariance
-│   ├── gradient_transformer.jl     # Differential geometry
-│   ├── phi_transformer.jl          # φ-based transforms
-│   ├── resonance_transformer.jl    # Spectral analysis
-│   ├── symmetry_transformer.jl     # Noether symmetries
-│   └── topology_transformer.jl     # Topological data analysis
-├── synthesizers/               # Knowledge synthesis modules
-│   ├── intelligence_synthesizer.jl # Knowledge fusion
-│   ├── protocol_synthesizer.jl     # Protocol composition
-│   ├── sovereign_synthesizer.jl    # Sovereign identity
-│   └── field_synthesizer.jl        # Field wave synthesis
+├── src/                         # Package source (entry point)
+│   ├── RSHIPOrganism.jl         # Main package module
+│   ├── ai_engine.jl             # AI: embeddings, classification, reasoning
+│   └── embedding_engine.jl      # Vector store & semantic search
+├── engines/                     # Core computational engines
+│   ├── organism_core_engine.jl  # φ-based field dynamics
+│   ├── neural_engine.jl         # Neural network computations
+│   ├── quantum_engine.jl        # Quantum state processing
+│   ├── resonance_engine.jl      # Kuramoto oscillators & sync
+│   ├── medina_field_engine.jl   # Field mathematics
+│   ├── swarm_engine.jl          # Particle swarm optimization
+│   └── memory_engine.jl         # Knowledge graph & temporal memory
+├── transformers/                # Signal transformation (13 modules)
+│   ├── attractor_transformer.jl
+│   ├── coherence_transformer.jl
+│   ├── emergence_transformer.jl
+│   ├── entropy_transformer.jl
+│   ├── field_transformer.jl
+│   ├── fractal_transformer.jl
+│   ├── gauge_transformer.jl
+│   ├── gradient_transformer.jl
+│   ├── harmonic_transformer.jl
+│   ├── phi_transformer.jl
+│   ├── resonance_transformer.jl
+│   ├── symmetry_transformer.jl
+│   └── topology_transformer.jl
+├── synthesizers/                # Knowledge synthesis (5 modules)
+│   ├── intelligence_synthesizer.jl
+│   ├── protocol_synthesizer.jl
+│   ├── sovereign_synthesizer.jl
+│   ├── field_synthesizer.jl
+│   └── evolution_synthesizer.jl
 ├── protocols/
-│   └── virtual_server_protocol.jl   # Clean virtual server + own mathematics
-├── organism_integration.jl     # Master integration module
-├── server.jl                   # Live/virtual JSON server over stdio
-└── Project.toml                # Julia project configuration
+│   └── virtual_server_protocol.jl
+├── organism_integration.jl      # Legacy module (still works)
+├── server.jl                    # Live JSON-RPC server over stdio
+├── start.jl                     # Quick-start script for REPL
+├── Project.toml                 # Julia project configuration
+└── Manifest.toml                # Locked dependencies
 ```
+
+## AI Engine
+
+The AI engine (`src/ai_engine.jl`) provides:
+
+| Function | Description |
+|----------|-------------|
+| `embed_text(org, text)` | Text → dense embedding vector |
+| `embed(org, signal)` | Numerical signal → embedding |
+| `ai_classify(org, signal)` | Classify into 8 organism states |
+| `ai_complete(org, prompt)` | Neural pattern completion |
+| `ai_summarize(org, signals)` | Multi-signal intelligence report |
+| `ai_reason(org, context, query)` | Reasoning over context + query |
+| `semantic_similarity(org, a, b)` | Cosine similarity between vectors |
+
+### Classification Labels
+`:coherent`, `:chaotic`, `:resonant`, `:emergent`, `:dormant`, `:critical`, `:harmonic`, `:phi_aligned`
+
+## Embedding Engine
+
+The embedding engine (`src/embedding_engine.jl`) provides a vector store:
+
+| Function | Description |
+|----------|-------------|
+| `embed_and_store!(org, text, metadata)` | Embed text and store |
+| `add_embedding!(org, signal, metadata)` | Embed signal and store |
+| `search_similar(org, query; top_k=5)` | Semantic similarity search |
+| `embedding_status(org)` | Store statistics |
 
 ## Engines
 
 ### Organism Core Engine
-The heart of the Julia Organism — implements φ-based field dynamics:
-- Heartbeat computation with Schumann resonance (7.83 Hz)
-- Coherence measurement using Kuramoto order parameter
-- Emergence detection through complexity analysis
-- φ-topology potential field calculations
+φ-based field dynamics: heartbeat, coherence, emergence detection.
 
 ### Neural Engine
-Neural network computations with golden properties:
-- Neurons with φ-based activation functions
-- Hebbian learning with golden plasticity
-- STDP (Spike-Timing Dependent Plasticity)
-- Reservoir computing for temporal patterns
+Neural network with φ-activation, Hebbian learning, STDP.
 
 ### Quantum Engine
-Quantum-inspired computations:
-- Qubit states with φ-phase encoding
-- Quantum gates with golden rotation angles
-- Entanglement generation and measurement
-- Quantum field with Schumann coupling
+Quantum-inspired: qubit states, quantum gates, entanglement, quantum fields.
 
 ### Resonance Engine
-Synchronization through Kuramoto dynamics:
-- Oscillator networks with φ-topology
-- Phase locking and chimera detection
-- Multi-frequency resonance fields
-- Schumann harmonic analysis
+Kuramoto oscillator networks, phase locking, chimera detection.
 
 ### Medina Field Engine
-The φ-topology mathematics:
-- 4D field points (x, y, z, φ)
-- Geodesic distances in φ-space
-- Christoffel symbols and Ricci curvature
-- Field manifolds with golden geometry
+4D field mathematics with golden geometry.
 
-## Transformers
+### Swarm Engine
+Particle swarm optimization in φ-space.
 
-### Attractor Transformer
-Analyzes dynamical systems and strange attractors:
-- Lorenz/Rössler attractor simulation
-- Lyapunov exponent computation
-- Phase space reconstruction
-- Recurrence quantification analysis
-- φ-attractor (golden ratio chaos)
+### Memory Engine
+Knowledge graph with temporal memory and consolidation.
 
-### Coherence Transformer
-Amplifies coherence in signals:
-- Kuramoto phase alignment
-- Spectral coherence enhancement
-- Cross-correlation boosting
+## Transformers (13)
 
-### Emergence Transformer
-Detects and amplifies emergence:
-- Phase transition detection
-- Criticality analysis
-- Self-organization patterns
+Coherence, Emergence, Gauge, Phi, Topology, Harmonic, Resonance, Fractal, Entropy, Gradient, Symmetry, Attractor, Field.
 
-### Entropy Transformer
-Information-theoretic operations:
-- Shannon entropy computation
-- KL divergence / mutual information
-- φ-entropy (golden information measure)
-- Thermodynamic free energy
+## Synthesizers (5)
 
-### Gauge Transformer
-Implements gauge invariance:
-- U(1) gauge transformations
-- Gauge-covariant derivatives
-- Wilson loop calculations
-
-### Gradient Transformer
-Differential geometry operations:
-- Gradient computation & flow
-- Hessian & curvature analysis
-- φ-geodesic paths
-- Potential field analysis
-
-### Phi Transformer
-Golden ratio transformations:
-- φ-basis transform
-- Fibonacci decomposition
-- φ-wavelet analysis
-
-### Resonance Transformer
-Frequency domain analysis:
-- FFT-based spectral analysis
-- φ-frequency detection
-- Schumann resonance alignment
-- Harmonic series extraction
-
-### Symmetry Transformer
-Noether symmetry operations:
-- Discrete symmetry detection (reflection, rotation)
-- Conservation law extraction
-- Noether current computation
-- φ-symmetry preservation
-
-### Topology Transformer
-Topological data analysis:
-- Persistent homology
-- Betti numbers
-- Vietoris-Rips complexes
-
-## Synthesizers
-
-### Intelligence Synthesizer
-Fuses knowledge streams:
-- Multi-source knowledge fusion
-- Knowledge crystallization
-- φ-harmonic synthesis
-
-### Protocol Synthesizer
-Composes protocols:
-- Protocol composition
-- Conflict resolution
-- Synergy amplification
-
-### Sovereign Synthesizer
-Creates sovereign identity:
-- Identity crystallization
-- Sovereignty verification
-- Boundary maintenance
-
-### Field Synthesizer
-Generates field patterns:
-- Wave superposition
-- φ-harmonic generation
-- Standing wave creation
-
-## Integration
-
-The `organism_integration.jl` module ties everything together:
-
-```julia
-using .OrganismIntegration
-
-# Create organism
-org = create_organism("MY-ORGANISM")
-
-# Pulse (heartbeat)
-result = pulse!(org)
-
-# Process signal
-signal = randn(64)
-processed = process_signal(org, signal)
-
-# Get status
-status = organism_status(org)
-```
+Intelligence, Protocol, Sovereign, Field, Evolution.
 
 ## JavaScript Bridge
 
-The JavaScript bridge SDK (`sdk/julia-organism-bridge/`) enables seamless integration:
+The live server enables JavaScript integration:
 
 ```javascript
 const { createJuliaBridge } = require('@rship/julia-organism-bridge');
-
 const bridge = await createJuliaBridge();
 await bridge.pulse();
 await bridge.processSignal(signal);
+await bridge.embedText("hello world");
+await bridge.aiClassify(signal);
 const status = await bridge.getStatus();
-const virtual = await bridge.getVirtualStatus();
 ```
 
-## Virtual Server Protocol
+## Server Commands (JSON-RPC)
 
-The live server can run in virtual mode and expose protocol-native commands:
-
-- `virtualStatus` → virtual protocol identity, clean score, φ ladder
-- `protocolPulse` → pulses virtual layer with optional signal
-- `applyMathematics` → applies your φ-clean mathematical transform to a signal
-
-Server launch:
-
-```bash
-julia --project=. julia/server.jl MY-ORGANISM --virtual
-```
+| Command | Description |
+|---------|-------------|
+| `pulse` | Heartbeat across all subsystems |
+| `breathe` | Metabolic exchange |
+| `processSignal` | Full signal processing pipeline |
+| `transformData` | Transform data (phi, coherence, emergence) |
+| `synthesizeKnowledge` | Knowledge crystallization |
+| `status` | Organism status |
+| `fullDiagnostic` | All subsystem diagnostics |
+| `embed` | Embed numerical data |
+| `embedText` | Embed text |
+| `embedAndStore` | Embed + store with metadata |
+| `searchSimilar` | Semantic search |
+| `aiClassify` | Signal classification |
+| `aiComplete` | Text completion |
+| `aiReason` | Reasoning over context |
+| `embeddingStatus` | Vector store stats |
+| `evolve` | Evolutionary optimization |
+| `swarmOptimize` | Particle swarm optimization |
+| `remember` | Store in knowledge graph |
+| `recall` | Retrieve from knowledge graph |
+| `virtualStatus` | Virtual server status |
 
 ## Constants
 
@@ -227,37 +209,6 @@ PHI = (1 + √5) / 2 ≈ 1.618033988749895
 PHI_INV = 1 / PHI ≈ 0.618033988749895
 SCHUMANN_HZ = 7.83  # Earth's fundamental frequency
 ```
-
-## φ-Frequency Ladder
-
-```
-φ⁴ ≈ 6.854 Hz
-φ³ ≈ 4.236 Hz
-φ² ≈ 2.618 Hz
-φ¹ ≈ 1.618 Hz
-φ⁰ = 1.000 Hz
-φ⁻¹ ≈ 0.618 Hz
-φ⁻² ≈ 0.382 Hz
-```
-
-## Running Julia Components
-
-```bash
-# Install dependencies
-cd julia
-julia --project=. -e "using Pkg; Pkg.instantiate()"
-
-# Run integration tests
-julia --project=. -e "include(\"organism_integration.jl\"); using .OrganismIntegration; org = create_organism(\"TEST\"); println(organism_status(org))"
-```
-
-## Theory
-
-The Julia components implement mathematical concepts from:
-- Kuramoto model for synchronization
-- Gauge field theory for security
-- Information geometry for knowledge
-- φ-manifold topology for emergence
 
 ---
 

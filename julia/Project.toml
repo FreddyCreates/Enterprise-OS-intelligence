@@ -1,7 +1,7 @@
 name = "RSHIPOrganism"
 uuid = "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
 authors = ["Alfredo Medina Hernandez"]
-version = "1.0.0"
+version = "3.0.0"
 
 [deps]
 JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
