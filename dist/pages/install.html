@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Install RSHIP CLI — Enterprise OS Intelligence</title>
+  <meta name="description" content="One-command install for RSHIP Enterprise OS Intelligence CLI. Sovereign AI infrastructure in seconds.">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>◎</text></svg>">
+  <style>
+    :root {
+      --bg: #02050f;
+      --card: #0a0f1a;
+      --border: #1a2535;
+      --text: #e2ecf5;
+      --dim: #6b7a8f;
+      --cyan: #00d4ff;
+      --green: #00ff88;
+      --gold: #ffd700;
+      --purple: #a855f7;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+    .container { max-width: 720px; width: 100%; }
+    .logo { font-size: 3rem; text-align: center; margin-bottom: 1rem; }
+    h1 { text-align: center; font-size: 2rem; margin-bottom: 0.5rem; }
+    .subtitle { text-align: center; color: var(--dim); margin-bottom: 3rem; font-size: 1.1rem; }
+    .install-block {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+    }
+    .install-block h2 {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--dim);
+      margin-bottom: 1rem;
+    }
+    .install-block .platform-icon { color: var(--cyan); margin-right: 0.5rem; }
+    .code-box {
+      background: #000;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      font-family: 'Cascadia Code', 'Fira Code', monospace;
+      font-size: 0.9rem;
+      color: var(--green);
+      overflow-x: auto;
+      position: relative;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+    .code-box:hover { border-color: var(--cyan); }
+    .code-box::after {
+      content: 'click to copy';
+      position: absolute;
+      top: 0.5rem;
+      right: 0.75rem;
+      font-size: 0.7rem;
+      color: var(--dim);
+      font-family: system-ui, sans-serif;
+    }
+    .code-box.copied::after { content: '✓ copied'; color: var(--green); }
+    .modes {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+    .mode-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.25rem;
+      transition: border-color 0.2s;
+    }
+    .mode-card:hover { border-color: var(--cyan); }
+    .mode-card h3 { font-size: 1rem; margin-bottom: 0.25rem; }
+    .mode-card p { color: var(--dim); font-size: 0.85rem; }
+    .mode-card .badge {
+      display: inline-block;
+      font-size: 0.7rem;
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+    }
+    .badge-enterprise { background: rgba(0,212,255,0.15); color: var(--cyan); }
+    .badge-developer { background: rgba(0,255,136,0.15); color: var(--green); }
+    .badge-operator { background: rgba(255,215,0,0.15); color: var(--gold); }
+    .badge-sovereign { background: rgba(168,85,247,0.15); color: var(--purple); }
+    .features { margin-top: 3rem; }
+    .features h2 { text-align: center; margin-bottom: 1.5rem; color: var(--dim); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.1em; }
+    .feature-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+    .feature { text-align: center; padding: 1rem; }
+    .feature .icon { font-size: 1.5rem; margin-bottom: 0.5rem; }
+    .feature .label { font-size: 0.85rem; color: var(--dim); }
+    .footer { margin-top: 3rem; text-align: center; color: var(--dim); font-size: 0.8rem; }
+    .footer a { color: var(--cyan); text-decoration: none; }
+    .footer a:hover { color: var(--gold); }
+    @media (max-width: 600px) {
+      .modes { grid-template-columns: 1fr; }
+      .feature-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">◎</div>
+    <h1>RSHIP CLI</h1>
+    <p class="subtitle">Enterprise OS Intelligence — Install in one command</p>
+
+    <div class="install-block">
+      <h2><span class="platform-icon">⊞</span> Windows (PowerShell)</h2>
+      <div class="code-box" onclick="copyCmd(this)">irm https://freddycreates.github.io/Enterprise-OS-intelligence/install.ps1 | iex</div>
+    </div>
+
+    <div class="install-block">
+      <h2><span class="platform-icon">⌘</span> macOS / Linux</h2>
+      <div class="code-box" onclick="copyCmd(this)">curl -fsSL https://freddycreates.github.io/Enterprise-OS-intelligence/install.sh | sh</div>
+    </div>
+
+    <div class="modes">
+      <div class="mode-card">
+        <span class="badge badge-enterprise">ENTERPRISE</span>
+        <h3>Enterprise Mode</h3>
+        <p>Full suite: billing, workforce, supply chain, contract intelligence</p>
+      </div>
+      <div class="mode-card">
+        <span class="badge badge-developer">DEVELOPER</span>
+        <h3>Developer Mode</h3>
+        <p>SDK tools, hot-reload, debugging, Worker deployment</p>
+      </div>
+      <div class="mode-card">
+        <span class="badge badge-operator">OPERATOR</span>
+        <h3>Operator Mode</h3>
+        <p>Infrastructure monitoring, cache control, health checks</p>
+      </div>
+      <div class="mode-card">
+        <span class="badge badge-sovereign">SOVEREIGN</span>
+        <h3>Sovereign Mode</h3>
+        <p>Self-hosted, air-gapped, zero external dependencies</p>
+      </div>
+    </div>
+
+    <div class="features">
+      <h2>What You Get</h2>
+      <div class="feature-grid">
+        <div class="feature">
+          <div class="icon">🧠</div>
+          <div class="label">Intelligent Cache Organisms</div>
+        </div>
+        <div class="feature">
+          <div class="icon">🔒</div>
+          <div class="label">Zero Third-Party AI</div>
+        </div>
+        <div class="feature">
+          <div class="icon">⚡</div>
+          <div class="label">Edge-First Architecture</div>
+        </div>
+        <div class="feature">
+          <div class="icon">📊</div>
+          <div class="label">35+ Production Apps</div>
+        </div>
+        <div class="feature">
+          <div class="icon">🏗️</div>
+          <div class="label">100+ Enterprise SDKs</div>
+        </div>
+        <div class="feature">
+          <div class="icon">🌐</div>
+          <div class="label">Sovereign Infrastructure</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <p>
+        <a href="https://github.com/FreddyCreates/Enterprise-OS-intelligence">GitHub</a> ·
+        <a href="https://freddycreates.github.io/Enterprise-OS-intelligence/">Documentation</a> ·
+        <a href="https://freddycreates.github.io/Enterprise-OS-intelligence/pages/api.html">API</a>
+      </p>
+      <p style="margin-top: 0.5rem;">Built by Alfredo Medina Hernandez · No third-party AI · Sovereign by design</p>
+    </div>
+  </div>
+
+  <script>
+    function copyCmd(el) {
+      navigator.clipboard.writeText(el.textContent.trim());
+      el.classList.add('copied');
+      setTimeout(() => el.classList.remove('copied'), 2000);
+    }
+  </script>
+</body>
+</html>
