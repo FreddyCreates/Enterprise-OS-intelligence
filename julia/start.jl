@@ -1,7 +1,10 @@
 #=
 QUICK START — Load this file in the Julia REPL to get started immediately.
 
-Usage (from the julia/ directory):
+Usage (from the repository root):
+    julia> include("julia/start.jl")
+
+Or from the julia/ directory:
     julia> include("start.jl")
 
 Or from anywhere:
@@ -24,7 +27,7 @@ org = create_organism("MY-ORGANISM")
 println()
 println("  ✓ Organism created: $(org.designation)")
 println("  ✓ AI engine ready (embedding dim: $(org.ai.embedding_dim))")
-println("  ✓ Embedding store ready")
+println("  ✓ Embedding store ready (capacity: $(org.embeddings.max_entries))")
 println()
 println("  Try these commands:")
 println("    pulse!(org)                        # heartbeat")
