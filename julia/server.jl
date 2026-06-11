@@ -6,7 +6,7 @@ Official Designation: RSHIP-2026-JULIA-SERVER-001
 Classification: Live JSON-RPC Server Over stdio
 
 This is the entry point that the JavaScript bridge spawns. It:
-  1. Loads all Julia Organism components
+  1. Loads the RSHIPOrganism package
   2. Creates a live JuliaOrganism instance
   3. Reads JSON commands from stdin, one per line
   4. Writes JSON responses to stdout, one per line
@@ -28,13 +28,8 @@ Usage:
 using Pkg
 Pkg.instantiate()   # no-op if deps already satisfied
 
-# ── Locate the julia/ directory relative to this file ─────────────────────────
-const JULIA_DIR = dirname(@__FILE__)
-
-push!(LOAD_PATH, JULIA_DIR)
-
-include(joinpath(JULIA_DIR, "organism_integration.jl"))
-using .OrganismIntegration
+# ── Load the package ──────────────────────────────────────────────────────────
+using RSHIPOrganism
 using JSON
 
 # ── Read optional startup args ────────────────────────────────────────────────
@@ -52,10 +47,7 @@ for arg in ARGS
 end
 
 # ── Boot the organism ─────────────────────────────────────────────────────────
-const ORG = OrganismIntegration.create_organism(designation)
-if virtual_mode && hasproperty(ORG, :virtual_server)
-    ORG.virtual_server.protocol_name = "RSHIP-CLEAN-VIRTUAL-PROTOCOL"
-end
+const ORG = create_organism(designation)
 
 # ── Signal readiness ──────────────────────────────────────────────────────────
 println("JULIA_READY")
@@ -71,7 +63,7 @@ while !eof(stdin)
 
     response = try
         cmd = Dict{String, Any}(string(k) => v for (k, v) in JSON.parse(line))
-        OrganismIntegration.process_command(ORG, cmd)
+        process_command(ORG, cmd)
     catch e
         id = try JSON.parse(line)["id"] catch; "" end
         Dict("id" => id, "error" => sprint(showerror, e))
