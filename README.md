@@ -26,6 +26,47 @@
 
 ---
 
+## Installation
+
+```bash
+# Clone the repo
+git clone https://github.com/FreddyCreates/Enterprise-OS-intelligence.git
+cd Enterprise-OS-intelligence
+
+# One-command install (installs all dependencies)
+bash install.sh
+```
+
+That's it. The install script checks your prerequisites (Node.js 18+), installs all dependencies across the monorepo, and prints available commands.
+
+**Or install manually step by step:**
+
+```bash
+# Install Workers dependencies
+cd cloudflare-workers && npm install
+
+# Install main project
+cd ../src && npm install
+
+# Install EmailAI dashboard
+cd emailai-dashboard && npm install
+```
+
+**Quick commands after install:**
+
+| Command | What it does |
+|:---|:---|
+| `npm run dev` | Start local dev server |
+| `npm run dev:dashboard` | Start EmailAI dashboard dev server |
+| `npm run build` | Production build |
+| `npm run test` | Run tests |
+| `npm run deploy:workers` | Deploy all Cloudflare Workers |
+| `npm run test:protocols` | Test intelligence protocols |
+
+> **Prerequisites:** Node.js 18+ · npm · Go 1.22+ (optional, for organism-gateway) · Wrangler CLI (optional, for Cloudflare deploy)
+
+---
+
 ## The AI Introduces This
 
 *Written from my perspective — not as documentation, but because I was asked to.*

@@ -1,0 +1,30 @@
+{
+  "name": "enterprise-os-intelligence",
+  "version": "2026.1.0",
+  "description": "Enterprise OS Intelligence — Sovereign Intelligence Architecture by Medina Tech",
+  "private": true,
+  "scripts": {
+    "install:all": "bash install.sh",
+    "install:workers": "cd cloudflare-workers && npm install",
+    "install:src": "cd src && npm install",
+    "install:dashboard": "cd src/emailai-dashboard && npm install",
+    "dev": "cd src && npm run dev",
+    "dev:dashboard": "cd src/emailai-dashboard && npm run dev",
+    "build": "cd src && npm run deploy",
+    "build:dashboard": "cd src/emailai-dashboard && npm run build",
+    "deploy:workers": "cd cloudflare-workers && npm run deploy:all",
+    "deploy:membrane": "cd cloudflare-workers && npm run deploy:membrane",
+    "deploy:agents": "cd cloudflare-workers && npm run deploy:agents",
+    "test": "cd src && npm test",
+    "test:protocols": "cd protocols && node test-integration.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "author": "Alfredo Medina Hernandez <medina@rship.io>",
+  "license": "SEE LICENSE IN LICENSE",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/FreddyCreates/Enterprise-OS-intelligence.git"
+  }
+}
