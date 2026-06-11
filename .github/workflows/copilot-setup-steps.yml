@@ -1,0 +1,74 @@
+name: "Copilot Setup Steps"
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+  pull_request:
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+
+jobs:
+  copilot-setup-steps:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    # Firewall: allow outbound HTTPS to GitHub and common package registries
+    firewall:
+      egress:
+        policy: block
+        allowed:
+          - host: github.com
+            ports:
+              - 443
+          - host: api.github.com
+            ports:
+              - 443
+          - host: uploads.github.com
+            ports:
+              - 443
+          - host: user-images.githubusercontent.com
+            ports:
+              - 443
+          - host: registry.npmjs.org
+            ports:
+              - 443
+          - host: pypi.org
+            ports:
+              - 443
+          - host: files.pythonhosted.org
+            ports:
+              - 443
+          - host: rubygems.org
+            ports:
+              - 443
+          - host: proxy.golang.org
+            ports:
+              - 443
+          - host: sum.golang.org
+            ports:
+              - 443
+          - host: pkg.dev
+            ports:
+              - 443
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Expose GitHub token and authenticate gh CLI
+        run: |
+          # Expose token as both GH_TOKEN and GITHUB_TOKEN for tooling compatibility
+          echo "GH_TOKEN=${GITHUB_TOKEN}" >> "$GITHUB_ENV"
+
+          # Verify gh is available (pre-installed on GitHub-hosted runners)
+          gh --version
+
+          # Authenticate gh CLI using the token
+          echo "${GITHUB_TOKEN}" | gh auth login --with-token
+          gh auth status
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
