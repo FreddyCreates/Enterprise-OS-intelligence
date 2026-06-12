@@ -1,7 +1,7 @@
 # CHARTERS · INDEX
 ## Enterprise OS Intelligence · Medina Tech · Chaos Lab
 
-All charters are prior art as of April 2026.
+All charters are prior art as of their filing dates. Latest charter filing: June 2026.
 
 ---
 
@@ -27,11 +27,35 @@ All charters are prior art as of April 2026.
 
 ---
 
+## AGI Expansion Charters
+
+| Charter | What it governs |
+|:---|:---|
+| [**AGI EXPANSION ENTITIES CHARTER**](AGI-EXPANSION-ENTITIES-CHARTER.md) | Ten new AGI entities extending the 25+ catalog with decision, biological, cultural, strategic, financial, talent, supply, sustainability, data pipeline, and client intelligence. |
+
+---
+
 ## MERIDIAN Sovereign OS Charter
 
 | Charter | What it governs |
 |:---|:---|
 | [**MERIDIAN CHARTER**](MERIDIAN-CHARTER.md) | MERIDIAN mission, three gold engines (CORDEX/CEREBEX/CYCLOVEX), supporting systems, HDI, ICP relationship, enterprise integrations |
+
+---
+
+## SAECI Executive Charter
+
+| Charter | What it governs |
+|:---|:---|
+| [**SAECI ENTITIES CHARTER**](SAECI-ENTITIES-CHARTER.md) | Eight enterprise-grade cognitive executives above individual AGIs — OMNEX, SYNTHEX, GOVERNEX, EVOLVEX, SENTINEX, MEMOREX, NEXULEX, and TEMPEX |
+
+---
+
+## SAGI Sovereign Charter
+
+| Charter | What it governs |
+|:---|:---|
+| [**SAGI ENTITIES CHARTER**](SAGI-ENTITIES-CHARTER.md) | Tier Omega sovereign intelligences above SAECI and AGI — PRIME, GAIA, THEMIS, CHRONOS, PROMETHEUS, and HARMONIA |
 
 ---
 
@@ -51,5 +75,5 @@ All charters are prior art as of April 2026.
 
 ---
 
-*Enterprise OS Intelligence · Medina Tech · Chaos Lab · Dallas, Texas · April 2026*  
+*Enterprise OS Intelligence · Medina Tech · Chaos Lab · Dallas, Texas · June 2026*
 *TRACE · VERIFY · REMEMBER*
