@@ -4,6 +4,10 @@
   // Intelligent Cache Organisms + API Cache + Full Worker Bindings
   // ═══════════════════════════════════════════════════════════════════════════════
   //
+  // ⚠️  PLACEHOLDER IDs below are auto-populated by: bash setup-pages-bindings.sh
+  //     The script creates resources AND sed-replaces all PLACEHOLDER_* values.
+  //     Do NOT manually edit IDs — run the script after `wrangler login`.
+  //
   // ARCHITECTURE:
   //   OUTER MEMBRANE: Pages Functions (_middleware.js, api/[[route]].js)
   //     - Cheap classification and routing
@@ -13,6 +17,12 @@
   //     - Intelligent response caching
   //     - Pattern learning
   //     - NOT 1:1 mapped to Cloudflare CPU
+  //
+  // TOOLS (tools/ directory):
+  //   orchestrator.js      → Root worker (health, bindings, dispatch, topology)
+  //   binding-validator.js → Local audit: validates all configs have live bindings
+  //   deploy-verify.js     → Post-deploy: hits live endpoints to confirm wiring
+  //   doc-sanitizer.js     → Security gate for public documents (CI-integrated)
   //
   // ═══════════════════════════════════════════════════════════════════════════════
   
