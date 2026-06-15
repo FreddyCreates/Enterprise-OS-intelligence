@@ -3,6 +3,7 @@
   "version": "2026.1.0",
   "description": "Enterprise OS Intelligence — Sovereign Intelligence Architecture by Medina Tech",
   "private": true,
+  "type": "module",
   "scripts": {
     "install:all": "bash install.sh",
     "install:workers": "cd cloudflare-workers && npm install",
