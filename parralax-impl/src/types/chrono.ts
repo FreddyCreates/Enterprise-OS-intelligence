@@ -89,6 +89,17 @@ export const ReceiptClass = {
   // ── Incidents ──
   IncidentKeyLeak:            'incident.key_leak',
   IncidentReview:             'incident.review',
+
+  // ── Training (TRAINING_DOCTRINE) ──
+  // Note: NO TrainingLevelPromotion class exists. Training-stage
+  // promotion (T1→T5) is DISTINCT from authority-level promotion (0→6),
+  // which lives in the doctrine-side receipt classes above.
+  TrainingSessionStarted:     'training.session_started',
+  TrainingObservation:        'training.observation_processed',
+  TrainingBatch:              'training.batch_processed',
+  TrainingOutcome:            'training.outcome_recorded',
+  TrainingSessionEnded:       'training.session_ended',
+  TrainingStagePromotion:     'training.stage_promotion',
 } as const;
 export type ReceiptClass = typeof ReceiptClass[keyof typeof ReceiptClass];
 
