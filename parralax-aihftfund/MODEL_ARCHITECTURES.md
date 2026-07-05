@@ -76,20 +76,20 @@ norm:                RMSNorm  eps 1e-5
 
 ### 2.2 Parameter count
 
-Breakdown (weight-tying counted once):
+Computed exactly by `parralax-impl/src/models/param-count.ts`:
 
 | Component | Formula | Count |
 |---|---|---|
-| Embedding (shared) | `vocab · d_model` | 131 M |
-| Per-layer attention | `4 · d_model²` | 67 M |
-| Per-layer FFN (SwiGLU) | `3 · d_model · ffn_hidden` | 176 M |
-| Per-layer RMSNorm | `2 · d_model` | 8 K |
-| Per layer total | | ≈ 243 M |
-| All 32 layers | `32 · 243M` | 7.78 B |
-| Final RMSNorm | `d_model` | 4 K |
-| **Total** | | **≈ 7.91 B** |
+| Embedding (shared) | `vocab · d_model` | 131.07 M |
+| Per-layer attention (MHA) | `4 · d_model²` | 67.11 M |
+| Per-layer FFN (SwiGLU) | `3 · d_model · ffn_hidden` | 176.16 M |
+| Per-layer RMSNorm | `2 · d_model` | 8.19 K |
+| Per layer total | | 243.28 M |
+| All 32 layers | `32 · 243.28M` | 7.78 B |
+| Final RMSNorm | `d_model` | 4.10 K |
+| **Total** | | **7,915,966,464 (≈ 7.92 B)** |
 
-Within ±2% of 8B target; well within ±5% tolerance for the label.
+Deviation from 8B label: **−1.05%**. Well within ±5% tolerance.
 
 ### 2.3 Consumer roles
 
@@ -112,7 +112,7 @@ AUSPEX is the mid-sized model. Its role is observation-heavy — it reads market
 ### 3.1 Architecture
 
 ```
-AUSPEX-14B architecture spec
+AUSPEX-14B architecture spec (final)
 ──────────────────────────────────────────────────────────
 vocab_size:          32000
 d_model:              5120
@@ -120,7 +120,7 @@ num_layers:             40
 num_heads:              40
 num_kv_heads:           10          (GQA 4:1)
 head_dim:              128
-ffn_hidden:          13824          (SwiGLU, scaled down slightly for target)
+ffn_hidden:          17920          (SwiGLU)
 max_seq_len:         16384
 tie_embedding:        true
 rope_base:          500000
@@ -131,52 +131,26 @@ norm:                RMSNorm  eps 1e-5
 
 ### 3.2 Parameter count
 
-Breakdown:
+Computed exactly by `parralax-impl/src/models/param-count.ts`:
 
 | Component | Formula | Count |
 |---|---|---|
-| Embedding (shared) | `vocab · d_model` | 164 M |
-| Per-layer attention (GQA) | `d_model · (d_model + 2 · num_kv_heads · head_dim) + d_model²` | 39 M |
-| Per-layer FFN (SwiGLU) | `3 · d_model · ffn_hidden` | 212 M |
-| Per-layer RMSNorm | `2 · d_model` | 10 K |
-| Per layer total | | ≈ 252 M |
-| All 40 layers | `40 · 252M` | 10.06 B |
-| Final RMSNorm | `d_model` | 5 K |
+| Embedding (shared) | `vocab · d_model` | 163.84 M |
+| Per-layer attention (GQA 4:1) | `2·d_model² + 2·d_model·num_kv_heads·head_dim` | 65.54 M |
+| Per-layer FFN (SwiGLU) | `3 · d_model · ffn_hidden` | 275.25 M |
+| Per-layer RMSNorm | `2 · d_model` | 10.24 K |
+| Per layer total | | 340.80 M |
+| All 40 layers | `40 · 340.80M` | 13.63 B |
+| Final RMSNorm | `d_model` | 5.12 K |
+| **Total** | | **13,795,742,720 (≈ 13.80 B)** |
 
-Hmm — this comes out closer to 10.2B than 14B. The GQA-4:1 saves considerably on attention params. To hit ~14B target, we increase `ffn_hidden`:
+Deviation from 14B label: **−1.46%**. Within ±5% tolerance.
 
-**Revised AUSPEX-14B:**
-
-```
-ffn_hidden:          17920          (increased for target)
-```
-
-Recalc per-layer FFN: `3 · 5120 · 17920` = 275 M  
-Per layer total: ≈ 315 M  
-All 40 layers: 12.6 B  
-Plus embedding: 12.8 B
-
-Still a bit under 14B. Two options: 44 layers, or wider FFN. Choose 44 layers (keeps FFN aspect ratio conventional):
-
-**Final AUSPEX-14B spec:**
-
-```
-AUSPEX-14B architecture spec (final)
-──────────────────────────────────────────────────────────
-vocab_size:          32000
-d_model:              5120
-num_layers:             44
-num_heads:              40
-num_kv_heads:           10          (GQA 4:1)
-head_dim:              128
-ffn_hidden:          17920          (SwiGLU)
-max_seq_len:         16384
-tie_embedding:        true
-rope_base:          500000
-──────────────────────────────────────────────────────────
-```
-
-Recount: per layer ≈ 315 M · 44 = 13.86 B; plus embedding = **14.02 B** ✓
+The spec was tuned experimentally against the parameter counter to hit
+close to 14B. Alternatives (e.g., 44 layers × 15360 ffn) also land in
+range; the 40-layer × 17920-ffn choice preserves an aspect ratio matching
+Mistral-8x22B's expert widths (17920 = 3.5 · d_model), which is
+architecturally conventional.
 
 ### 3.3 Consumer roles
 
@@ -200,11 +174,11 @@ ORACULUM is the largest of the three. Council-level reasoning — proposal revie
 ### 4.1 Architecture
 
 ```
-ORACULUM-20B architecture spec
+ORACULUM-20B architecture spec (final)
 ──────────────────────────────────────────────────────────
 vocab_size:          32000
 d_model:              6144
-num_layers:             44
+num_layers:             50
 num_heads:              48
 num_kv_heads:            8          (GQA 6:1)
 head_dim:              128
@@ -219,40 +193,20 @@ norm:                RMSNorm  eps 1e-5
 
 ### 4.2 Parameter count
 
-Breakdown:
+Computed exactly by `parralax-impl/src/models/param-count.ts`:
 
 | Component | Formula | Count |
 |---|---|---|
-| Embedding (shared) | `vocab · d_model` | 197 M |
-| Per-layer attention (GQA 6:1) | `d_model · (d_model + 2 · num_kv_heads · head_dim) + d_model²` | 50 M |
-| Per-layer FFN (SwiGLU) | `3 · d_model · ffn_hidden` | 302 M |
-| Per-layer RMSNorm | `2 · d_model` | 12 K |
-| Per layer total | | ≈ 352 M |
-| All 44 layers | `44 · 352M` | 15.5 B |
-| Final RMSNorm | `d_model` | 6 K |
+| Embedding (shared) | `vocab · d_model` | 196.61 M |
+| Per-layer attention (GQA 6:1) | `2·d_model² + 2·d_model·num_kv_heads·head_dim` | 88.08 M |
+| Per-layer FFN (SwiGLU) | `3 · d_model · ffn_hidden` | 301.99 M |
+| Per-layer RMSNorm | `2 · d_model` | 12.29 K |
+| Per layer total | | 390.09 M |
+| All 50 layers | `50 · 390.09M` | 19.50 B |
+| Final RMSNorm | `d_model` | 6.14 K |
+| **Total** | | **19,700,742,144 (≈ 19.70 B)** |
 
-Comes out 15.7B; short of 20B target. Increase layer count to 56:
-
-Recalc: per layer 352M · 56 = 19.7 B  
-Plus embedding: **19.9 B** ✓
-
-**Final ORACULUM-20B spec:**
-
-```
-ORACULUM-20B architecture spec (final)
-──────────────────────────────────────────────────────────
-vocab_size:          32000
-d_model:              6144
-num_layers:             56
-num_heads:              48
-num_kv_heads:            8          (GQA 6:1)
-head_dim:              128
-ffn_hidden:          16384          (SwiGLU)
-max_seq_len:         32768
-──────────────────────────────────────────────────────────
-```
-
-Total: **≈ 19.9 B** — within ±0.5% of 20B target.
+Deviation from 20B label: **−1.50%**. Within ±5% tolerance.
 
 ### 4.3 Consumer roles
 
@@ -271,11 +225,11 @@ Total: **≈ 19.9 B** — within ±0.5% of 20B target.
 
 | Model | Params | Layers | d_model | Heads | KV heads | FFN hidden | Context | Role |
 |---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|---|
-| **VATES-8B** | 7.91 B | 32 | 4096 | 32 | 32 | 14336 | 8K | Signals (AUGUR) |
-| **AUSPEX-14B** | 14.02 B | 44 | 5120 | 40 | 10 | 17920 | 16K | Observation (VIGIL, CEREBEX) |
-| **ORACULUM-20B** | 19.90 B | 56 | 6144 | 48 | 8 | 16384 | 32K | Reasoning (ARCHON, ARBITER) |
+| **VATES-8B** | 7.92 B | 32 | 4096 | 32 | 32 | 14336 | 8K | Signals (AUGUR, PROPHET) |
+| **AUSPEX-14B** | 13.80 B | 40 | 5120 | 40 | 10 | 17920 | 16K | Observation (VIGIL, CEREBEX) |
+| **ORACULUM-20B** | 19.70 B | 50 | 6144 | 48 | 8 | 16384 | 32K | Reasoning (ARCHON, ARBITER) |
 
-Sizes match the labels within ±2% — sufficient tolerance for the naming to be honest.
+Sizes match the labels within ±1.5% each — sufficient tolerance for the naming to be honest. Parameter counts derived by `parralax-impl/src/models/param-count.ts` and verified against the specs in tests.
 
 ---
 
@@ -305,9 +259,9 @@ Rough on-disk footprint for each model at half precision:
 
 | Model | Params | fp16 size | int8 quantised | int4 quantised |
 |---|:---:|:---:|:---:|:---:|
-| VATES-8B | 7.91 B | ~16 GB | ~8 GB | ~4 GB |
-| AUSPEX-14B | 14.02 B | ~28 GB | ~14 GB | ~7 GB |
-| ORACULUM-20B | 19.90 B | ~40 GB | ~20 GB | ~10 GB |
+| VATES-8B | 7.92 B | ~16 GB | ~8 GB | ~4 GB |
+| AUSPEX-14B | 13.80 B | ~28 GB | ~14 GB | ~7 GB |
+| ORACULUM-20B | 19.70 B | ~40 GB | ~20 GB | ~10 GB |
 
 These sizes matter for the doctrine: **weights never sit in a repository.** All three sizes are orders of magnitude larger than what any git-hosted repo can reasonably hold. Weights live on operator-controlled block storage, referenced by content hash from the manifest.
 
