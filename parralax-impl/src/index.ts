@@ -83,3 +83,36 @@ export type {
 // ── Agents (behaviour-bearing; the rest are stubs) ──
 export { AugurAgent } from './agents/augur.js';
 export type { AugurConfig } from './agents/augur.js';
+export { VigilAgent } from './agents/vigil.js';
+export type { VigilConfig, VigilObservation } from './agents/vigil.js';
+
+// ── Models (MODEL_WEIGHTS_DOCTRINE + MODEL_ARCHITECTURES) ──
+export * from './models/types.js';
+export {
+  countParameters,
+  verifyEstimatedParams,
+  verifySizeLabel,
+  estimateFp16Bytes,
+} from './models/param-count.js';
+export type { ParamCountBreakdown } from './models/param-count.js';
+export {
+  VATES_8B,
+  AUSPEX_14B,
+  ORACULUM_20B,
+  PARRALAX_ARCHITECTURES,
+  architectureByName,
+} from './models/architectures.js';
+export type { ArchitectureName } from './models/architectures.js';
+export {
+  enumerateTensorDescriptors,
+  describeModel,
+  verifyDescriptorTotal,
+} from './models/init.js';
+export {
+  MissingLoader,
+  ModelLoadError,
+  NotImplementedError as CheckpointNotImplementedError,
+  prepareLoad,
+  sha256Of,
+} from './models/checkpoint.js';
+export type { CheckpointLoader, LoadedModel } from './models/checkpoint.js';

@@ -220,7 +220,9 @@ export interface RiskTierParams {
 }
 
 // ── The engine result envelope ──
-export interface EvaluationResult {
+// NB: named GateEvaluationResult to distinguish from models/types.ts
+// EvaluationResult (which is a model-evaluation harness result).
+export interface GateEvaluationResult {
   readonly passed:        boolean;
   readonly firstFailure:  GateResult | null;
   readonly receipts:      ReadonlyArray<ChronoEntry>;
