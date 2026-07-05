@@ -43,3 +43,43 @@ export type { AlpacaPaperConfig } from './venues/alpaca-paper.js';
 
 // ── Operator UI shapes (Testing Doctrine § 3 — TradingView overlay) ──
 export * from './operator-ui/tradingview.js';
+
+// ── Training (Training Doctrine) ──
+export { HistoricalReplay } from './training/replay.js';
+export type { Regime, ReplayTick, ReplayConfig } from './training/replay.js';
+
+export {
+  ReputationLedger,
+  PHI_INV,
+  INITIAL_SCORE,
+} from './training/reputation.js';
+export type { Reputation, ReputationDelta } from './training/reputation.js';
+
+export {
+  TrainingSession,
+} from './training/session.js';
+export type {
+  AgentSignal,
+  SignalSide,
+  TrainableAgent,
+  TrainingSessionConfig,
+  TrainingSessionResult,
+} from './training/session.js';
+
+export {
+  TrainingStage,
+  writeSessionStarted,
+  writeTrainingOutcome,
+  writeSessionEnded,
+  writeStagePromotion,
+} from './training/receipt.js';
+export type {
+  TrainingSessionStartedPayload,
+  TrainingOutcomePayload,
+  TrainingSessionEndedPayload,
+  TrainingStagePromotionPayload,
+} from './training/receipt.js';
+
+// ── Agents (behaviour-bearing; the rest are stubs) ──
+export { AugurAgent } from './agents/augur.js';
+export type { AugurConfig } from './agents/augur.js';
