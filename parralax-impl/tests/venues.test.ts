@@ -165,10 +165,32 @@ describe('AlpacaPaperVenue — stub adapter (Venue interface conformance)', () =
     await expect(v.modifyOrder('x', request())).rejects.toBeInstanceOf(NotAuthorizedError);
   });
 
-  it('throws NotImplementedError on trade methods when credentials present (stub)', async () => {
-    const v = new AlpacaPaperVenue({ key: 'k', secret: 's' });
-    await expect(v.placeOrder(request())).rejects.toBeInstanceOf(NotImplementedError);
-    await expect(v.cancelOrder('x')).rejects.toBeInstanceOf(NotImplementedError);
+  it('placeOrder/cancelOrder return a real Ack (not throw) when credentials present — HTTP semantics ratified', async () => {
+    // With credentials, placeOrder and cancelOrder go through the HTTP client
+    // (which returns a rejected Ack on error rather than throwing an internal
+    // implementation-error). Only modifyOrder is still deliberately NotImplemented
+    // per TESTING_DOCTRINE § 2 — Alpaca order-replace has subtle semantics
+    // warranting its own commit and its own tests.
+    //
+    // We inject a fetch that always 401s so this test doesn't hit the network;
+    // the shape asserted is: the venue exposed a real HTTP client with credentials,
+    // not the old always-throw stub.
+    const alwaysFail: import('../src/venues/alpaca-paper.js').FetchLike = async () => ({
+      ok: false, status: 401,
+      headers: { get: () => null },
+      json: async () => ({ message: 'unauthorized' }),
+      text: async () => '{"message":"unauthorized"}',
+    });
+    const v = new AlpacaPaperVenue({ key: 'k', secret: 's', fetch: alwaysFail });
+    const placeAck = await v.placeOrder(request());
+    expect(placeAck.status).toBe('rejected');
+    expect(placeAck.reason).toMatch(/HTTP 401/);
+
+    const cancelAck = await v.cancelOrder('some-id');
+    expect(cancelAck.status).toBe('unknown');
+    expect(cancelAck.reason).toMatch(/HTTP 401/);
+
+    // modifyOrder is the deliberate exception — still NotImplemented.
     await expect(v.modifyOrder('x', request())).rejects.toBeInstanceOf(NotImplementedError);
   });
 
